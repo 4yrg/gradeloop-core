@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.3.4",
+    "@eslint/compat": "^1.0.0",
     "@react-types/shared": "3.32.1",
     "@tailwindcss/postcss": "4.1.11",
     "@types/node": "20.5.7",
