@@ -44,7 +44,7 @@ jobs:
         if: matrix.linter.language == 'go'
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.58 # Or the version you prefer
+          version: v1.64.8 # Or the version you prefer
           working-directory: ${{ matrix.linter.path }}
           args: --disable asciicheck
 
