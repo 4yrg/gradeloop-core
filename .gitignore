@@ -1,0 +1,183 @@
+# =========================
+# Global ignores
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.old
+*.orig
+.env
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.code-workspace
+__pycache__/
+venv/
+.envrc
+
+# =========================
+# Node / React / Next.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+dist/
+coverage/
+build/
+.cache/
+.next/
+*.tsbuildinfo
+
+# Local development
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Go / Fiber
+# =========================
+bin/
+vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.sum
+go.work
+go.work.sum
+
+# Compiled binaries
+*.a
+*.o
+
+# IDE specific
+.vscode/
+*.iml
+
+# =========================
+# Python / FastAPI / AI
+# =========================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+pytestdebug.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Machine Learning / AI
+*.ckpt
+*.h5
+*.pb
+*.pt
+*.pth
+*.tflite
+*.onnx
+*.npz
+*.npy
+mlruns/
+wandb/
+logs/
+runs/
+tensorboard/
+lightning_logs/
+
+# =========================
+# OS / Editor junk
+# =========================
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+*.rej
+*.kate-swp
+*~
+
+# =========================
+# Docker / Containers
+# =========================
+.docker/
+docker-compose.override.yml
+*.pid
+*.pid.lock
+
+# =========================
+# Miscellaneous
+# =========================
+*.sqlite3
+*.db
+*.tar.gz
+*.zip
+*.tgz
+*.7z
+*.rar
+uploads/
+media/
+staticfiles/
+
+# =========================
+# Logs and runtime files
+# =========================
+logs/
+*.log
+*.out
+*.err
+tmp/
+pids/
