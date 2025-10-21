@@ -44,6 +44,11 @@ jobs:
         run: go mod download
         working-directory: ${{ matrix.linter.path }}
 
+      - name: Build Go module
+        if: matrix.linter.language == 'go'
+        run: go build ./...
+        working-directory: ${{ matrix.linter.path }}
+
       # Linter for Go services
       - name: Run golangci-lint
         if: matrix.linter.language == 'go'
