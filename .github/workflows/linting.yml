@@ -39,6 +39,11 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
+      - name: Download Go modules
+        if: matrix.linter.language == 'go'
+        run: go mod download
+        working-directory: ${{ matrix.linter.path }}
+
       # Linter for Go services
       - name: Run golangci-lint
         if: matrix.linter.language == 'go'
