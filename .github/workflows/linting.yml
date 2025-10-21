@@ -19,12 +19,11 @@ jobs:
       matrix:
         include:
           # --- Add an entry for each service you want to lint ---
-          - linter:
-              name: "Go Template"
-              path: "apps/fastapi-template" # UPDATE THIS PATH
-              language: "go"
-              version: "1.24"
-          - linter:
+                    - linter:
+                        name: "Go Template"
+                        path: "apps/go-template" # UPDATE THIS PATH
+                        language: "go"
+                        version: "1.24"           - linter:
               name: "FastApi Template"
               path: "apps/fastapi-template" # UPDATE THIS PATH
               language: "python"
@@ -59,6 +58,7 @@ jobs:
       - name: Run ESLint
         if: matrix.linter.language == 'node'
         run: |
-          npm ci
-          npm run lint
+          corepack enable
+          pnpm install
+          pnpm lint
         working-directory: ${{ matrix.linter.path }}
