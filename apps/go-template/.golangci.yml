@@ -1,0 +1,3 @@
+linters-settings:
+  asciicheck:
+    disable: true
