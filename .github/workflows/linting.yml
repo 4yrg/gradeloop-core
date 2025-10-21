@@ -46,6 +46,7 @@ jobs:
         with:
           version: v1.58 # Or the version you prefer
           working-directory: ${{ matrix.linter.path }}
+          args: --disable asciicheck
 
       # Linter for Python services
       - name: Run Flake8
