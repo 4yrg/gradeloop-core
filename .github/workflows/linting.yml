@@ -39,6 +39,11 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
+      - name: Tidy Go modules
+        if: matrix.linter.language == 'go'
+        run: go mod tidy
+        working-directory: ${{ matrix.linter.path }}
+
       - name: Download Go modules
         if: matrix.linter.language == 'go'
         run: go mod download
