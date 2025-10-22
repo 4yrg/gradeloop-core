@@ -1,0 +1,84 @@
+name: Monorepo Security Scan (Unified)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened]
+
+jobs:
+  snyk_scan_all:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------------
+      # 1. Setup All Language Environments (Go 1.24, Python 3.13, Node 22)
+      # ----------------------------------------------------------------------
+      - name: Setup Go 1.24
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # ----------------------------------------------------------------------
+      # 2. Install All Project Dependencies
+      # Dependency resolution MUST happen before the Snyk scan.
+      # ----------------------------------------------------------------------
+      - name: Install Go Dependencies (Monorepo)
+        # Finds all go.mod files and runs 'go mod download' from the correct directory
+        run: find . -name "go.mod" -execdir go mod download \;
+
+      - name: Install Python Dependencies (Monorepo)
+        # Note: Using a single root venv for all pip installs in the workflow
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          # Find all requirements.txt files and install dependencies
+          find . -name "requirements.txt" -print0 | while IFS= read -r -d $'\0' file; do
+            pip install -r "$file"
+          done
+
+      - name: Install Node.js Dependencies (Monorepo)
+        # Assuming you use npm or pnpm; adjust the command if using yarn
+        # Finds all package.json files and runs 'npm install' from the correct directory
+        run: find . -name "package.json" -execdir npm install \;
+
+      # ----------------------------------------------------------------------
+      # 3. Run Snyk Scan using the --all-projects flag
+      # ----------------------------------------------------------------------
+      - name: Install and Authenticate Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Unified Snyk Scan (SCA & Code)
+        # Run from repo root. --all-projects finds all Go, Python, and Node manifest files.
+        run: snyk test --all-projects --org=${{ secrets.SNYK_ORG_ID }} --detection-depth=5 --code --sarif-file-output=snyk.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        # continue-on-error is used to ensure SARIF upload runs even if vulnerabilities are found
+        continue-on-error: true
+
+      # ----------------------------------------------------------------------
+      # 4. Upload results to GitHub Code Scanning (Recommended)
+      # ----------------------------------------------------------------------
+      - name: Upload Snyk results to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
+        if: always() # Always run to ensure SARIF file is uploaded
