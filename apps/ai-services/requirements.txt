@@ -1,2 +1,4 @@
 pydantic-settings
 fastapi~=0.121.1
+uvicorn
+
