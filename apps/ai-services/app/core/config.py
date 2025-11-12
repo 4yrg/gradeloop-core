@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Services (CIPAS)"
@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     MODEL_PATH_UNIXCODER: str
     MODEL_PATH_CODELIAMA: str
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
