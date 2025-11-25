@@ -1,9 +1,7 @@
 import asyncio
-import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import AsyncIterator, List, Optional
-import httpx
 import typer
 import aiofiles
 from anyio import Path as AsyncPath
@@ -12,14 +10,19 @@ from sqlalchemy import select
 
 # This is a long relative import path. It assumes the script is run as a module.
 # You might need to adjust PYTHONPATH if running it as a standalone script.
-from ..db import get_db, AsyncSessionLocal
+from ..db import AsyncSessionLocal
 from ..models import Submission
 from ..storage import get_storage
+from ..utils import get_logger
 
+logger = get_logger(__name__)
 app = typer.Typer()
 
-CODENET_URL = "https://dax-cdn.cdn.appdomain.cloud/dax-project-codenet/1.0.0/Project_CodeNet.tar.gz"
-LANGUAGES = {"Java", "C++", "C", "Go", "Python", "JavaScript"}
+# Define the local path where CodeNet dataset is expected
+LOCAL_CODENET_ROOT = "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet"
+
+# Filter languages
+LANGUAGES_TO_INGEST = {"Java", "C++", "C", "Go", "Python", "JavaScript"}
 LANGUAGE_EXTENSIONS = {
     ".java": "Java",
     ".cpp": "C++",
@@ -45,80 +48,70 @@ class SubmissionMeta:
     file_path: Path
 
 
-async def download_codenet_subset(root_dir: Path, url: str) -> Path:
-    """Downloads and extracts the CodeNet dataset."""
-    root_dir.mkdir(exist_ok=True, parents=True)
-    tar_path = root_dir / "Project_CodeNet.tar.gz"
-
-    if tar_path.exists():
-        print(f"Dataset already exists at {tar_path}")
-    else:
-        print(f"Downloading CodeNet dataset from {url}...")
-        async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream("GET", url) as response:
-                response.raise_for_status()
-                total_size = int(response.headers.get("content-length", 0))
-                with open(tar_path, "wb") as f:
-                    with typer.progressbar(length=total_size, label="Downloading") as progress:
-                        async for chunk in response.aiter_bytes():
-                            f.write(chunk)
-                            progress.update(len(chunk))
-        print("Download complete.")
-
-    print("Extracting dataset...")
-    with tarfile.open(tar_path, "r:gz") as tar:
-        # Extracting can be slow, might be better to do it member by member if memory is a concern
-        tar.extractall(path=root_dir)
-    print("Extraction complete.")
-    return root_dir / "Project_CodeNet"
-
-
 async def scan_submissions(root_dir: Path) -> AsyncIterator[SubmissionMeta]:
     """Scans the CodeNet directory structure to find submissions."""
-    data_path = AsyncPath(root_dir) / "data"
-    print(f"Scanning for submissions in {data_path}...")
+    if not root_dir.exists():
+        logger.error(f"Root directory for CodeNet does not exist: {root_dir}")
+        return
 
-    async for file_path in data_path.rglob("*"):
+    logger.info(f"Scanning for submissions in {root_dir}...")
+    
+    # Using Path.rglob for async-friendly directory traversal with anyio.Path
+    async for file_path in AsyncPath(root_dir).rglob("*"):
         if file_path.is_file() and file_path.suffix in LANGUAGE_EXTENSIONS:
-            language = LANGUAGE_EXTENSIONS[file_path.suffix]
+            language_from_ext = LANGUAGE_EXTENSIONS[file_path.suffix]
+
             try:
-                # Expected structure: .../data/{problem_id}/{language}/{status}/.../{filename}
-                # This parsing is based on a potential structure and might need adjustment.
-                parts = file_path.parts
-                # Find the index of 'data' and parse from there
-                data_index = parts.index('data')
-                problem_id = parts[data_index + 1]
-                # Assuming status is part of the path, e.g., .../Accepted/...
-                status_part = next((p for p in parts if p in ["Accepted", "Wrong Answer", "Runtime Error"]), "Unknown")
+                # Expected structure: {root_dir}/{problem_id}/{language_dir}/{filename}
+                # Example: D:/Projects/SLIIT/Research/Datasets/Project_CodeNet/p00001/Python/s12345.py
                 
-                yield SubmissionMeta(
-                    problem_id=problem_id,
-                    language=language,
-                    status=status_part,
-                    file_path=Path(file_path),
-                )
-            except (ValueError, IndexError):
-                # This file path doesn't match the expected structure, skip it.
+                # Get the parent directories relative to the root_dir
+                relative_to_root = file_path.relative_to(root_dir)
+                parts = relative_to_root.parts
+
+                if len(parts) >= 3: # Expecting at least problem_id/language_dir/filename
+                    problem_id = parts[0]
+                    language_dir = parts[1] # e.g., 'Python', 'Java', 'C++'
+
+                    # Check if the language from the directory matches our expected languages
+                    # and if it corresponds to the file extension's language
+                    if (language_from_ext in LANGUAGES_TO_INGEST) and \
+                       (language_from_ext == language_dir or language_dir == "Python"): # CodeNet uses 'Python' for Python
+                        
+                        yield SubmissionMeta(
+                            problem_id=problem_id,
+                            language=language_from_ext,
+                            status="Unknown",  # Status not available directly from path in this assumed structure
+                            file_path=Path(file_path),
+                        )
+            except (ValueError, IndexError) as e:
+                logger.warning(f"Skipping {file_path} due to parsing error: {e}")
                 continue
 
 
-async def store_submission(submission_meta: SubmissionMeta, db: AsyncSession) -> Submission:
+async def store_submission(submission_meta: SubmissionMeta, db: AsyncSession) -> Optional[Submission]:
     """Stores a submission's content in the artifact store and its metadata in the DB."""
     storage = get_storage()
     
-    # Use file_path as a unique identifier for the artifact URI for now
-    artifact_uri = str(submission_meta.file_path.as_posix())
+    # Using a hash of the file path for artifact URI to ensure uniqueness and handle long paths
+    # A more robust solution might use a hash of the file content
+    artifact_uri = f"codenet/{submission_meta.problem_id}/{submission_meta.language}/{submission_meta.file_path.name}"
 
-    # Check if this has already been ingested
+    # Check if this has already been ingested to prevent duplicates
     result = await db.execute(select(Submission).where(Submission.artifact_uri == artifact_uri))
-    if result.scalars().first():
+    existing_submission = result.scalars().first()
+    if existing_submission:
+        logger.debug(f"Submission {submission_meta.file_path.name} already ingested.")
         return None
 
+    # Read content asynchronously
     async with aiofiles.open(submission_meta.file_path, "rb") as f:
         content = await f.read()
 
+    # Save content to artifact store
     await storage.save(artifact_uri, content)
 
+    # Store metadata in the database
     db_submission = Submission(
         problem_id=submission_meta.problem_id,
         language=submission_meta.language,
@@ -130,66 +123,71 @@ async def store_submission(submission_meta: SubmissionMeta, db: AsyncSession) ->
 
 
 @app.command()
-def download(
-    root_dir: Path = typer.Option(
-        "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet",
-        help="The directory to download and extract the dataset into.",
-    ),
-    url: str = typer.Option(CODENET_URL, help="URL for the CodeNet tarball."),
-):
-    """Downloads and extracts the CodeNet dataset."""
-    asyncio.run(download_codenet_subset(root_dir, url))
-
-
-@app.command()
 def scan(
     root_dir: Path = typer.Option(
-        "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet/Project_CodeNet",
-        help="The root directory of the extracted CodeNet dataset.",
+        LOCAL_CODENET_ROOT,
+        help="The root directory of the extracted CodeNet dataset (e.g., D:/Projects/SLIIT/Research/Datasets/Project_CodeNet).",
     ),
 ):
     """Scans the dataset and prints submission metadata."""
     async def _scan():
         count = 0
         async for meta in scan_submissions(root_dir):
-            print(meta)
+            logger.info(meta)
             count += 1
-        print(f"Found {count} submissions.")
+        logger.info(f"Found {count} submissions.")
 
     asyncio.run(_scan())
 
 
 @app.command()
-def store(
+async def store(
     root_dir: Path = typer.Option(
-        "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet/Project_CodeNet",
-        help="The root directory of the extracted CodeNet dataset.",
+        LOCAL_CODENET_ROOT,
+        help="The root directory of the extracted CodeNet dataset (e.g., D:/Projects/SLIIT/Research/Datasets/Project_CodeNet).",
     ),
-    limit: int = typer.Option(None, help="Limit the number of submissions to ingest."),
+    limit: Optional[int] = typer.Option(None, help="Limit the number of submissions to ingest."),
+    batch_size: int = typer.Option(100, help="Number of submissions to process before committing to DB."),
 ):
     """Scans the dataset and stores submissions in the database and artifact store."""
-    async def _store():
-        db: AsyncSession = AsyncSessionLocal()
-        try:
-            count = 0
-            ingested_count = 0
-            async for meta in scan_submissions(root_dir):
-                if meta.language in LANGUAGES:
-                    submission = await store_submission(meta, db)
-                    if submission:
-                        ingested_count += 1
-                        print(f"Stored: {meta.file_path.name}")
-                    
-                    count += 1
-                    if limit and count >= limit:
-                        break
-            
-            await db.commit()
-            print(f"Successfully ingested {ingested_count} new submissions.")
-        finally:
-            await db.close()
+    db: AsyncSession = AsyncSessionLocal()
+    try:
+        count = 0
+        ingested_count = 0
+        processed_in_batch = 0
 
-    asyncio.run(_store())
+        async for meta in scan_submissions(root_dir):
+            if meta.language in LANGUAGES_TO_INGEST:
+                submission = await store_submission(meta, db)
+                if submission:
+                    ingested_count += 1
+                    logger.info(f"Ingested: {meta.file_path.name} (Problem: {meta.problem_id}, Lang: {meta.language})")
+                
+                count += 1
+                processed_in_batch += 1
+
+                if processed_in_batch >= batch_size:
+                    await db.commit()
+                    logger.info(f"Committed {processed_in_batch} submissions to DB. Total ingested: {ingested_count}")
+                    processed_in_batch = 0
+                
+                if limit and count >= limit:
+                    break
+        
+        # Commit any remaining submissions in the last batch
+        if processed_in_batch > 0:
+            await db.commit()
+            logger.info(f"Committed final {processed_in_batch} submissions to DB. Total ingested: {ingested_count}")
+
+        logger.info(f"Finished ingestion. Total unique submissions ingested: {ingested_count}.")
+        logger.info(f"Total files scanned: {count}.")
+
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"An error occurred during ingestion, rolling back transaction: {e}")
+        raise
+    finally:
+        await db.close()
 
 
 if __name__ == "__main__":
