@@ -13,3 +13,4 @@ tree-sitter-java
 tree-sitter-javascript
 tree-sitter-cpp
 tree-sitter-go
+numpy
