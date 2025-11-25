@@ -14,3 +14,10 @@ tree-sitter-javascript
 tree-sitter-cpp
 tree-sitter-go
 numpy
+transformers
+torch
+sentencepiece
+pytorch-lightning
+faiss-cpu
+scikit-learn
+pandas
