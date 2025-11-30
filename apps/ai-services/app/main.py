@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from app.modules.cipas.router import router as cipas_router
+from app.modules.ivas import router as ivas_router
 from app.core.config import settings
 
 ml_models = {}
@@ -40,6 +41,13 @@ app.include_router(
     cipas_router,
     prefix=f"{settings.API_V1_STR}/cipas",
     tags=["CIPAS"]
+)
+
+# Mount the IVAS module router
+app.include_router(
+    ivas_router.router,
+    prefix="/ivas",
+    tags=["IVAS"]
 )
 
 # You can add other module routers here later
