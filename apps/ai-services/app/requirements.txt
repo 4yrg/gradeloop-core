@@ -14,5 +14,6 @@ torch==2.1.2  # PyTorch 2.1.2 for TTS compatibility (2.9+ has breaking changes)
 torchaudio==2.1.2  # Match torch version
 TTS==0.22.0  # Coqui XTTS v2 for natural human voice
 transformers==4.33.0  # Required for TTS==0.22.0 compatibility
-# Step 4: ollama==0.1.6
+# Step 4: LLM (Large Language Model)
+ollama==0.1.6  # Ollama Python client for Llama 3.1
 # Step 8: sqlalchemy==2.0.25, psycopg2-binary==2.9.9
