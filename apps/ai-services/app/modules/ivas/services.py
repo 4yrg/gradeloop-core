@@ -238,9 +238,71 @@ class TTSService:
 class LLMService:
     """Large Language Model service using Ollama + Llama 3.1"""
     
-    def __init__(self):
-        # TODO: Implement in Step 4
-        logger.info("LLMService initialized (placeholder)")
+    def __init__(self, model: str = "llama3.1:8b", host: str = "http://localhost:11434"):
+        """
+        Initialize LLM service with Ollama client.
+        
+        Args:
+            model: Ollama model name (default: "llama3.1:8b")
+            host: Ollama server URL (default: "http://localhost:11434")
+        """
+        try:
+            import ollama
+            
+            self.model = model
+            self.host = host
+            self.client = ollama.Client(host=host)
+            
+            logger.info(f"Initializing LLMService with model: {model}")
+            logger.info(f"Ollama server: {host}")
+            
+            # Verify connection by listing available models
+            try:
+                models = self.client.list()
+                available_models = [m['name'] for m in models.get('models', [])]
+                
+                if model not in available_models:
+                    logger.warning(f"Model {model} not found in available models: {available_models}")
+                    logger.warning(f"Run: ollama pull {model}")
+                else:
+                    logger.info(f"✅ Model {model} is available")
+                    
+            except Exception as e:
+                logger.warning(f"Could not verify model availability: {e}")
+                logger.info("Assuming Ollama server is running and model is available")
+            
+            # Define Socratic viva system prompt
+            self.system_prompt = """You are an expert programming tutor conducting a Socratic viva (oral examination). 
+
+Your role:
+- Ask ONE clear, focused question at a time about the student's code
+- Use the Socratic method: guide students to discover answers themselves
+- Be encouraging and supportive, not intimidating
+- Ask questions that test understanding, not just memorization
+- Progress from basic concepts to deeper understanding
+- If the student struggles, provide hints or ask simpler questions
+- If the student answers well, ask more challenging follow-up questions
+
+Question style:
+- Keep questions short and specific (1-2 sentences max)
+- Focus on: concepts, design decisions, edge cases, improvements
+- Examples: "Why did you choose this data structure?", "What happens if the input is empty?", "How could you make this more efficient?"
+
+Context:
+- You have access to the lab assignment and student's code
+- You can see the conversation history
+- Adapt your questions based on student responses
+
+Remember: Your goal is to assess understanding through dialogue, not to lecture."""
+            
+            logger.info("✅ LLMService initialized successfully")
+            
+        except ImportError:
+            logger.error("ollama not installed. Run: pip install ollama==0.1.6")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to initialize LLMService: {e}")
+            raise
     
     async def generate_question(
         self,
@@ -252,15 +314,71 @@ class LLMService:
         Generate next viva question based on conversation.
         
         Args:
-            conversation_history: Previous turns
-            lab_assignment: Lab description
-            student_code: Student's code
+            conversation_history: Previous turns [{"role": "user"/"assistant", "content": str}, ...]
+            lab_assignment: Lab description/requirements
+            student_code: Student's code implementation
             
         Returns:
-            AI question text
+            AI question text (single focused question)
         """
-        # TODO: Implement in Step 4
-        raise NotImplementedError("LLM not implemented yet - coming in Step 4")
+        try:
+            logger.info("Generating viva question with LLM")
+            
+            # Build context for the LLM
+            context_message = f"""Lab Assignment:
+{lab_assignment}
+
+Student's Code:
+```
+{student_code}
+```
+
+Based on the above context and conversation history, generate ONE clear, focused Socratic question to assess the student's understanding. Keep it concise (1-2 sentences).
+"""
+            
+            # Build messages for Ollama
+            messages = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": context_message}
+            ]
+            
+            # Add conversation history (limit to last 10 exchanges to avoid context overflow)
+            recent_history = conversation_history[-20:] if len(conversation_history) > 20 else conversation_history
+            messages.extend(recent_history)
+            
+            # If this is the first question, add a prompt
+            if not conversation_history:
+                messages.append({
+                    "role": "user",
+                    "content": "Generate the first question to start the viva. Focus on a fundamental aspect of their code."
+                })
+            else:
+                messages.append({
+                    "role": "user", 
+                    "content": "Based on the student's previous response, generate the next question."
+                })
+            
+            logger.info(f"Sending request to Ollama (model: {self.model})")
+            
+            # Call Ollama API
+            response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={
+                    "temperature": 0.7,  # Slight creativity for natural questions
+                    "top_p": 0.9,
+                    "num_predict": 150,  # Limit response length for concise questions
+                }
+            )
+            
+            question = response['message']['content'].strip()
+            
+            logger.info(f"✅ Generated question: {question[:100]}...")
+            return question
+            
+        except Exception as e:
+            logger.error(f"Question generation failed: {e}")
+            raise RuntimeError(f"LLM question generation error: {str(e)}")
     
     async def assess_response(
         self,
