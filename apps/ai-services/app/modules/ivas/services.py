@@ -4,7 +4,11 @@ Contains service classes for ASR, TTS, LLM, and assessment logic.
 """
 
 import logging
+import io
+import tempfile
+import os
 from typing import Optional, List
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -12,22 +16,86 @@ logger = logging.getLogger(__name__)
 class ASRService:
     """Automatic Speech Recognition service using Faster-Whisper"""
     
-    def __init__(self):
-        # TODO: Implement in Step 2
-        logger.info("ASRService initialized (placeholder)")
+    def __init__(self, model_size: str = "base", device: str = "cpu"):
+        """
+        Initialize ASR service with Faster-Whisper model.
+        
+        Args:
+            model_size: Whisper model size (tiny, base, small, medium, large)
+            device: Device to run on ("cpu" or "cuda")
+        """
+        try:
+            from faster_whisper import WhisperModel
+            
+            # Set model cache directory
+            models_dir = Path(__file__).parent.parent.parent.parent / "models" / "whisper"
+            models_dir.mkdir(parents=True, exist_ok=True)
+            
+            logger.info(f"Loading Faster-Whisper model: {model_size} on {device}")
+            logger.info(f"Model cache directory: {models_dir}")
+            
+            # Initialize the Whisper model
+            # Models will auto-download to models_dir on first run
+            self.model = WhisperModel(
+                model_size,
+                device=device,
+                compute_type="int8",  # Use int8 for better performance on CPU
+                download_root=str(models_dir)
+            )
+            
+            logger.info(f"ASRService initialized successfully with {model_size} model")
+            
+        except ImportError:
+            logger.error("faster-whisper not installed. Run: pip install faster-whisper")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to initialize ASRService: {e}")
+            raise
     
     async def transcribe(self, audio_bytes: bytes) -> str:
         """
         Transcribe audio to text.
         
         Args:
-            audio_bytes: Raw audio data
+            audio_bytes: Raw audio data (supports WAV, MP3, WebM)
             
         Returns:
             Transcribed text
         """
-        # TODO: Implement in Step 2
-        raise NotImplementedError("ASR not implemented yet - coming in Step 2")
+        try:
+            # Save audio bytes to temporary file
+            # Faster-Whisper requires a file path, not bytes directly
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
+                temp_audio.write(audio_bytes)
+                temp_audio_path = temp_audio.name
+            
+            try:
+                # Transcribe audio
+                logger.info(f"Transcribing audio file: {temp_audio_path}")
+                segments, info = self.model.transcribe(
+                    temp_audio_path,
+                    beam_size=5,
+                    language=None,  # Auto-detect language
+                    vad_filter=True,  # Voice Activity Detection to filter silence
+                )
+                
+                # Log detected language
+                logger.info(f"Detected language: {info.language} (probability: {info.language_probability:.2f})")
+                
+                # Combine all segments into full transcription
+                transcription = " ".join([segment.text for segment in segments])
+                
+                logger.info(f"Transcription completed: {transcription[:100]}...")
+                return transcription.strip()
+                
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_audio_path):
+                    os.unlink(temp_audio_path)
+                    
+        except Exception as e:
+            logger.error(f"Transcription failed: {e}")
+            raise RuntimeError(f"ASR transcription error: {str(e)}")
 
 
 class TTSService:
