@@ -1,0 +1,26 @@
+# IVAS Models - Do not commit large model files
+models/whisper/models--*/
+models/whisper/*.m4a
+models/whisper/*.wav
+models/whisper/*.mp3
+models/piper/*.onnx
+models/piper/*.tar.gz
+
+# Keep only the JSON config files and README
+!models/piper/*.json
+!models/piper/README.md
+!models/whisper/README.md
+
+# Test outputs
+tests/test_output_*.wav
+tests/*.m4a
+tests/*.mp3
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
