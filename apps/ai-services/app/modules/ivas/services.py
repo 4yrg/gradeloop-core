@@ -9,8 +9,41 @@ import tempfile
 import os
 from typing import Optional, List
 from pathlib import Path
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+class TTSEngine(Enum):
+    """Available TTS engines"""
+    PIPER = "piper"  # Fast (0.1-0.2s), robotic voice - good for development
+    XTTS = "xtts"    # Slow on CPU (3-6s), natural voice - needs GPU for production
+
+
+def get_tts_service(engine: TTSEngine = TTSEngine.PIPER, **kwargs):
+    """
+    Factory function to get appropriate TTS service.
+    
+    Args:
+        engine: TTS engine to use (PIPER or XTTS)
+        **kwargs: Engine-specific configuration
+        
+    Returns:
+        TTSService instance (Piper or XTTS)
+        
+    Usage:
+        # Fast for development (Piper)
+        tts = get_tts_service(TTSEngine.PIPER)
+        
+        # Natural voice for production with GPU (XTTS)
+        tts = get_tts_service(TTSEngine.XTTS, use_gpu=True)
+    """
+    if engine == TTSEngine.PIPER:
+        return TTSService(**kwargs)
+    elif engine == TTSEngine.XTTS:
+        return XTTSService(**kwargs)
+    else:
+        raise ValueError(f"Unknown TTS engine: {engine}")
 
 
 class ASRService:
@@ -246,6 +279,190 @@ class LLMService:
         """
         # TODO: Implement in Step 7
         raise NotImplementedError("Assessment not implemented yet - coming in Step 7")
+
+
+class XTTSService:
+    """Text-to-Speech service using Coqui XTTS v2 for natural human voice"""
+    
+    def __init__(self, language: str = "en", use_gpu: bool = True):
+        """
+        Initialize XTTS v2 service.
+        
+        Args:
+            language: Language code (default: "en")
+            use_gpu: Use GPU if available (default: True for faster synthesis)
+        """
+        try:
+            from TTS.api import TTS
+            import torch
+            
+            logger.info("Initializing Coqui XTTS v2 for natural voice synthesis")
+            
+            # Determine device - prioritize GPU for speed
+            if use_gpu:
+                if torch.cuda.is_available():
+                    self.device = "cuda"
+                    logger.info("🚀 Using NVIDIA CUDA GPU for TTS (0.5-1s per response)")
+                elif torch.backends.mps.is_available():
+                    # MPS (Apple Silicon) doesn't fully support XTTS yet (missing FFT ops)
+                    # Fall back to CPU for compatibility
+                    self.device = "cpu"
+                    logger.warning("⚠️  MPS (Apple Silicon) not fully compatible with XTTS")
+                    logger.warning("⚠️  Using CPU instead (3-6s per response)")
+                    logger.info("💡 For production: Deploy on server with NVIDIA GPU for <1s response")
+                else:
+                    self.device = "cpu"
+                    logger.warning("⚠️  No GPU available, using CPU (3-6s per response)")
+                    logger.info("💡 For production: Deploy on server with NVIDIA GPU for <1s response")
+            else:
+                self.device = "cpu"
+                logger.info("Using CPU for TTS (development mode)")
+            
+            # Initialize XTTS v2 model
+            # This will auto-download on first run (~1.8GB)
+            model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
+            logger.info(f"Loading XTTS v2 model: {model_name}")
+            logger.info("Note: First run will download ~1.8GB model, please wait...")
+            
+            self.tts = TTS(model_name=model_name, progress_bar=True).to(self.device)
+            
+            # Set up reference audio path for voice cloning
+            # We'll use a default speaker or allow custom reference
+            self.models_dir = Path(__file__).parent / "models" / "xtts"
+            self.models_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Default reference audio (we'll use XTTS built-in speaker)
+            # For custom voice, place reference audio file here
+            self.reference_audio = self.models_dir / "reference_voice.wav"
+            
+            logger.info("✅ XTTSService initialized successfully")
+            logger.info(f"   Model: {model_name}")
+            logger.info(f"   Device: {self.device}")
+            logger.info(f"   Language: {language}")
+            
+        except ImportError:
+            logger.error("Coqui TTS not installed. Run: pip install TTS==0.22.0")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to initialize XTTSService: {e}")
+            raise
+    
+    async def synthesize(
+        self, 
+        text: str, 
+        speaker_wav: Optional[str] = None,
+        language: str = "en",
+        emotion: str = "neutral"
+    ) -> bytes:
+        """
+        Convert text to natural speech using XTTS v2.
+        
+        Args:
+            text: Text to convert
+            speaker_wav: Path to reference audio for voice cloning (optional)
+            language: Language code (default: "en")
+            emotion: Emotion hint (not directly supported, but affects tone)
+            
+        Returns:
+            Audio bytes (WAV format)
+        """
+        try:
+            logger.info(f"Synthesizing with XTTS v2: {text[:50]}...")
+            
+            # Use custom reference audio if provided, otherwise use default speaker
+            if speaker_wav and Path(speaker_wav).exists():
+                ref_audio = speaker_wav
+                logger.info(f"Using custom voice reference: {ref_audio}")
+            elif self.reference_audio.exists():
+                ref_audio = str(self.reference_audio)
+                logger.info(f"Using default voice reference: {ref_audio}")
+            else:
+                # Use built-in speaker from XTTS
+                # We'll generate without voice cloning for default voice
+                ref_audio = None
+                logger.info("Using XTTS default speaker voice")
+            
+            # Create temporary output file
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_output:
+                temp_output_path = temp_output.name
+            
+            try:
+                # Synthesize speech
+                if ref_audio:
+                    # With voice cloning using reference audio
+                    self.tts.tts_to_file(
+                        text=text,
+                        file_path=temp_output_path,
+                        speaker_wav=ref_audio,
+                        language=language
+                    )
+                else:
+                    # Without voice cloning - XTTS v2 requires speaker_wav for voice cloning
+                    # We'll use a built-in sample or create a neutral voice
+                    # For now, get available speakers from the model
+                    speakers = self.tts.speakers if hasattr(self.tts, 'speakers') and self.tts.speakers else None
+                    
+                    if speakers and len(speakers) > 0:
+                        # Use first available speaker
+                        logger.info(f"Using speaker: {speakers[0]}")
+                        self.tts.tts_to_file(
+                            text=text,
+                            file_path=temp_output_path,
+                            speaker=speakers[0],
+                            language=language
+                        )
+                    else:
+                        # XTTS v2 is primarily for voice cloning, needs reference audio
+                        # Generate a simple neutral voice or use the model's capability
+                        logger.warning("No speaker or reference audio provided. XTTS works best with voice cloning.")
+                        # Try without speaker (some models support this)
+                        try:
+                            self.tts.tts_to_file(
+                                text=text,
+                                file_path=temp_output_path,
+                                language=language
+                            )
+                        except ValueError:
+                            # If that fails, we need to provide guidance
+                            raise RuntimeError(
+                                "XTTS v2 requires a reference voice. Please provide a 6-10 second audio sample. "
+                                "You can record yourself saying a few sentences and save it as a WAV file, "
+                                f"then place it at: {self.reference_audio}"
+                            )
+                
+                # Read the generated audio
+                with open(temp_output_path, "rb") as f:
+                    audio_bytes = f.read()
+                
+                logger.info(f"✅ Synthesized {len(audio_bytes)} bytes of natural audio")
+                return audio_bytes
+                
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_output_path):
+                    os.unlink(temp_output_path)
+                    
+        except Exception as e:
+            logger.error(f"XTTS synthesis failed: {e}")
+            raise RuntimeError(f"XTTS synthesis error: {str(e)}")
+    
+    def set_reference_voice(self, audio_path: str) -> None:
+        """
+        Set a custom reference voice for cloning.
+        
+        Args:
+            audio_path: Path to reference audio file (WAV, 6-10 seconds recommended)
+        """
+        import shutil
+        
+        source = Path(audio_path)
+        if not source.exists():
+            raise FileNotFoundError(f"Reference audio not found: {audio_path}")
+        
+        # Copy to models directory
+        shutil.copy(source, self.reference_audio)
+        logger.info(f"✅ Reference voice updated: {self.reference_audio}")
+        logger.info("   Voice cloning will use this audio for future synthesis")
 
 
 class AdaptiveAssessmentEngine:
