@@ -27,8 +27,8 @@ class ASRService:
         try:
             from faster_whisper import WhisperModel
             
-            # Set model cache directory
-            models_dir = Path(__file__).parent.parent.parent.parent / "models" / "whisper"
+            # Set model cache directory within ivas module
+            models_dir = Path(__file__).parent / "models" / "whisper"
             models_dir.mkdir(parents=True, exist_ok=True)
             
             logger.info(f"Loading Faster-Whisper model: {model_size} on {device}")
@@ -101,9 +101,50 @@ class ASRService:
 class TTSService:
     """Text-to-Speech service using Piper TTS"""
     
-    def __init__(self):
-        # TODO: Implement in Step 3
-        logger.info("TTSService initialized (placeholder)")
+    def __init__(self, voice_model: str = "en_US-lessac-medium"):
+        """
+        Initialize TTS service with Piper.
+        
+        Args:
+            voice_model: Piper voice model name (e.g., "en_US-lessac-medium")
+        """
+        try:
+            from piper import PiperVoice
+            import wave
+            
+            # Set model cache directory within ivas module
+            self.models_dir = Path(__file__).parent / "models" / "piper"
+            self.models_dir.mkdir(parents=True, exist_ok=True)
+            
+            self.voice_model = voice_model
+            self.model_path = self.models_dir / f"{voice_model}.onnx"
+            self.config_path = self.models_dir / f"{voice_model}.onnx.json"
+            
+            logger.info(f"Initializing Piper TTS with voice model: {voice_model}")
+            logger.info(f"Model cache directory: {self.models_dir}")
+            
+            # Check if model files exist
+            if not self.model_path.exists() or not self.config_path.exists():
+                logger.error(f"Model files not found at {self.model_path}")
+                logger.info("Please download voice model files:")
+                logger.info(f"  curl -L -o {self.model_path} https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/medium/en_US-lessac-medium.onnx")
+                logger.info(f"  curl -L -o {self.config_path} https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json")
+                raise FileNotFoundError(f"Model files not found: {self.model_path}")
+            
+            logger.info(f"✅ Model files found: {self.model_path.name}")
+            
+            # Load the voice model
+            logger.info("Loading Piper voice model...")
+            self.voice = PiperVoice.load(str(self.model_path), config_path=str(self.config_path))
+            
+            logger.info("TTSService initialized successfully")
+            
+        except ImportError:
+            logger.error("piper-tts not installed. Run: pip install piper-tts")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to initialize TTSService: {e}")
+            raise
     
     async def synthesize(self, text: str) -> bytes:
         """
@@ -115,8 +156,50 @@ class TTSService:
         Returns:
             Audio bytes (WAV format)
         """
-        # TODO: Implement in Step 3
-        raise NotImplementedError("TTS not implemented yet - coming in Step 3")
+        try:
+            import wave
+            import struct
+            
+            logger.info(f"Synthesizing text: {text[:50]}...")
+            
+            # Synthesize speech
+            # PiperVoice.synthesize returns a generator of AudioChunk objects
+            audio_chunks = []
+            for audio_chunk in self.voice.synthesize(text):
+                # AudioChunk has audio_int16_bytes property
+                audio_chunks.append(audio_chunk.audio_int16_bytes)
+            
+            # Combine audio chunks and create WAV file
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_output:
+                temp_output_path = temp_output.name
+            
+            try:
+                # Write WAV file
+                with wave.open(temp_output_path, "wb") as wav_file:
+                    # Set WAV parameters from voice config
+                    wav_file.setnchannels(1)  # Mono
+                    wav_file.setsampwidth(2)  # 16-bit
+                    wav_file.setframerate(self.voice.config.sample_rate)
+                    
+                    # Write all audio chunks
+                    for audio_bytes_chunk in audio_chunks:
+                        wav_file.writeframes(audio_bytes_chunk)
+                
+                # Read the generated WAV file
+                with open(temp_output_path, "rb") as f:
+                    audio_bytes = f.read()
+                
+                logger.info(f"✅ Synthesized {len(audio_bytes)} bytes of audio")
+                return audio_bytes
+                
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_output_path):
+                    os.unlink(temp_output_path)
+                    
+        except Exception as e:
+            logger.error(f"Synthesis failed: {e}")
+            raise RuntimeError(f"TTS synthesis error: {str(e)}")
 
 
 class LLMService:
