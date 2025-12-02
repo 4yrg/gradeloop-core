@@ -52,30 +52,30 @@ async def test_xtts_service():
                 "context": "Opening greeting",
                 "text": "Hello! Let's begin the viva assessment. I'm here to help you demonstrate your understanding."
             },
-            {
-                "context": "Asking a question",
-                "text": "That's a good start. Can you explain why you chose this particular approach?"
-            },
-            {
-                "context": "Encouragement",
-                "text": "Excellent explanation! Your understanding of the concept is quite clear. Let's explore this a bit deeper."
-            },
-            {
-                "context": "Probing deeper",
-                "text": "Interesting. What would happen if we changed the input parameters? How would your code handle that?"
-            },
-            {
-                "context": "Positive feedback",
-                "text": "That's exactly right! You've demonstrated a solid grasp of error handling. Well done."
-            },
-            {
-                "context": "Gentle correction",
-                "text": "I see where you're going with that. However, let me help you think about this differently."
-            },
-            {
-                "context": "Complex question",
-                "text": "Now, considering time complexity and space efficiency, how would you optimize this algorithm for large datasets?"
-            }
+            # {
+            #     "context": "Asking a question",
+            #     "text": "That's a good start. Can you explain why you chose this particular approach?"
+            # },
+            # {
+            #     "context": "Encouragement",
+            #     "text": "Excellent explanation! Your understanding of the concept is quite clear. Let's explore this a bit deeper."
+            # },
+            # {
+            #     "context": "Probing deeper",
+            #     "text": "Interesting. What would happen if we changed the input parameters? How would your code handle that?"
+            # },
+            # {
+            #     "context": "Positive feedback",
+            #     "text": "That's exactly right! You've demonstrated a solid grasp of error handling. Well done."
+            # },
+            # {
+            #     "context": "Gentle correction",
+            #     "text": "I see where you're going with that. However, let me help you think about this differently."
+            # },
+            # {
+            #     "context": "Complex question",
+            #     "text": "Now, considering time complexity and space efficiency, how would you optimize this algorithm for large datasets?"
+            # }
         ]
         
         # Test each scenario
@@ -138,63 +138,6 @@ async def test_xtts_service():
         traceback.print_exc()
         print()
 
-
-async def compare_voices():
-    """Compare Piper vs XTTS v2 voice quality"""
-    print("\n" + "="*60)
-    print("🔄 Voice Quality Comparison: Piper vs XTTS v2")
-    print("="*60 + "\n")
-    
-    try:
-        from app.modules.ivas.services import TTSService, XTTSService
-        
-        test_text = "That's a good start. Can you explain why you chose this approach?"
-        tests_dir = Path(__file__).parent
-        
-        # Test Piper
-        print("1️⃣  Generating with Piper (basic TTS)...")
-        piper_service = TTSService(voice_model="en_US-lessac-medium")
-        start_time = time.time()
-        piper_audio = await piper_service.synthesize(test_text)
-        piper_time = time.time() - start_time
-        
-        piper_file = tests_dir / "comparison_piper.wav"
-        with open(piper_file, "wb") as f:
-            f.write(piper_audio)
-        print(f"   ✅ Piper: {piper_time:.2f}s, {len(piper_audio):,} bytes")
-        print(f"   💾 Saved: {piper_file.name}")
-        
-        # Test XTTS v2
-        print("\n2️⃣  Generating with XTTS v2 (natural voice)...")
-        xtts_service = XTTSService(language="en", use_gpu=False)
-        start_time = time.time()
-        xtts_audio = await xtts_service.synthesize(test_text)
-        xtts_time = time.time() - start_time
-        
-        xtts_file = tests_dir / "comparison_xtts.wav"
-        with open(xtts_file, "wb") as f:
-            f.write(xtts_audio)
-        print(f"   ✅ XTTS v2: {xtts_time:.2f}s, {len(xtts_audio):,} bytes")
-        print(f"   💾 Saved: {xtts_file.name}")
-        
-        print("\n" + "="*60)
-        print("📊 Comparison Summary")
-        print("="*60)
-        print(f"   Piper:    {piper_time:.2f}s - Fast, robotic")
-        print(f"   XTTS v2:  {xtts_time:.2f}s - Natural, human-like")
-        print(f"   Speed:    Piper is {xtts_time/piper_time:.1f}x faster")
-        print(f"\n🎧 Listen to both and compare:")
-        print(f"   afplay {piper_file.name}")
-        print(f"   afplay {xtts_file.name}")
-        print()
-        
-    except Exception as e:
-        print(f"\n❌ Comparison failed: {e}")
-        import traceback
-        traceback.print_exc()
-        print()
-
-
 async def test_voice_cloning():
     """Test voice cloning with custom reference audio"""
     print("\n" + "="*60)
@@ -253,9 +196,6 @@ async def test_voice_cloning():
 if __name__ == "__main__":
     # Run basic XTTS test
     asyncio.run(test_xtts_service())
-    
-    # Optional: Compare Piper vs XTTS
-    # asyncio.run(compare_voices())
     
     # Optional: Test voice cloning
     # asyncio.run(test_voice_cloning())
