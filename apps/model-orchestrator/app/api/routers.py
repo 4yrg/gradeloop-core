@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from .cipas_router import cipas_router # Corrected import
+from .template_router import cipas_router
 
 api_router = APIRouter()
 
-api_router.include_router(cipas_router, prefix="/cipas", tags=["Cipas Module"])
+api_router.include_router(cipas_router, prefix="/test", tags=["Test"])
