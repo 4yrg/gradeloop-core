@@ -3,7 +3,11 @@ Configuration for IVAS (Interactive Viva Assessment System)
 """
 
 import os
+import logging
 from enum import Enum
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Environment(Enum):
@@ -29,12 +33,11 @@ class IVASConfig:
     ASR_DEVICE = os.getenv("ASR_DEVICE", "cpu")  # cpu or cuda
     
     # TTS Configuration
-    # In development: Use fast Piper TTS (instant response)
-    # In production: Use natural XTTS with GPU (requires GPU server)
-    TTS_ENGINE = "piper" if ENVIRONMENT == Environment.DEVELOPMENT else "xtts"
+    # Use XTTS for natural voice synthesis
+    TTS_ENGINE = "xtts"
     TTS_USE_GPU = os.getenv("TTS_USE_GPU", "false").lower() == "true"
     
-    # Piper TTS settings
+    # Piper TTS settings (deprecated - using XTTS only)
     PIPER_VOICE_MODEL = os.getenv("PIPER_VOICE_MODEL", "en_US-lessac-medium")
     
     # XTTS settings
@@ -112,6 +115,91 @@ IVAS Configuration:
      • Google Cloud (T4 or A10 GPUs)
      • Azure (NC-series VMs)
 """
+
+
+class ServiceHealthChecker:
+    """Check health of all IVAS services before starting WebSocket"""
+    
+    @staticmethod
+    async def check_asr() -> tuple[bool, Optional[str]]:
+        """Check if ASR service is ready"""
+        try:
+            from .services import ASRService
+            asr = ASRService(model_size=IVASConfig.ASR_MODEL_SIZE, device=IVASConfig.ASR_DEVICE)
+            logger.info("✅ ASR service is healthy")
+            return True, None
+        except Exception as e:
+            error = f"ASR service unavailable: {str(e)}"
+            logger.error(f"❌ {error}")
+            return False, error
+    
+    @staticmethod
+    async def check_tts() -> tuple[bool, Optional[str]]:
+        """Check if TTS service is ready"""
+        try:
+            from .services import get_tts_service, TTSEngine
+            tts = get_tts_service(TTSEngine.XTTS, use_gpu=IVASConfig.TTS_USE_GPU)
+            logger.info("✅ TTS service is healthy")
+            return True, None
+        except Exception as e:
+            error = f"TTS service unavailable: {str(e)}"
+            logger.error(f"❌ {error}")
+            return False, error
+    
+    @staticmethod
+    async def check_llm() -> tuple[bool, Optional[str]]:
+        """Check if LLM service is ready"""
+        try:
+            from .services import LLMService
+            import ollama
+            
+            # Check if Ollama server is reachable
+            client = ollama.Client(host=IVASConfig.LLM_HOST)
+            models = client.list()
+            
+            # Check if required model is available
+            available_models = [m['name'] for m in models.get('models', [])]
+            if IVASConfig.LLM_MODEL not in available_models:
+                error = f"Model {IVASConfig.LLM_MODEL} not found. Run: ollama pull {IVASConfig.LLM_MODEL}"
+                logger.error(f"❌ {error}")
+                return False, error
+            
+            logger.info("✅ LLM service is healthy")
+            return True, None
+            
+        except Exception as e:
+            error = f"LLM service unavailable: {str(e)}"
+            logger.error(f"❌ {error}")
+            return False, error
+    
+    @staticmethod
+    async def check_all() -> dict[str, dict]:
+        """Check all services and return status"""
+        results = {}
+        
+        logger.info("🔍 Checking IVAS service health...")
+        
+        asr_ok, asr_error = await ServiceHealthChecker.check_asr()
+        results["asr"] = {"healthy": asr_ok, "error": asr_error}
+        
+        tts_ok, tts_error = await ServiceHealthChecker.check_tts()
+        results["tts"] = {"healthy": tts_ok, "error": tts_error}
+        
+        llm_ok, llm_error = await ServiceHealthChecker.check_llm()
+        results["llm"] = {"healthy": llm_ok, "error": llm_error}
+        
+        all_healthy = asr_ok and tts_ok and llm_ok
+        results["overall"] = {
+            "healthy": all_healthy,
+            "message": "All services healthy" if all_healthy else "Some services unavailable"
+        }
+        
+        if all_healthy:
+            logger.info("✅ All IVAS services are healthy and ready")
+        else:
+            logger.warning("⚠️  Some IVAS services are not ready")
+        
+        return results
 
 
 # Example usage:
