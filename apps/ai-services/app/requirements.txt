@@ -5,7 +5,8 @@ pydantic-settings==2.1.0
 # ... your existing packages ...
 
 # IVAS dependencies (will add in later steps)
-# Step 2: faster-whisper==0.10.0
+# Step 2: ASR (Automatic Speech Recognition)
+faster-whisper>=1.2.1
 # Step 3: piper-tts==1.2.0
 # Step 4: ollama==0.1.6
 # Step 8: sqlalchemy==2.0.25, psycopg2-binary==2.9.9
