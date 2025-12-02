@@ -47,7 +47,7 @@ async def test_asr_service():
         
         # Test with sample audio
         # Option 1: Use a test audio file if available
-        test_audio_path = Path(__file__).parent.parent / "models" / "whisper" / "Southern Province 4.m4a"
+        test_audio_path = Path(__file__).parent / "Southern Province 4.m4a"
         
         if test_audio_path.exists():
             print(f"2️⃣  Testing with audio file: {test_audio_path}")
@@ -77,46 +77,46 @@ async def test_asr_service():
             print()
             
             # Try to generate test audio on macOS
-            import subprocess
-            import sys
+            # import subprocess
+            # import sys
             
-            if sys.platform == "darwin":  # macOS
-                print("3️⃣  Generating test audio with macOS 'say' command...")
-                try:
-                    test_text = "This is a test of the automatic speech recognition system. The quick brown fox jumps over the lazy dog."
-                    subprocess.run([
-                        "say", test_text,
-                        "-o", str(test_audio_path),
-                        "--data-format=LEI16@22050"
-                    ], check=True)
-                    print(f"✅ Generated test audio: {test_audio_path}\n")
+            # if sys.platform == "darwin":  # macOS
+            #     print("3️⃣  Generating test audio with macOS 'say' command...")
+            #     try:
+            #         test_text = "This is a test of the automatic speech recognition system. The quick brown fox jumps over the lazy dog."
+            #         subprocess.run([
+            #             "say", test_text,
+            #             "-o", str(test_audio_path),
+            #             "--data-format=LEI16@22050"
+            #         ], check=True)
+            #         print(f"✅ Generated test audio: {test_audio_path}\n")
                     
-                    # Now test with generated audio
-                    with open(test_audio_path, "rb") as f:
-                        audio_bytes = f.read()
+            #         # Now test with generated audio
+            #         with open(test_audio_path, "rb") as f:
+            #             audio_bytes = f.read()
                     
-                    print(f"4️⃣  Testing transcription...")
-                    start_time = time.time()
-                    transcription = await asr_service.transcribe(audio_bytes)
-                    elapsed_time = time.time() - start_time
+            #         print(f"4️⃣  Testing transcription...")
+            #         start_time = time.time()
+            #         transcription = await asr_service.transcribe(audio_bytes)
+            #         elapsed_time = time.time() - start_time
                     
-                    print(f"\n✅ Transcription completed in {elapsed_time:.2f} seconds")
-                    print(f"\n📝 Original text:")
-                    print(f"   \"{test_text}\"")
-                    print(f"\n📝 Transcription result:")
-                    print(f"   \"{transcription}\"")
-                    print()
+            #         print(f"\n✅ Transcription completed in {elapsed_time:.2f} seconds")
+            #         print(f"\n📝 Original text:")
+            #         print(f"   \"{test_text}\"")
+            #         print(f"\n📝 Transcription result:")
+            #         print(f"   \"{transcription}\"")
+            #         print()
                     
-                    # Check accuracy
-                    if "test" in transcription.lower() and "speech" in transcription.lower():
-                        print("✅ Transcription accuracy: GOOD (key words detected)")
-                    else:
-                        print("⚠️  Transcription may not be accurate (check results above)")
+            #         # Check accuracy
+            #         if "test" in transcription.lower() and "speech" in transcription.lower():
+            #             print("✅ Transcription accuracy: GOOD (key words detected)")
+            #         else:
+            #             print("⚠️  Transcription may not be accurate (check results above)")
                     
-                except subprocess.CalledProcessError as e:
-                    print(f"❌ Failed to generate test audio: {e}")
-            else:
-                print("ℹ️  Automatic audio generation only available on macOS")
+            #     except subprocess.CalledProcessError as e:
+            #         print(f"❌ Failed to generate test audio: {e}")
+            # else:
+            #     print("ℹ️  Automatic audio generation only available on macOS")
         
         print("\n" + "="*60)
         print("✅ ASR Service Test Complete!")
