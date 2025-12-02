@@ -34,7 +34,7 @@ async def test_asr_service():
         
         # Test with sample audio
         # Option 1: Use a test audio file if available
-        test_audio_path = Path("models/whisper/Southern Province.m4a")
+        test_audio_path = Path("models/whisper/Southern Province 4.m4a")
         
         if test_audio_path.exists():
             print(f"2️⃣  Testing with audio file: {test_audio_path}")
