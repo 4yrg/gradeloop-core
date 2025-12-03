@@ -1,0 +1,79 @@
+# T3 Clone Detection Configuration
+# Type-3 clones: Similar code with modifications (insertions/deletions/changes)
+
+# Input paths
+input:
+  ast_root: "data/ast/java" # Root directory containing AST files
+  t1_t2_hashes: "data/metadata/t1_t2_hashes.json" # Combined T1/T2 hashes file
+
+# Output paths
+output:
+  metadata_dir: "data/metadata"
+  similarity_json: "data/metadata/t3_similarity.json" # All similarity scores
+  pairs_csv: "data/metadata/t3_pairs.csv" # Clone pairs above threshold
+  statistics_json: "data/metadata/t3_statistics.json" # Detection statistics
+
+# Detection parameters
+detection:
+  # Similarity threshold for Type-3 clones
+  # Range: [0.0, 1.0]
+  # - 1.0 = identical (Type-1)
+  # - 0.9-0.99 = very similar (Type-2 or near-Type-2)
+  # - 0.7-0.89 = similar with modifications (Type-3)
+  # - <0.7 = too different (not clones)
+  similarity_threshold: 0.7
+
+  # Maximum size ratio for comparison
+  # Skip comparison if (larger_size / smaller_size) > max_size_ratio
+  # Rationale: Files with very different sizes are unlikely to be clones
+  # Example: 100 nodes vs 500 nodes = ratio 5.0 (skip if max_size_ratio=3.0)
+  max_size_ratio: 3.0
+
+  # Enable problem-level grouping
+  # Only compare submissions within the same problem_id
+  # Rationale: Students solving different problems produce unrelated code
+  # Setting to false compares ALL pairs (expensive for large datasets)
+  enable_problem_grouping: true
+
+  # Enable parallel processing
+  # Use multiprocessing to speed up similarity computation
+  # Recommended for datasets with >1000 comparisons
+  enable_parallel: true
+
+  # Maximum worker processes
+  # null = use all available CPUs
+  # Set to specific number to limit CPU usage
+  max_workers: null
+
+# Tree Edit Distance costs
+tree_edit_distance:
+  # Cost of inserting a node
+  insert_cost: 1.0
+
+  # Cost of deleting a node
+  delete_cost: 1.0
+
+  # Cost of renaming a node (when node types differ)
+  # Set to 0.0 to allow free renaming (only structure matters)
+  # Set to 1.0 to penalize type changes
+  rename_cost: 1.0
+
+# Performance settings
+performance:
+  # Maximum ASTs to keep in memory cache
+  # Higher = faster but more memory
+  # Lower = slower but less memory
+  ast_cache_size: 1000
+
+  # Progress bar refresh rate (seconds)
+  progress_bar_refresh: 0.1
+
+# Reproducibility
+reproducibility:
+  seed: 42
+
+# Logging
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  file: null # Set to path for file logging, null for console only
