@@ -1,0 +1,94 @@
+# Clone Detection Pipeline Configuration
+# =======================================
+# This file controls the unified T1-T4 clone detection pipeline execution.
+
+# Target language for clone detection
+language: java
+
+# Pipeline execution settings
+execution:
+  # Force re-run all stages even if outputs exist
+  force_rerun: false
+
+  # Stop pipeline execution on first stage failure
+  stop_on_error: true
+
+  # Enable verbose logging
+  verbose: true
+
+# Pipeline stages
+# Each stage can be individually enabled/disabled
+stages:
+  # Stage 1: Data Ingestion
+  # Ingest source code from Project CodeNet dataset
+  data_ingestion:
+    enabled: true
+
+  # Stage 2: Code Normalization
+  # Normalize source code (remove whitespace, comments)
+  normalization:
+    enabled: true
+
+  # Stage 3: Tokenization
+  # Generate token streams using javalang
+  tokenization:
+    enabled: true
+
+  # Stage 4: AST Extraction
+  # Extract Abstract Syntax Trees using tree-sitter
+  ast_extraction:
+    enabled: true
+
+  # Stage 5: T1/T2 Detection
+  # Detect exact (T1) and renamed (T2) clones using hashing
+  t1_t2_detection:
+    enabled: true
+
+  # Stage 6: T3 Detection
+  # Detect similar clones with modifications using AST similarity
+  t3_detection:
+    enabled: true
+
+  # Stage 7: T4 Detection
+  # Detect semantic clones using execution-based validation
+  t4_detection:
+    enabled: true
+
+# Dataset generation settings
+dataset:
+  # Ratio of negative samples to positive samples
+  # 1.0 = balanced (equal negatives and positives)
+  # 0.5 = half as many negatives as positives
+  # 2.0 = twice as many negatives as positives
+  negative_ratio: 1.0
+
+  # Random seed for reproducible sampling
+  seed: 42
+
+# CodeT5+ formatting settings
+codet5:
+  # Dataset split ratios (must sum to 1.0)
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+  # Random seed for reproducible splits
+  seed: 42
+
+# Evaluation settings
+evaluation:
+  # Automatically run evaluation after pipeline completion
+  auto_evaluate: true
+
+  # Use ground truth as predictions for validation
+  # (should achieve perfect scores - useful for testing)
+  validate_mode: false
+
+# Logging configuration
+logging:
+  level: INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Save logs to file
+  save_to_file: true
+  log_file: "data/logs/pipeline.log"
