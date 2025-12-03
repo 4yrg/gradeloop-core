@@ -1,0 +1,13 @@
+input:
+  java_root: "data/raw/java"
+
+output:
+  java_root: "data/normalized/java"
+
+rules:
+  remove_comments: true
+  normalize_whitespace: true
+  strip_blank_lines: true
+
+reproducibility:
+  seed: 42
