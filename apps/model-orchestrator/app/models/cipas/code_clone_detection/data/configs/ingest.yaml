@@ -1,5 +1,5 @@
 dataset:
-  codenet_root: "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet/data"
+  codenet_root: "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet/derived/benchmarks"
 
 languages:
   java:
