@@ -21,3 +21,4 @@ pytorch-lightning
 faiss-cpu
 scikit-learn
 pandas
+javalang
