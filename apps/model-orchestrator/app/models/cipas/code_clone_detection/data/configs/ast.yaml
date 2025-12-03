@@ -1,0 +1,38 @@
+input:
+  java_root: "data/normalized/java"
+  batch_size: 100
+
+output:
+  java_root: "data/ast/java"
+  features_root: "data/features/java"
+  embeddings_root: "data/embeddings/java"
+
+parser:
+  language: "java"
+  include_text: false # Store node types only (best for T3)
+  include_positions: true # Include position information for detailed analysis
+  max_depth: null # No depth limit by default
+
+reproducibility:
+  seed: 42
+
+# Machine Learning Configuration
+ml:
+  embedding_model: "microsoft/codebert-base" # For code embeddings
+  tokenizer_model: "microsoft/codebert-base"
+  max_sequence_length: 512
+  batch_size: 32
+  device: "auto" # auto, cpu, or cuda
+
+# Feature Engineering
+features:
+  extract_structural: true # AST structural features
+  extract_statistical: true # Node count statistics
+  extract_java_specific: true # Java-specific metrics (classes, methods, etc.)
+  extract_complexity: true # Cyclomatic complexity metrics
+
+# Performance Settings
+performance:
+  concurrent_files: 100 # Number of files to process concurrently
+  memory_limit_mb: 4096 # Memory limit for processing
+  enable_caching: true

@@ -231,5 +231,6 @@ pids/
 
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/raw/java/
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/tokens/
-
+apps/model-orchestrator/app/models/cipas/code_clone_detection/data/embeddings/
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/normalized/
+apps/model-orchestrator/app/models/cipas/code_clone_detection/data/ast/
