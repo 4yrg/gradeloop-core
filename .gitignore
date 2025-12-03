@@ -21,6 +21,7 @@ venv/
 .envrc
 /apps/*/.gitignore
 
+
 # =========================
 # Node / React / Next.js
 # =========================
@@ -223,3 +224,9 @@ logs/
 *.err
 tmp/
 pids/
+
+# =========================
+# CIPAS Project
+# =========================
+
+apps/model-orchestrator/app/models/cipas/code_clone_detection/data/raw/java/
