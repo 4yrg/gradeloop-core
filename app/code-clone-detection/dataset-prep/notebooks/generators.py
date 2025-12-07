@@ -6,8 +6,7 @@ rule-based transformations or LLM-based mutations with proper validation.
 """
 
 import re
-import json
-from typing import Optional, Dict, Any
+from typing import Optional
 import subprocess
 
 try:
@@ -143,16 +142,6 @@ Original code:
 Mutated code:"""
     
     try:
-        # Prepare the request payload
-        payload = {
-            "model": "codegemma:7b",
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0.7,
-            }
-        }
-        
         # Call ollama via subprocess
         result = subprocess.run(
             ['ollama', 'run', 'codegemma:7b'],
