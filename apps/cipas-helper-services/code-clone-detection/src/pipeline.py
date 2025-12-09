@@ -188,11 +188,10 @@ class CloneDetectionPipeline:
         return clone_pairs
     
     def _save_results(self) -> None:
-        """Save fragments and clone pairs to disk."""
+        """Save fragments and clone pairs to disk in Parquet format."""
         logger.info("Step 4: Saving results")
         
         output_config = self.config.get("output", {})
-        output_format = output_config.get("format", "parquet")
         compression = output_config.get("compression", "snappy")
         include_source = output_config.get("include_source", True)
         
@@ -202,21 +201,19 @@ class CloneDetectionPipeline:
         
         # Save fragments
         if include_source:
-            fragments_path = output_dir / f"fragments.{output_format}"
+            fragments_path = output_dir / "fragments.parquet"
             save_fragments(
                 self.fragments,
                 fragments_path,
-                format=output_format,
-                compression=compression if output_format == "parquet" else None
+                compression=compression
             )
         
         # Save clone pairs
-        clones_path = output_dir / f"clone_pairs.{output_format}"
+        clones_path = output_dir / "clone_pairs.parquet"
         save_clone_pairs(
             self.clone_pairs,
             clones_path,
-            format=output_format,
-            compression=compression if output_format == "parquet" else None
+            compression=compression
         )
         
         logger.info(f"Results saved to {output_dir}")

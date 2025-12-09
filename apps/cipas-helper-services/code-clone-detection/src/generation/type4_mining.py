@@ -10,6 +10,21 @@ CodeNet, competitive programming submissions) is effective because:
 2. Different programmers use different algorithms/approaches
 3. Submission files are already organized by problem ID
 
+ALLOWED CHANGES IN TYPE-4 CLONES:
+    ✅ Different algorithms (bubble sort → merge sort, linear → binary search)
+    ✅ Different control flow (loop → recursion, if-else → dict lookup)
+    ✅ Different data structures (array → hash map, list → set)
+    ✅ Different order of operations (forward → backward processing)
+    ✅ Completely different code structure (procedural → OOP)
+    ✅ Different identifiers, data types, or literals
+    ✅ Different number of statements or functions
+    ✅ Different programming paradigms (imperative → functional)
+    ✅ Different built-ins or libraries
+    ✅ Different mathematical approaches (iteration → formula)
+
+REQUIREMENT:
+    ❗ Both pieces of code MUST compute the same result or perform the same task
+
 This module mines Type-4 clone pairs from directory structures where files
 are grouped by problem identifiers in their filenames.
 

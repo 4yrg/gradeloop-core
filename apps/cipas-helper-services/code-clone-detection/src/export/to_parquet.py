@@ -267,6 +267,74 @@ def validate_schema(pairs: list[dict[str, Any]]) -> tuple[bool, list[str]]:
     return is_valid, errors
 
 
+def export_by_language(
+    pairs: list[dict[str, Any]],
+    out_dir: str,
+    filename_prefix: str = "clone_dataset"
+) -> dict[str, str]:
+    """
+    Export pairs to separate Parquet files per language.
+    
+    Creates one parquet file for each language found in the dataset.
+    Useful for multi-language datasets where each language should be
+    stored separately.
+    
+    Args:
+        pairs: List of pair dictionaries (must have 'lang' field)
+        out_dir: Output directory for language-specific files
+        filename_prefix: Prefix for output filenames
+        
+    Returns:
+        Dictionary mapping language -> file path
+        
+    Raises:
+        ValueError: If pairs are empty or missing 'lang' field
+        
+    Examples:
+        >>> pairs = [
+        ...     {'id': '1', 'lang': 'python', 'code_a': 'x=1', 'code_b': 'x = 1', 'type': 'type1'},
+        ...     {'id': '2', 'lang': 'java', 'code_a': 'int x=1;', 'code_b': 'int x = 1;', 'type': 'type1'}
+        ... ]
+        >>> paths = export_by_language(pairs, "output/by_language")
+        >>> 'python' in paths and 'java' in paths
+        True
+    """
+    if not pairs:
+        raise ValueError("Cannot export empty pairs list")
+    
+    # Check for lang field
+    if 'lang' not in pairs[0]:
+        raise ValueError("Pairs must have 'lang' field for language-based export")
+    
+    logger.info(f"Exporting {len(pairs)} pairs by language to {out_dir}")
+    
+    # Convert to DataFrame for easy grouping
+    df = pd.DataFrame(pairs)
+    
+    # Create output directory
+    out_dir_path = Path(out_dir)
+    out_dir_path.mkdir(parents=True, exist_ok=True)
+    
+    # Export each language separately
+    paths = {}
+    languages = df['lang'].unique()
+    
+    for lang in languages:
+        lang_df = df[df['lang'] == lang]
+        lang_pairs = lang_df.to_dict('records')
+        
+        filename = f"{filename_prefix}_{lang}.parquet"
+        file_path = str(out_dir_path / filename)
+        
+        export_pairs(lang_pairs, file_path)
+        paths[lang] = file_path
+        
+        logger.info(f"Exported {len(lang_pairs)} {lang} pairs to {filename}")
+    
+    logger.info(f"Exported {len(languages)} languages: {', '.join(languages)}")
+    return paths
+
+
 def export_summary(pairs: list[dict[str, Any]], out_path: str) -> str:
     """
     Export summary statistics to text file.

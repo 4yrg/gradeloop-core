@@ -5,10 +5,25 @@ Type-3 clones have similar functionality but with statement-level modifications
 such as adding/removing statements, changing control flow, or restructuring code.
 This module uses a back-translation approach: code → summary → regenerated code.
 
+Type-3 Transformations (must remain mostly similar):
+    - Identifier renaming (same as Type-2)
+    - Literal changes
+    - Formatting and comments
+    - Data type modifications
+    - Adding or removing statements (extra lines, missing lines, added checks)
+    - Small helper operations
+    - Reordering closely related statements (preserving control flow)
+    - Small changes in control flow (extra if guards, logging, added computation steps)
+
+Critical Requirements:
+    - The two code fragments must be MOSTLY SIMILAR
+    - Core logic remains RECOGNIZABLE and ALIGNED
+    - NOT completely rewritten (otherwise becomes Type-4)
+
 The LLM-based approach:
 1. Summarize original code to capture high-level functionality
-2. Generate new code from summary with different implementation
-3. Result is functionally similar but structurally different
+2. Generate new code from summary with Type-3 modifications
+3. Result is functionally similar but structurally different within Type-3 constraints
 
 This module provides a mock implementation with a clean adapter interface
 that can be replaced with real LLM backends (OpenAI, Anthropic, local models).
@@ -20,6 +35,10 @@ Classes:
 Functions:
     produce_type3: Generate Type-3 clone using back-translation
     create_llm_client: Factory function for LLM client creation
+    
+See Also:
+    - TYPE3_CLONE_SPECIFICATION.md: Complete Type-3 specification
+    - ollama_client.py: Production LLM client for Type-3 generation
 """
 
 import logging
@@ -197,16 +216,25 @@ def produce_type3(
     """
     Generate a Type-3 clone using back-translation approach.
     
-    Type-3 clones implement similar functionality with structural differences:
-    - Different statement ordering
-    - Added/removed statements
-    - Modified control flow
-    - Alternative algorithms
+    Type-3 clones implement similar functionality with statement-level modifications:
+    - Identifier renaming (variables, functions, parameters)
+    - Literal value changes
+    - Formatting and comment variations
+    - Data type modifications
+    - Adding statements (validation, logging, extra checks, helper operations)
+    - Removing statements (non-essential lines)
+    - Reordering closely related statements (safe reordering only)
+    - Small control flow changes (extra if guards, additional logging, computation steps)
+    
+    Critical constraints:
+    - Code fragments must be MOSTLY SIMILAR
+    - Core logic remains RECOGNIZABLE and ALIGNED
+    - NOT completely rewritten (that would be Type-4)
     
     Process:
     1. Summarize original code (code → summary)
-    2. Generate new implementation from summary (summary → code')
-    3. Result has similar functionality but different structure
+    2. Generate new implementation from summary with Type-3 transformations (summary → code')
+    3. Result has similar functionality but modified structure within Type-3 bounds
     
     Args:
         code: Original source code
@@ -214,7 +242,7 @@ def produce_type3(
         llm_client: LLM adapter for summarization and generation
         
     Returns:
-        Type-3 clone with similar functionality but different structure
+        Type-3 clone with similar functionality but Type-3 modifications
         
     Examples:
         >>> client = MockLLMClient()
@@ -224,36 +252,41 @@ def produce_type3(
         True
         >>> clone != original
         True
+        
+    See Also:
+        - TYPE3_CLONE_SPECIFICATION.md for complete transformation rules
+        - ollama_client.py for production LLM implementation
     """
     if not code or not code.strip():
         logger.warning("Empty or whitespace-only code provided")
-        return code
+        return ""
     
     try:
         # Step 1: Summarize the original code
         logger.debug(f"Summarizing {lang} code...")
         summary = llm_client.summarize(code, lang)
         
-        if not summary:
-            logger.error("Failed to generate summary")
-            return code
+        if not summary or not summary.strip():
+            logger.warning("Failed to generate summary, returning empty string")
+            return ""
         
-        logger.info(f"Generated summary: {summary[:100]}...")
+        logger.debug(f"Generated summary: {summary[:100]}...")
         
         # Step 2: Generate new code from summary
         logger.debug(f"Generating new {lang} code from summary...")
         generated_code = llm_client.generate_from_summary(summary, lang)
         
-        if not generated_code:
-            logger.error("Failed to generate code from summary")
-            return code
+        if not generated_code or not generated_code.strip():
+            logger.warning("Failed to generate code from summary, returning empty string")
+            return ""
         
-        logger.info(f"Generated Type-3 clone ({len(generated_code)} chars)")
+        logger.debug(f"Generated Type-3 clone ({len(generated_code)} chars)")
         return generated_code
         
     except Exception as e:
-        logger.error(f"Error during Type-3 generation: {e}")
-        return code
+        logger.warning(f"Error during Type-3 generation: {e}, returning empty string to skip this sample")
+        # Return empty string to indicate failure - the caller should skip this sample
+        return ""
 
 
 def produce_type3_with_context(
@@ -334,10 +367,13 @@ def create_llm_client(
             "Local model client not yet implemented. "
             "Implement LocalLLMClient extending BaseLLMClient."
         )
+    elif provider_lower == "ollama":
+        from .ollama_client import OllamaLLMClient
+        return OllamaLLMClient(config)
     else:
         raise ValueError(
             f"Unsupported LLM provider: {provider}. "
-            f"Supported: mock, openai, anthropic, local"
+            f"Supported: mock, openai, anthropic, local, ollama"
         )
 
 
