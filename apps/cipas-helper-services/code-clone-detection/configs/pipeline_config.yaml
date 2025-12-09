@@ -1,0 +1,60 @@
+# Code Clone Detection Pipeline Configuration
+
+# Data source settings
+data_source:
+  type: "local" # local, github, or custom
+  input_dir: "data/raw"
+  output_dir: "data/processed"
+  extensions: [".py", ".java", ".js", ".cpp"]
+
+# Parsing settings
+parser:
+  enabled: true
+  language: "python" # python, java, javascript, cpp
+  extract_functions: true
+  extract_classes: true
+  min_lines: 5 # Minimum lines for a code fragment
+
+# Feature extraction
+features:
+  token_based: true
+  ast_based: true
+  semantic_based: false # Requires LLM
+  metrics:
+    - "loc" # Lines of code
+    - "complexity" # Cyclomatic complexity
+    - "token_count"
+
+# Clone detection settings
+clone_detection:
+  similarity_threshold: 0.85
+  clone_types: ["type1", "type2", "type3", "type4"]
+  algorithms:
+    - name: "token_similarity"
+      weight: 0.4
+    - name: "ast_similarity"
+      weight: 0.3
+    - name: "semantic_similarity"
+      weight: 0.3
+
+# LLM settings (optional)
+llm:
+  enabled: false
+  provider: "mock" # mock, openai, anthropic
+  model: "gpt-4"
+  temperature: 0.1
+  max_tokens: 1000
+  batch_size: 10
+
+# Output settings
+output:
+  format: "parquet" # parquet, csv, json
+  include_source: true
+  include_embeddings: false
+  compression: "snappy"
+
+# Logging
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR
+  file: "logs/pipeline.log"
+  console: true
