@@ -39,8 +39,18 @@ logs/
 # Data
 data/raw/*
 data/processed/*
+data/work/*
+data/tmp/*
+data/output/*
+data/cache/*
+data/checkpoints/*
+data/logs/*
+data/metadata/*
+data/export/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/work/.gitkeep
+!data/output/.gitkeep
 
 # IDE
 .vscode/

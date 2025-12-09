@@ -3,7 +3,7 @@
 # Data source settings
 data_source:
   type: "local" # local, github, or custom
-  input_dir: "data/raw"
+  input_dir: "D:/Projects/SLIIT/Research/Datasets/Project_CodeNet"
   output_dir: "data/processed"
   extensions: [".py", ".java", ".js", ".cpp"]
 
@@ -48,7 +48,7 @@ llm:
 
 # Output settings
 output:
-  format: "parquet" # parquet, csv, json
+  # Output format is Parquet for optimal performance and compression
   include_source: true
   include_embeddings: false
   compression: "snappy"

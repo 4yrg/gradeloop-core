@@ -1,7 +1,7 @@
 """
 Data persistence utilities.
 
-Handles reading and writing datasets in various formats (CSV, Parquet, JSON).
+Handles reading and writing datasets in Parquet format for optimal performance.
 """
 
 import json
@@ -19,20 +19,18 @@ logger = logging.getLogger(__name__)
 def save_fragments(
     fragments: List[CodeFragment],
     output_path: str | Path,
-    format: str = "parquet",
     compression: Optional[str] = "snappy"
 ) -> None:
     """
-    Save code fragments to file.
+    Save code fragments to Parquet file.
     
     Args:
         fragments: List of CodeFragment objects
-        output_path: Output file path
-        format: Output format (parquet, csv, json)
-        compression: Compression type for parquet
+        output_path: Output file path (should end in .parquet)
+        compression: Compression type for parquet (default: snappy)
         
     Example:
-        >>> save_fragments(fragments, "data/fragments.parquet", format="parquet")
+        >>> save_fragments(fragments, "data/fragments.parquet")
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -40,35 +38,19 @@ def save_fragments(
     # Convert to list of dicts
     data = [frag.to_dict() for frag in fragments]
     
-    if format == "parquet":
-        df = pd.DataFrame(data)
-        df.to_parquet(output_path, compression=compression, index=False)
-        logger.info(f"Saved {len(fragments)} fragments to {output_path} (parquet)")
-    
-    elif format == "csv":
-        df = pd.DataFrame(data)
-        df.to_csv(output_path, index=False)
-        logger.info(f"Saved {len(fragments)} fragments to {output_path} (csv)")
-    
-    elif format == "json":
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
-        logger.info(f"Saved {len(fragments)} fragments to {output_path} (json)")
-    
-    else:
-        raise ValueError(f"Unsupported format: {format}")
+    df = pd.DataFrame(data)
+    df.to_parquet(output_path, compression=compression, index=False)
+    logger.info(f"Saved {len(fragments)} fragments to {output_path}")
 
 
 def load_fragments(
-    input_path: str | Path,
-    format: Optional[str] = None
+    input_path: str | Path
 ) -> List[CodeFragment]:
     """
-    Load code fragments from file.
+    Load code fragments from Parquet file.
     
     Args:
-        input_path: Input file path
-        format: Input format (auto-detected if None)
+        input_path: Input Parquet file path
         
     Returns:
         List of CodeFragment objects
@@ -83,24 +65,8 @@ def load_fragments(
     if not input_path.exists():
         raise FileNotFoundError(f"File not found: {input_path}")
     
-    # Auto-detect format
-    if format is None:
-        format = input_path.suffix[1:]  # Remove leading dot
-    
-    if format == "parquet":
-        df = pd.read_parquet(input_path)
-        data = df.to_dict('records')
-    
-    elif format == "csv":
-        df = pd.read_csv(input_path)
-        data = df.to_dict('records')
-    
-    elif format == "json":
-        with open(input_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    
-    else:
-        raise ValueError(f"Unsupported format: {format}")
+    df = pd.read_parquet(input_path)
+    data = df.to_dict('records')
     
     # Convert to CodeFragment objects
     fragments = [CodeFragment.from_dict(item) for item in data]
@@ -112,52 +78,34 @@ def load_fragments(
 def save_clone_pairs(
     clone_pairs: List[ClonePair],
     output_path: str | Path,
-    format: str = "parquet",
     compression: Optional[str] = "snappy"
 ) -> None:
     """
-    Save clone pairs to file.
+    Save clone pairs to Parquet file.
     
     Args:
         clone_pairs: List of ClonePair objects
-        output_path: Output file path
-        format: Output format (parquet, csv, json)
-        compression: Compression type for parquet
+        output_path: Output file path (should end in .parquet)
+        compression: Compression type for parquet (default: snappy)
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
     data = [pair.to_dict() for pair in clone_pairs]
     
-    if format == "parquet":
-        df = pd.DataFrame(data)
-        df.to_parquet(output_path, compression=compression, index=False)
-        logger.info(f"Saved {len(clone_pairs)} clone pairs to {output_path} (parquet)")
-    
-    elif format == "csv":
-        df = pd.DataFrame(data)
-        df.to_csv(output_path, index=False)
-        logger.info(f"Saved {len(clone_pairs)} clone pairs to {output_path} (csv)")
-    
-    elif format == "json":
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
-        logger.info(f"Saved {len(clone_pairs)} clone pairs to {output_path} (json)")
-    
-    else:
-        raise ValueError(f"Unsupported format: {format}")
+    df = pd.DataFrame(data)
+    df.to_parquet(output_path, compression=compression, index=False)
+    logger.info(f"Saved {len(clone_pairs)} clone pairs to {output_path}")
 
 
 def load_clone_pairs(
-    input_path: str | Path,
-    format: Optional[str] = None
+    input_path: str | Path
 ) -> List[ClonePair]:
     """
-    Load clone pairs from file.
+    Load clone pairs from Parquet file.
     
     Args:
-        input_path: Input file path
-        format: Input format (auto-detected if None)
+        input_path: Input Parquet file path
         
     Returns:
         List of ClonePair objects
@@ -167,23 +115,8 @@ def load_clone_pairs(
     if not input_path.exists():
         raise FileNotFoundError(f"File not found: {input_path}")
     
-    if format is None:
-        format = input_path.suffix[1:]
-    
-    if format == "parquet":
-        df = pd.read_parquet(input_path)
-        data = df.to_dict('records')
-    
-    elif format == "csv":
-        df = pd.read_csv(input_path)
-        data = df.to_dict('records')
-    
-    elif format == "json":
-        with open(input_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    
-    else:
-        raise ValueError(f"Unsupported format: {format}")
+    df = pd.read_parquet(input_path)
+    data = df.to_dict('records')
     
     clone_pairs = [ClonePair.from_dict(item) for item in data]
     logger.info(f"Loaded {len(clone_pairs)} clone pairs from {input_path}")

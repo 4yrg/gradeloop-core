@@ -3,52 +3,52 @@
 
 # LLM adapter configuration
 llm:
-  # Provider type: mock, openai, anthropic, huggingface
-  provider: mock
-  
+  # Provider type: mock, openai, anthropic, huggingface, ollama
+  provider: ollama
+
   # Model name/identifier
-  model_name: "mock-local"
-  
+  model_name: "codegemma:2b"
+
   # Batch size for processing
   batch_size: 4
-  
+
   # Additional LLM settings
   settings:
     # Temperature for generation (0.0-1.0)
     temperature: 0.1
-    
+
     # Maximum tokens for generation
     max_tokens: 1000
-    
+
     # Top-p sampling
     top_p: 0.9
-    
+
     # Timeout for API calls (seconds)
-    timeout: 30
-    
+    timeout: 120
+
     # Retry settings
     max_retries: 3
     retry_delay: 1
-  
+
   # Embedding configuration
   embeddings:
     # Enable embedding generation
     enabled: false
-    
+
     # Embedding dimension
     dimension: 128
-    
+
     # Embedding model
     model: "mock-embeddings"
-  
+
   # API configuration (if using external provider)
   api:
     # API key (use environment variable in production)
     api_key: null
-    
-    # API base URL
-    base_url: null
-    
+
+    # API base URL (default Ollama endpoint)
+    base_url: "http://localhost:11434"
+
     # Organization ID (if applicable)
     organization: null
 
@@ -56,32 +56,32 @@ llm:
 tokenizers:
   java: "default"
   python: "libcst"
-  
+
   # Tokenizer settings
   settings:
     java:
       # Tokenization strategy
       strategy: "whitespace"
-      
+
       # Include comments in tokens
       include_comments: false
-      
+
       # Normalize identifiers
       normalize_identifiers: false
-      
+
       # Maximum token length
       max_token_length: 100
-    
+
     python:
       # Use LibCST for Python tokenization
       use_libcst: true
-      
+
       # Include docstrings
       include_docstrings: true
-      
+
       # Preserve whitespace
       preserve_whitespace: false
-      
+
       # Parse encoding
       encoding: "utf-8"
 
@@ -89,37 +89,37 @@ tokenizers:
 formatters:
   java: "clang-format"
   python: "black"
-  
+
   # Formatter settings
   settings:
     java:
       # clang-format style
       style: "Google"
-      
+
       # Configuration options
       options:
         IndentWidth: 4
         ColumnLimit: 100
         UseTab: Never
-      
+
       # Executable path (null = use PATH)
       executable: null
-    
+
     python:
       # Black configuration
       line_length: 88
-      
+
       # Target Python versions
       target_versions:
         - "py310"
         - "py311"
-      
+
       # Skip string normalization
       skip_string_normalization: false
-      
+
       # Preview features
       preview: false
-      
+
       # Executable path (null = use PATH)
       executable: null
 
@@ -129,17 +129,17 @@ tools:
   linters:
     java: "checkstyle"
     python: "flake8"
-  
+
   # Code complexity analyzers
   complexity:
     java: "pmd"
     python: "radon"
-  
+
   # AST parsers
   parsers:
     java: "tree-sitter"
     python: "ast"
-  
+
   # Code similarity tools
   similarity:
     algorithm: "token-based"
@@ -149,13 +149,13 @@ tools:
 cache:
   # Enable model/result caching
   enabled: true
-  
+
   # Cache directory
-  cache_dir: "./data/cache/models"
-  
+  cache_dir: "data/cache/models"
+
   # Cache expiration (hours)
   expiration: 24
-  
+
   # Maximum cache size (MB)
   max_size: 1024
 
@@ -163,12 +163,12 @@ cache:
 performance:
   # Use GPU if available
   use_gpu: false
-  
+
   # Number of threads for CPU operations
   num_threads: 4
-  
+
   # Memory limit per model (MB)
   memory_limit: 2048
-  
+
   # Enable mixed precision
   mixed_precision: false

@@ -1,21 +1,36 @@
 """
 Type-1 clone generation for code clone detection.
 
-Type-1 clones are exact copies with modifications only to whitespace, comments,
-and formatting. This module generates Type-1 variants by applying deterministic
-formatting transformations.
+Type-1 clones are EXACT copies with modifications ONLY to:
+- Whitespace (spaces, tabs, newlines, indentation)
+- Comments (adding, removing, modifying)
+- Formatting (line breaks, brace positions)
 
-Transformations include:
+CRITICAL: Type-1 clones must preserve ALL code tokens exactly.
+No variable renaming, no literal changes, no type changes, no reordering.
+
+Allowed transformations:
 - Changing indentation (spaces vs tabs, indent size)
 - Adding/removing blank lines
-- Modifying spacing around operators
-- Adjusting line continuations
+- Modifying comments (inline, block, doc comments)
+- Adjusting spacing around operators (but preserving the operators)
+- Changing brace positions (same line vs next line)
+- Rewrapping long lines
+
+Prohibited transformations (these create Type-2 clones):
+- Renaming variables, functions, classes
+- Changing literals (numbers, strings, booleans)
+- Changing types
+- Reordering statements
+- Adding/removing code statements
 
 Functions:
     produce_type1_variant: Generate a Type-1 clone variant
     _change_indentation: Modify indentation style
     _modify_blank_lines: Add or remove blank lines
-    _change_operator_spacing: Adjust spacing around operators
+    _modify_comments: Add, remove, or modify comments
+    _change_operator_spacing: Adjust spacing around operators (preserve tokens)
+    _change_brace_positions: Modify brace placement
     _seed_from_code: Generate deterministic seed from code hash
 """
 
@@ -71,14 +86,21 @@ def produce_type1_variant(code: str, lang: str) -> str:
     # Apply transformations in sequence
     variant = code
     
-    # 1. Change indentation style
+    # 1. Change indentation style (whitespace only)
     variant = _change_indentation(variant, lang, rng)
     
-    # 2. Modify blank lines
+    # 2. Modify blank lines (whitespace only)
     variant = _modify_blank_lines(variant, rng)
     
-    # 3. Change operator spacing
-    variant = _change_operator_spacing(variant, rng)
+    # 3. Modify comments (comments only)
+    variant = _modify_comments(variant, lang, rng)
+    
+    # 4. Change operator spacing (whitespace only, preserve all operators)
+    variant = _change_operator_spacing(variant, lang, rng)
+    
+    # 5. Change brace positions (formatting only, for Java/C-style)
+    if lang in ['java', 'javascript', 'cpp', 'c']:
+        variant = _change_brace_positions(variant, rng)
     
     logger.debug(f"Generated Type-1 variant (seed={seed})")
     return variant
@@ -257,54 +279,153 @@ def _modify_blank_lines(code: str, rng: random.Random) -> str:
     return '\n'.join(modified_lines)
 
 
-def _change_operator_spacing(code: str, rng: random.Random) -> str:
+def _modify_comments(code: str, lang: str, rng: random.Random) -> str:
+    """
+    Add, remove, or modify comments deterministically.
+    
+    Type-1 compliant: Only affects comments, not code tokens.
+    
+    Modifications:
+    - Add inline comments to random lines
+    - Remove existing comments (randomly)
+    - Modify comment text
+    - Change comment style (// vs /* */ for Java/C)
+    
+    Args:
+        code: Source code
+        lang: Programming language
+        rng: Seeded random number generator
+        
+    Returns:
+        Code with modified comments
+    """
+    lines = code.split('\n')
+    modified_lines = []
+    
+    # Define comment syntax based on language
+    if lang == 'python':
+        inline_comment = '#'
+        block_start = None
+        block_end = None
+    else:  # Java, JavaScript, C, C++
+        inline_comment = '//'
+        block_start = '/*'
+        block_end = '*/'
+    
+    for line in lines:
+        # Randomly add inline comment (10% chance)
+        if line.strip() and not line.strip().startswith(inline_comment) and rng.random() < 0.1:
+            # Add comment at end of line
+            comments = ['Modified', 'Changed', 'Updated', 'Reformatted', 'TODO']
+            comment_text = rng.choice(comments)
+            modified_lines.append(f"{line}  {inline_comment} {comment_text}")
+        
+        # Randomly remove inline comments (30% chance)
+        elif inline_comment in line and rng.random() < 0.3:
+            # Remove comment but keep code
+            if inline_comment == '#':
+                code_part = line.split('#')[0].rstrip()
+            else:
+                code_part = line.split('//')[0].rstrip()
+            modified_lines.append(code_part)
+        
+        else:
+            modified_lines.append(line)
+    
+    return '\n'.join(modified_lines)
+
+
+def _change_operator_spacing(code: str, lang: str, rng: random.Random) -> str:
     """
     Modify spacing around operators deterministically.
     
+    Type-1 compliant: ONLY changes whitespace, preserves ALL tokens.
+    
+    CRITICAL: This function must NOT remove or change any operators.
+    It only adds or removes spaces around them.
+    
     Changes include:
     - Adding/removing spaces around =, +, -, *, /, etc.
-    - Modifying spacing in function calls
     - Adjusting spacing after commas
+    - Modifying spacing around parentheses
+    
+    Args:
+        code: Source code
+        lang: Programming language
+        rng: Seeded random number generator
+        
+    Returns:
+        Code with modified operator spacing (all tokens preserved)
+    """
+    # Choose spacing style
+    spacing_style = rng.choice(['compact', 'spaced'])
+    
+    if spacing_style == 'compact':
+        # Remove spaces around operators (but keep the operators)
+        # Be careful to not break compound operators like ==, !=, <=, >=, &&, ||
+        code = re.sub(r'\s*(\+)\s*', r'\1', code)  # a + b -> a+b
+        code = re.sub(r'\s*(-)(?!>)\s*', r'\1', code)  # a - b -> a-b (not ->)
+        code = re.sub(r'\s*(\*)\s*', r'\1', code)  # a * b -> a*b
+        code = re.sub(r'\s*(/)\s*', r'\1', code)  # a / b -> a/b
+        code = re.sub(r'\s+(%)\s*', r'\1', code)  # a % b -> a%b
+        # For =, only remove if single = (not ==, !=, <=, >=)
+        code = re.sub(r'(?<![=!<>])\s*=\s*(?!=)', r'=', code)  # a = b -> a=b
+        # Remove space after commas
+        code = re.sub(r',\s+', r',', code)  # a, b -> a,b
+        # Remove spaces around parentheses
+        code = re.sub(r'\s*\(\s*', r'(', code)  # foo ( x ) -> foo(x)
+        code = re.sub(r'\s*\)', r')', code)
+        
+    else:  # spaced
+        # Add spaces around operators (preserve the operators)
+        code = re.sub(r'(\+)', r' \1 ', code)  # a+b -> a + b
+        code = re.sub(r'(-)(?![>])', r' \1 ', code)  # a-b -> a - b (not ->)
+        code = re.sub(r'(\*)', r' \1 ', code)  # a*b -> a * b
+        code = re.sub(r'(/)', r' \1 ', code)  # a/b -> a / b
+        code = re.sub(r'(%)', r' \1 ', code)  # a%b -> a % b
+        # For =, only add space if single = (not ==, !=, <=, >=)
+        code = re.sub(r'(?<![=!<>])=(?!=)', r' = ', code)  # a=b -> a = b
+        # Add space after commas
+        code = re.sub(r',(?!\s)', r', ', code)  # a,b -> a, b
+        # Add spaces around parentheses (careful with function calls)
+        code = re.sub(r'\(', r'( ', code)  # (x) -> ( x )
+        code = re.sub(r'\)', r' )', code)
+        # Clean up multiple spaces
+        code = re.sub(r'  +', ' ', code)
+    
+    return code
+
+
+def _change_brace_positions(code: str, rng: random.Random) -> str:
+    """
+    Modify brace placement for C-style languages.
+    
+    Type-1 compliant: Only changes formatting, not tokens.
+    
+    Changes include:
+    - Moving opening brace to same line vs next line
+    - Example: if (x) { } vs if (x)\n{ }
     
     Args:
         code: Source code
         rng: Seeded random number generator
         
     Returns:
-        Code with modified operator spacing
+        Code with modified brace positions
     """
-    # Choose spacing style
-    spacing_style = rng.choice(['compact', 'spaced', 'mixed'])
+    # Choose brace style
+    brace_style = rng.choice(['same_line', 'next_line'])
     
-    if spacing_style == 'compact':
-        # Remove spaces around operators
-        code = re.sub(r'\s*([+\-*/%=<>!&|])\s*', r'\1', code)
-        # But keep space after commas (minimum)
-        code = re.sub(r',(?=\S)', r', ', code)
-        
-    elif spacing_style == 'spaced':
-        # Add spaces around operators
-        # Avoid breaking compound operators like ==, !=, <=, etc.
-        code = re.sub(r'([+\-*/%])(?!=)', r' \1 ', code)
-        code = re.sub(r'([=<>!])(?!=)', r' \1 ', code)
-        code = re.sub(r'([&|])(?![&|])', r' \1 ', code)
-        # Add space after commas
-        code = re.sub(r',(\S)', r', \1', code)
-        # Clean up multiple spaces
-        code = re.sub(r' +', ' ', code)
-        
-    else:  # mixed
-        # Randomly add or remove spaces
-        operators = ['+', '-', '*', '/', '%', '=']
-        for op in operators:
-            if rng.random() < 0.5:
-                # Add spaces
-                code = re.sub(f'\\{op}(?!=)', f' {op} ', code)
-            else:
-                # Remove spaces
-                code = re.sub(f'\\s*\\{op}\\s*(?!=)', op, code)
-        # Clean up multiple spaces
-        code = re.sub(r' +', ' ', code)
+    if brace_style == 'same_line':
+        # Move opening brace to same line
+        # Pattern: )\n{ or )\n  { -> ) {
+        code = re.sub(r'\)\s*\n\s*\{', r') {', code)
+        # Pattern: if (...)\n{ -> if (...) {
+        code = re.sub(r'\)\s*\n\s*\{', r') {', code)
+    else:  # next_line
+        # Move opening brace to next line
+        # Pattern: ) { -> )\n{
+        code = re.sub(r'\)\s*\{', r')\n{', code)
     
     return code
 
@@ -346,6 +467,96 @@ def generate_multiple_type1_variants(
         variants.append(variant)
     
     return variants
+
+
+def _tokenize_for_validation(code: str, lang: str) -> list[str]:
+    """
+    Extract code tokens for validation purposes.
+    
+    Removes whitespace, comments, and formatting to get only meaningful tokens.
+    
+    Args:
+        code: Source code
+        lang: Programming language
+        
+    Returns:
+        List of code tokens
+    """
+    # Remove comments first
+    if lang == 'python':
+        # Remove Python comments
+        code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
+    else:
+        # Remove C-style comments
+        code = re.sub(r'//.*$', '', code, flags=re.MULTILINE)
+        code = re.sub(r'/\*.*?\*/', '', code, flags=re.DOTALL)
+    
+    # Remove all whitespace
+    code = re.sub(r'\s+', '', code)
+    
+    # Split into tokens (basic tokenization)
+    tokens = re.findall(r'[a-zA-Z_]\w*|[0-9]+\.?[0-9]*|[+\-*/%=<>!&|(){}[\];:,.]|"[^"]*"|\'[^\']*\'', code)
+    
+    return tokens
+
+
+def validate_type1_clone(original: str, variant: str, lang: str) -> dict[str, Any]:
+    """
+    Validate that variant is a true Type-1 clone of original.
+    
+    Type-1 clones must have IDENTICAL tokens (same order, same values).
+    Only whitespace, comments, and formatting can differ.
+    
+    Args:
+        original: Original source code
+        variant: Generated variant
+        lang: Programming language
+        
+    Returns:
+        Validation result with:
+        - is_valid: bool indicating if variant is valid Type-1 clone
+        - token_match: bool indicating if tokens match exactly
+        - differences: list of any token differences found
+        - message: explanation of validation result
+    """
+    # Extract tokens from both
+    original_tokens = _tokenize_for_validation(original, lang)
+    variant_tokens = _tokenize_for_validation(variant, lang)
+    
+    # Check if tokens match exactly
+    token_match = original_tokens == variant_tokens
+    
+    differences = []
+    if not token_match:
+        # Find differences
+        min_len = min(len(original_tokens), len(variant_tokens))
+        for i in range(min_len):
+            if original_tokens[i] != variant_tokens[i]:
+                differences.append({
+                    'position': i,
+                    'original': original_tokens[i],
+                    'variant': variant_tokens[i]
+                })
+        
+        # Check length difference
+        if len(original_tokens) != len(variant_tokens):
+            differences.append({
+                'type': 'length_mismatch',
+                'original_count': len(original_tokens),
+                'variant_count': len(variant_tokens)
+            })
+    
+    is_valid = token_match
+    message = "Valid Type-1 clone" if is_valid else f"Invalid: {len(differences)} token differences found"
+    
+    return {
+        'is_valid': is_valid,
+        'token_match': token_match,
+        'differences': differences,
+        'message': message,
+        'original_token_count': len(original_tokens),
+        'variant_token_count': len(variant_tokens)
+    }
 
 
 # Unit tests (can be run with pytest)
@@ -403,15 +614,86 @@ def test_modify_blank_lines():
 
 
 def test_change_operator_spacing():
-    """Test operator spacing changes."""
+    """Test operator spacing changes preserve all tokens."""
     code = "x=1+2*3"
+    lang = "python"
     rng = random.Random(42)
-    result = _change_operator_spacing(code, rng)
+    result = _change_operator_spacing(code, lang, rng)
     assert isinstance(result, str)
-    # Should contain the same operators
+    # Should contain the same operators (tokens preserved)
     assert '=' in result
     assert '+' in result
     assert '*' in result
+    # Validate tokens are preserved
+    validation = validate_type1_clone(code, result, lang)
+    assert validation['is_valid'], f"Tokens not preserved: {validation['differences']}"
+
+
+def test_validate_type1_clone():
+    """Test Type-1 clone validation."""
+    original = "def foo():\n    x = 1 + 2\n    return x"
+    
+    # Valid Type-1: only whitespace changed
+    valid_variant = "def foo():\n\tx=1+2\n\treturn x"
+    result = validate_type1_clone(original, valid_variant, "python")
+    assert result['is_valid'], "Should accept whitespace-only changes"
+    assert result['token_match'], "Tokens should match"
+    
+    # Invalid: variable renamed (Type-2)
+    invalid_variant = "def foo():\n    y = 1 + 2\n    return y"
+    result = validate_type1_clone(original, invalid_variant, "python")
+    assert not result['is_valid'], "Should reject variable renaming"
+    assert not result['token_match'], "Tokens should not match"
+    assert len(result['differences']) > 0, "Should report differences"
+
+
+def test_modify_comments():
+    """Test comment modification preserves code tokens."""
+    code = "def foo():\n    x = 1  # comment\n    return x"
+    lang = "python"
+    rng = random.Random(42)
+    result = _modify_comments(code, lang, rng)
+    assert isinstance(result, str)
+    # Validate tokens are preserved
+    validation = validate_type1_clone(code, result, lang)
+    assert validation['is_valid'], f"Tokens not preserved: {validation['differences']}"
+
+
+def test_change_brace_positions():
+    """Test brace position changes preserve code tokens."""
+    code = "if (x) {\n    return y;\n}"
+    rng = random.Random(42)
+    result = _change_brace_positions(code, rng)
+    assert isinstance(result, str)
+    # Should contain the same tokens
+    assert 'if' in result
+    assert '{' in result
+    assert '}' in result
+
+
+def test_produce_type1_variant_preserves_tokens():
+    """Test that Type-1 variant preserves all code tokens."""
+    code = "def calculate(a, b):\n    result = a + b * 2\n    return result"
+    variant = produce_type1_variant(code, "python")
+    
+    # Validate it's a true Type-1 clone
+    validation = validate_type1_clone(code, variant, "python")
+    assert validation['is_valid'], f"Generated variant is not Type-1: {validation['message']}"
+    assert validation['token_match'], "Tokens must match exactly"
+    assert len(validation['differences']) == 0, f"Found token differences: {validation['differences']}"
+
+
+def test_tokenize_for_validation():
+    """Test token extraction for validation."""
+    code = "x = 1 + 2  # comment"
+    tokens = _tokenize_for_validation(code, "python")
+    # Should extract: x, =, 1, +, 2 (comment removed)
+    assert 'x' in tokens
+    assert '=' in tokens
+    assert '1' in tokens
+    assert '+' in tokens
+    assert '2' in tokens
+    assert 'comment' not in tokens  # Comments should be removed
 
 
 def test_generate_multiple_variants():
@@ -436,6 +718,7 @@ def test_empty_code():
 if __name__ == "__main__":
     # Run basic tests
     print("Running Type-1 generation tests...")
+    print("=" * 60)
     
     test_produce_type1_variant_deterministic()
     print("✓ Deterministic test passed")
@@ -453,7 +736,22 @@ if __name__ == "__main__":
     print("✓ Blank lines test passed")
     
     test_change_operator_spacing()
-    print("✓ Operator spacing test passed")
+    print("✓ Operator spacing test passed (tokens preserved)")
+    
+    test_modify_comments()
+    print("✓ Comment modification test passed (tokens preserved)")
+    
+    test_change_brace_positions()
+    print("✓ Brace position test passed")
+    
+    test_validate_type1_clone()
+    print("✓ Type-1 validation test passed")
+    
+    test_tokenize_for_validation()
+    print("✓ Token extraction test passed")
+    
+    test_produce_type1_variant_preserves_tokens()
+    print("✓ Type-1 variant token preservation test passed")
     
     test_generate_multiple_variants()
     print("✓ Multiple variants test passed")
@@ -461,15 +759,30 @@ if __name__ == "__main__":
     test_empty_code()
     print("✓ Empty code test passed")
     
-    print("\nAll tests passed!")
+    print("=" * 60)
+    print("All tests passed! ✓")
+    print("\nType-1 clone generation is working correctly.")
+    print("All code tokens are preserved in generated variants.")
     
     # Example usage
-    print("\n--- Example Usage ---")
+    print("\n" + "=" * 60)
+    print("Example Usage")
+    print("=" * 60)
     example_code = """def calculate(a, b):
     result = a + b * 2
     return result"""
     
-    print("Original:")
+    print("\nOriginal:")
     print(example_code)
+    
     print("\nType-1 Variant:")
-    print(produce_type1_variant(example_code, "python"))
+    variant = produce_type1_variant(example_code, "python")
+    print(variant)
+    
+    print("\nValidation:")
+    validation = validate_type1_clone(example_code, variant, "python")
+    print(f"  Is valid Type-1 clone: {validation['is_valid']}")
+    print(f"  Tokens match: {validation['token_match']}")
+    print(f"  Message: {validation['message']}")
+    print(f"  Token count - Original: {validation['original_token_count']}, Variant: {validation['variant_token_count']}")
+

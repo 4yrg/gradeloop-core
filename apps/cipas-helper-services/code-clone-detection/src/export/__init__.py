@@ -1,5 +1,5 @@
 """
 Export package.
 
-Handles exporting datasets to various formats (Parquet, CSV, JSON, etc.).
+Handles exporting datasets to Parquet format for optimal storage and performance.
 """

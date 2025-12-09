@@ -7,7 +7,7 @@ A modular Python pipeline for creating high-quality code clone datasets. This to
 - 🔍 **Multi-language support**: Python, Java, JavaScript, C++
 - 🧩 **Modular architecture**: Organized into extract, preprocess, generation, negatives, validation, balancing, and export stages
 - 🤖 **LLM integration**: Optional semantic analysis with mockable interfaces
-- 📊 **Multiple output formats**: Parquet, CSV, JSON
+- 📊 **Optimized Parquet export**: Fast, compressed, and efficient storage format
 - 🧪 **Fully tested**: Comprehensive unit tests
 - 📓 **Jupyter-friendly**: All functions return values for interactive analysis
 - ⚖️ **Dataset balancing**: Automatic balancing of positive and negative samples
@@ -67,7 +67,7 @@ code-clone-detection/
    ```bash
    # For tree-sitter AST parsing
    pip install tree-sitter
-   
+
    # For LibCST Python manipulation
    pip install libcst
    ```
@@ -204,9 +204,18 @@ results = pipeline.run()
 ### Clone Types
 
 - **Type 1**: Exact clones (except whitespace/comments)
+  - Only whitespace, comments, and formatting differ
+  - All code tokens are identical
+  - See [Type-1 Clone Rules](docs/TYPE1_CLONE_RULES.md) for detailed guidelines
 - **Type 2**: Syntactically identical (different identifiers)
+  - Variable/function/type names may differ
+  - Literals may be different
 - **Type 3**: Copied with modifications
+  - Statements added, removed, or modified
 - **Type 4**: Semantically similar (different implementation)
+  - Same functionality, different approach
+
+For detailed information on Type-1 clone generation and validation, see the [Type-1 Clone Rules documentation](docs/TYPE1_CLONE_RULES.md).
 
 ## Testing
 
@@ -280,7 +289,7 @@ class CustomLLMAdapter(LLMAdapter):
 
 ## Performance Tips
 
-1. **Use Parquet format**: Much faster than CSV for large datasets
+1. **Parquet format is used by default**: Optimized for fast read/write and efficient compression
 2. **Adjust batch size**: For LLM embeddings, tune `llm.batch_size`
 3. **Filter by extensions**: Process only relevant file types
 4. **Set min_lines**: Skip very small code fragments
