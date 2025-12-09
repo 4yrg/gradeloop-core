@@ -1,15 +1,17 @@
-# Code Clone Detection Pipeline
+# Code Clone Detection Dataset Pipeline
 
-A modular Python pipeline for detecting code clones across multiple programming languages. This tool extracts code fragments, computes similarity metrics, and identifies clone pairs using token-based, AST-based, and optional semantic analysis.
+A modular Python pipeline for creating high-quality code clone datasets. This tool extracts code fragments, generates clone pairs, applies transformations, validates clones, balances datasets, and exports in multiple formats for machine learning research.
 
 ## Features
 
 - 🔍 **Multi-language support**: Python, Java, JavaScript, C++
-- 🧩 **Modular architecture**: Easy to extend and customize
+- 🧩 **Modular architecture**: Organized into extract, preprocess, generation, negatives, validation, balancing, and export stages
 - 🤖 **LLM integration**: Optional semantic analysis with mockable interfaces
 - 📊 **Multiple output formats**: Parquet, CSV, JSON
 - 🧪 **Fully tested**: Comprehensive unit tests
 - 📓 **Jupyter-friendly**: All functions return values for interactive analysis
+- ⚖️ **Dataset balancing**: Automatic balancing of positive and negative samples
+- ✅ **Validation**: Built-in validation for clone quality and dataset integrity
 
 ## Project Structure
 
@@ -20,21 +22,19 @@ code-clone-detection/
 │   └── schema.yaml              # Data schema definitions
 ├── src/
 │   ├── __init__.py
-│   ├── config_loader.py         # Configuration utilities
-│   ├── logger.py                # Logging setup
-│   ├── file_utils.py            # File system utilities
-│   ├── models.py                # Data models
-│   ├── parser.py                # Code parsing
-│   ├── clone_detector.py        # Clone detection algorithms
-│   ├── data_io.py               # Data persistence
-│   ├── llm_adapter.py           # LLM adapter interfaces
-│   └── pipeline.py              # Main pipeline orchestrator
+│   ├── utils/                   # Shared utilities (config, logging, file I/O)
+│   ├── extract/                 # Code fragment extraction
+│   ├── preprocess/              # Data cleaning and normalization
+│   ├── generation/              # Clone pair generation
+│   ├── negatives/               # Negative sample generation
+│   ├── validation/              # Quality validation
+│   ├── balancing/               # Dataset balancing
+│   └── export/                  # Export to various formats
+├── scripts/
+│   └── init_project.py          # Project initialization script
+├── notebooks/                   # Jupyter notebooks for exploration
 ├── tests/
-│   ├── conftest.py              # Test fixtures
-│   ├── test_config_loader.py
-│   ├── test_models.py
-│   ├── test_clone_detector.py
-│   └── test_llm_adapter.py
+│   └── unit/                    # Unit tests
 ├── data/
 │   ├── raw/                     # Input source code
 │   └── processed/               # Output datasets
@@ -50,20 +50,26 @@ code-clone-detection/
    cd cipas-helper-services/code-clone-detection
    ```
 
-2. **Install dependencies:**
+2. **Initialize project structure (if needed):**
+
+   ```bash
+   python scripts/init_project.py
+   ```
+
+3. **Install dependencies:**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Optional dependencies for advanced features:**
+4. **Optional dependencies for advanced features:**
 
    ```bash
    # For tree-sitter AST parsing
    pip install tree-sitter
-
-   # For OpenAI embeddings
-   pip install openai
+   
+   # For LibCST Python manipulation
+   pip install libcst
    ```
 
 ## Quick Start
