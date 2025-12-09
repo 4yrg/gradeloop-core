@@ -1,9 +1,23 @@
 """
-Code Clone Detection Pipeline
+Code Clone Detection Dataset Pipeline
 
-A modular pipeline for detecting code clones across multiple programming languages.
+A modular pipeline for creating high-quality code clone datasets with support
+for extraction, preprocessing, generation, validation, balancing, and export.
+
+Main modules:
+- utils: Shared utilities (config, logging, file I/O)
+- extract: Code fragment extraction
+- preprocess: Data cleaning and normalization
+- generation: Clone pair generation
+- negatives: Negative sample generation
+- validation: Quality validation
+- balancing: Dataset balancing
+- export: Export to various formats
 """
 
+__version__ = "0.1.0"
+
+# Legacy imports for backward compatibility
 from .clone_detector import detect_clones
 from .config_loader import Config, load_yaml_config
 from .data_io import (
@@ -17,8 +31,6 @@ from .llm_adapter import LLMAdapter, create_llm_adapter
 from .models import ClonePair, CodeFragment, CodeMetrics
 from .parser import extract_fragments_from_file
 from .pipeline import CloneDetectionPipeline, run_pipeline_from_config
-
-__version__ = "0.1.0"
 
 __all__ = [
     # Main pipeline
