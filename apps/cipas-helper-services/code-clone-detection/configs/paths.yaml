@@ -1,0 +1,101 @@
+# Path Configuration
+# Defines all directory paths used throughout the pipeline
+
+# Raw data directory - input source code files
+raw_data_dir: D:/Projects/SLIIT/Research/Datasets/Project_CodeNet
+
+# Working directory - intermediate processing files
+work_dir: data/work
+
+# Temporary directory - temporary files (can be cleaned)
+temp_dir: data/tmp
+
+# Output directory - final processed datasets
+output_dir: data/output
+
+# Parquet output directory - parquet format outputs
+parquet_dir: data/output/parquet
+
+# Log directory - pipeline execution logs
+log_dir: data/logs
+
+# Additional path configurations
+paths:
+  # Cache directory for intermediate results
+  cache_dir: data/cache
+
+  # Checkpoint directory for pipeline state
+  checkpoint_dir: data/checkpoints
+
+  # Metadata directory for dataset metadata
+  metadata_dir: data/metadata
+
+  # Export directory for final datasets
+  export_dir: data/export
+
+# Path creation settings
+settings:
+  # Automatically create directories if they don't exist
+  auto_create: true
+
+  # Create parent directories recursively
+  create_parents: true
+
+  # Directory permissions (octal)
+  permissions: 0o755
+
+# Subdirectory structure
+subdirectories:
+  raw_data:
+    - java
+    - python
+    - samples
+
+  work:
+    - extracted
+    - preprocessed
+    - generated
+    - validated
+
+  output:
+    - parquet
+    - csv
+    - json
+
+  logs:
+    - pipeline
+    - validation
+    - generation
+
+# File naming patterns
+file_patterns:
+  # Raw source files
+  source_files: "{language}/**/*.{ext}"
+
+  # Intermediate files
+  fragments: "fragments_{language}_{timestamp}.parquet"
+  clones: "clones_{language}_{timestamp}.parquet"
+
+  # Output files
+  dataset: "clone_dataset_{split}_{timestamp}.parquet"
+  metadata: "metadata_{timestamp}.json"
+
+  # Log files
+  pipeline_log: "pipeline_{timestamp}.log"
+  error_log: "errors_{timestamp}.log"
+
+# Cleanup settings
+cleanup:
+  # Remove temporary files after processing
+  remove_temp: true
+
+  # Keep temporary files for debugging
+  keep_on_error: true
+
+  # Maximum age of temporary files (days)
+  temp_file_max_age: 7
+
+  # Directories to clean
+  clean_dirs:
+    - temp_dir
+    - cache_dir
