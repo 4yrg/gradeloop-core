@@ -1,0 +1,22 @@
+# Core dependencies
+pyyaml>=6.0
+pandas>=2.0.0
+pyarrow>=12.0.0
+tqdm>=4.65.0
+requests>=2.31.0              # For Ollama API calls
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Optional dependencies for advanced features
+# Uncomment as needed:
+
+# tree-sitter>=0.20.0        # For advanced AST parsing
+# libcst>=1.0.0              # For Python CST manipulation
+
+# Development dependencies
+black>=23.0.0                # Code formatter
+isort>=5.12.0                # Import sorter
+flake8>=6.0.0                # Linter
+mypy>=1.4.0                  # Type checker

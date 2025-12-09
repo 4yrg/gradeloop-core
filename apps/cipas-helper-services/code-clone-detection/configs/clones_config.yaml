@@ -1,0 +1,259 @@
+# Clone Dataset Configuration
+# Configuration for generating balanced code clone datasets
+
+# Target languages for clone detection
+languages:
+  - java
+  - python
+
+# Clone type counts per language
+# These are target counts for quick testing - adjust for production
+clone_counts:
+  java:
+    # Type 1: Exact clones (except whitespace/comments)
+    type1: 50
+
+    # Type 2: Syntactically identical (renamed identifiers/literals)
+    type2: 50
+
+    # Type 3: Copied with modifications (statements added/removed)
+    type3: 50
+
+    # Type 4: Semantically similar (different implementation)
+    type4: 50
+
+    # Negative samples - Easy (completely different code)
+    non_easy: 50
+
+    # Negative samples - Textual Hard (similar text, different semantics)
+    non_textual_hard: 50
+
+    # Negative samples - Structural Hard (similar structure, different purpose)
+    non_structural_hard: 50
+
+  python:
+    type1: 50
+    type2: 50
+    type3: 50
+    type4: 50
+    non_easy: 50
+    non_textual_hard: 50
+    non_structural_hard: 50
+
+# Dataset balancing configuration
+balancing:
+  # Ratio of positive (clone) to negative (non-clone) samples
+  # 1.0 means equal number of positives and negatives
+  pos_to_neg_ratio: 1.0
+
+  # Distribution of positive samples across clone types
+  # Must sum to 1.0
+  pos_distribution:
+    type1: 0.25 # 25% Type 1 clones
+    type2: 0.25 # 25% Type 2 clones
+    type3: 0.25 # 25% Type 3 clones
+    type4: 0.25 # 25% Type 4 clones
+
+  # Distribution of negative samples across difficulty levels
+  # Must sum to 1.0
+  neg_distribution:
+    non_easy: 0.34 # 34% Easy negatives
+    non_textual_hard: 0.33 # 33% Textually hard negatives
+    non_structural_hard: 0.33 # 33% Structurally hard negatives
+
+  # Stratification settings
+  stratify_by_language: true # Ensure balanced language distribution
+  stratify_by_clone_type: true # Ensure balanced clone type distribution
+
+  # Sampling strategy
+  sampling_strategy: "random" # Options: random, stratified, weighted
+
+  # Random seed for reproducibility
+  random_seed: 42
+
+# Generation parameters
+generation:
+  # Minimum code fragment size (lines of code)
+  min_fragment_size: 5
+
+  # Maximum code fragment size (lines of code)
+  max_fragment_size: 100
+
+  # Similarity thresholds for clone classification
+  similarity_thresholds:
+    type1: 0.95 # 95% or higher similarity
+    type2: 0.85 # 85-95% similarity
+    type3: 0.70 # 70-85% similarity
+    type4: 0.50 # 50-70% similarity (semantic)
+
+  # Transformation parameters for synthetic clone generation
+  transformations:
+    type1:
+      - "whitespace_changes"
+      - "comment_changes"
+      - "formatting_changes"
+
+    type2:
+      # ✅ Allowed Type-2 Transformations
+      # Identifiers (variables, functions, classes, parameters)
+      - "rename_variables" # x -> var_0, count -> var_1
+      - "rename_functions" # calculate -> func_0, getData -> func_1
+      - "rename_classes" # MyClass -> Class_0, DataProcessor -> Class_1
+      - "rename_parameters" # param -> var_0, items -> var_1
+
+      # Literals (numbers, strings, booleans, null values)
+      - "change_numeric_literals" # 42 -> 52, 3.14 -> 4.28
+      - "change_string_literals" # "hello" -> "hello_v2", "data" -> "info"
+      - "change_boolean_literals" # True -> False, true -> false
+      - "change_null_literals" # None/null (typically unchanged)
+
+      # Data types (preserving control structure)
+      - "change_data_types" # int -> long, float -> double (where compatible)
+
+      # Type-1 changes (also allowed in Type-2)
+      - "whitespace_changes"
+      - "comment_changes"
+      - "formatting_changes"
+
+      # ❗ What Must Stay the Same:
+      # - Control flow (same loops, if-statements, function calls)
+      # - Sequence of operations
+      # - Overall code structure
+      # - Language keywords and constructs
+
+    type3:
+      - "add_statements"
+      - "remove_statements"
+      - "modify_statements"
+      - "change_control_flow"
+
+    type4:
+      # ✅ Allowed Type-4 Transformations
+      # Type-4 clones have NO restrictions except semantic equivalence
+
+      # Different Algorithms
+      - "different_algorithm" # bubble sort → merge sort, linear → binary search
+      - "loop_to_recursion" # iterative → recursive implementation
+      - "recursion_to_loop" # recursive → iterative implementation
+      - "different_sorting_method" # any sorting algorithm variation
+      - "different_search_method" # any search algorithm variation
+
+      # Different Control Flow
+      - "change_control_flow" # completely different branching/looping
+      - "different_branching" # if-else → switch/dict lookup
+      - "different_loop_type" # for → while → recursion
+      - "different_execution_order" # forward → backward, eager → lazy
+
+      # Different Data Structures
+      - "different_data_structure" # array → hash map → tree
+      - "list_to_dict" # list-based → dictionary-based
+      - "array_to_set" # array → set for uniqueness
+      - "stack_to_recursion" # explicit stack → recursive calls
+
+      # Different Programming Paradigms
+      - "imperative_to_functional" # imperative → functional style
+      - "functional_to_imperative" # functional → imperative style
+      - "procedural_to_oop" # procedural → object-oriented
+      - "oop_to_procedural" # object-oriented → procedural
+
+      # Different Code Structure
+      - "different_code_structure" # any structural reorganization
+      - "single_function_to_multiple" # monolithic → modular
+      - "multiple_functions_to_single" # modular → monolithic
+      - "inline_to_helper_functions" # inline code → helper functions
+
+      # Different Built-ins/Libraries
+      - "manual_to_builtin" # manual implementation → built-in function
+      - "builtin_to_manual" # built-in function → manual implementation
+      - "different_library" # different libraries for same task
+
+      # Different Mathematical Approaches
+      - "formula_to_iteration" # mathematical formula → iterative calculation
+      - "iteration_to_formula" # iterative calculation → mathematical formula
+      - "different_formula" # different mathematical approach
+
+      # Other Semantic Equivalents
+      - "semantic_equivalent" # any semantically equivalent variation
+      - "optimization_variation" # naive → optimized or vice versa
+      - "synchronous_to_async" # sync → async (if semantically equivalent)
+
+      # ❗ What Must Stay the Same:
+      # - Semantic equivalence (same result/behavior)
+      # - Functional correctness (passes same tests)
+      #
+      # ❗ Everything Else Can Change:
+      # - Algorithm, control flow, data structures
+      # - Number of statements, functions, classes
+      # - Programming paradigm, style, patterns
+      # - Identifiers, types, literals
+      # - Library choices, built-in usage
+
+# Validation parameters
+validation:
+  # Enable validation of generated clones
+  enabled: true
+
+  # Minimum similarity score for positive pairs
+  min_positive_similarity: 0.50
+
+  # Maximum similarity score for negative pairs
+  max_negative_similarity: 0.70
+
+  # Quality checks
+  checks:
+    - "syntax_valid" # Code must be syntactically valid
+    - "similarity_threshold" # Similarity must meet thresholds
+    - "no_duplicates" # No exact duplicates
+    - "fragment_size" # Fragment size within bounds
+    - "label_consistency" # Labels match similarity scores
+
+# Export settings
+export:
+  # Output formats
+  formats:
+    - "parquet"
+    - "csv"
+
+  # Include source code in output
+  include_source: true
+
+  # Include features/embeddings
+  include_features: false
+
+  # Split dataset into train/val/test
+  split_dataset: true
+  split_ratios:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+
+  # Compression for parquet
+  compression: "snappy"
+
+  # Output directory
+  output_dir: "data/processed/clones"
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/clone_generation.log"
+  console: true
+
+  # Progress tracking
+  show_progress: true
+  progress_bar: true
+
+# Performance settings
+performance:
+  # Number of parallel workers for generation
+  num_workers: 4
+
+  # Batch size for processing
+  batch_size: 100
+
+  # Memory limit (MB)
+  memory_limit: 4096
+
+  # Cache intermediate results
+  enable_cache: true
+  cache_dir: "data/cache"
