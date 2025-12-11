@@ -9,6 +9,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import logging
+import time
 from generation.type3_backtranslate import produce_type3, create_llm_client
 
 logging.basicConfig(
@@ -100,7 +101,7 @@ def test_java_samples():
     try:
         # Try to create Ollama client
         client = create_llm_client("ollama", {
-            'model_name': 'codegemma:2b',
+            'model_name': 'qwen2.5-coder:7b',
             'api': {'base_url': 'http://localhost:11434'},
             'settings': {'temperature': 0.1, 'max_tokens': 1000}
         })
@@ -111,6 +112,7 @@ def test_java_samples():
         return False
     
     results = []
+    total_time = 0
     
     for name, code in samples:
         print(f"\n{'-'*70}")
@@ -121,10 +123,15 @@ def test_java_samples():
         print()
         
         try:
+            start_time = time.time()
             clone = produce_type3(code, "java", client)
+            generation_time = time.time() - start_time
+            total_time += generation_time
             
             print("Generated Clone:")
             print(clone)
+            print()
+            print(f"⏱ Generation Time: {generation_time:.2f} seconds")
             print()
             
             # Validate
@@ -165,6 +172,8 @@ def test_java_samples():
     total_count = len(results)
     
     print(f"Valid clones: {valid_count}/{total_count} ({valid_count/total_count*100:.1f}%)")
+    print(f"Total generation time: {total_time:.2f} seconds")
+    print(f"Average time per clone: {total_time/total_count:.2f} seconds")
     print()
     
     critical_issues = []
@@ -201,7 +210,7 @@ def test_python_samples():
     
     try:
         client = create_llm_client("ollama", {
-            'model_name': 'codegemma:2b',
+            'model_name': 'qwen2.5-coder:7b',
             'api': {'base_url': 'http://localhost:11434'},
             'settings': {'temperature': 0.1, 'max_tokens': 1000}
         })
@@ -210,6 +219,7 @@ def test_python_samples():
         return False
     
     results = []
+    total_time = 0
     
     for name, code in samples:
         print(f"\n{'-'*70}")
@@ -220,10 +230,15 @@ def test_python_samples():
         print()
         
         try:
+            start_time = time.time()
             clone = produce_type3(code, "python", client)
+            generation_time = time.time() - start_time
+            total_time += generation_time
             
             print("Generated Clone:")
             print(clone)
+            print()
+            print(f"⏱ Generation Time: {generation_time:.2f} seconds")
             print()
             
             validation = validate_type3_clone(code, clone, "python")
@@ -253,6 +268,9 @@ def test_python_samples():
     
     valid_count = sum(1 for r in results if r['valid'])
     print(f"\nPython: {valid_count}/{len(results)} valid")
+    if results:
+        print(f"Total generation time: {total_time:.2f} seconds")
+        print(f"Average time per clone: {total_time/len(results):.2f} seconds")
     
     return valid_count == len(results)
 
@@ -266,7 +284,7 @@ def main():
     print("\nThis test validates that the Ollama LLM client generates valid Type-3 clones.")
     print("Requirements:")
     print("  1. Ollama must be running (ollama serve)")
-    print("  2. Model codegemma:2b must be pulled (ollama pull codegemma:2b)")
+    print("  2. Model qwen2.5-coder:7b must be pulled (ollama pull qwen2.5-coder:7b)")
     print()
     
     java_ok = test_java_samples()

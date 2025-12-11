@@ -209,6 +209,18 @@ class OllamaLLMClient(BaseLLMClient):
                         continue
                     raise RuntimeError("Ollama returned empty response after retries")
                 
+                # Clean up markdown code blocks (qwen2.5-coder wraps code in ```)
+                generated_text = generated_text.strip()
+                if generated_text.startswith('```'):
+                    lines = generated_text.split('\n')
+                    # Remove opening fence (```java or ```python or just ```)
+                    if lines[0].startswith('```'):
+                        lines = lines[1:]
+                    # Remove closing fence
+                    if lines and lines[-1].strip() == '```':
+                        lines = lines[:-1]
+                    generated_text = '\n'.join(lines).strip()
+                
                 logger.debug(f"Generated response ({len(generated_text)} chars): {generated_text[:100]}...")
                 return generated_text
                 
@@ -356,11 +368,20 @@ class OllamaLLMClient(BaseLLMClient):
         )
         
         # Define stop sequences to prevent extra functions
+        # Note: qwen2.5-coder returns code in markdown blocks, so we don't use ``` as stop
         stop_sequences = []
-        if lang.lower() == "python":
-            stop_sequences = ["\n\n\ndef ", "\n\n\nclass ", "\n\nif __name__", "```"]
-        elif lang.lower() == "java":
-            stop_sequences = ["\n\n\npublic ", "\n\n\nprivate ", "\n\nclass ", "```", "\n\n//"]
+        if 'codegemma' in self.model_name.lower():
+            # Codegemma works well with aggressive stop sequences
+            if lang.lower() == "python":
+                stop_sequences = ["\n\n\ndef ", "\n\n\nclass ", "\n\nif __name__", "```"]
+            elif lang.lower() == "java":
+                stop_sequences = ["\n\n\npublic ", "\n\n\nprivate ", "\n\nclass ", "```", "\n\n//"]
+        else:
+            # Other models (qwen, codellama) need lighter stop sequences
+            if lang.lower() == "python":
+                stop_sequences = ["\n\n\ndef ", "\n\n\nclass "]
+            elif lang.lower() == "java":
+                stop_sequences = ["\n\n\npublic ", "\n\n\nprivate "]
         
         try:
             generated_code = self._generate(prompt, system_prompt, stop_sequences)
