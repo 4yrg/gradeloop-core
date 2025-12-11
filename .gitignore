@@ -180,6 +180,9 @@ runs/
 tensorboard/
 lightning_logs/
 
+# AI model files and directories
+apps/ai-services/models/
+
 # =========================
 # OS / Editor junk
 # =========================
@@ -223,3 +226,5 @@ logs/
 *.err
 tmp/
 pids/
+
+Sudila.md
