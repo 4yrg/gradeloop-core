@@ -331,49 +331,36 @@ class OllamaLLMClient(BaseLLMClient):
             return self._get_placeholder_code(lang)
         
         system_prompt = (
-            f"You are a code generation assistant specialized in creating Type-3 code clones. "
-            f"Generate clean, idiomatic, compilable/executable {lang} code based on functional descriptions. "
-            f"Generate ONLY ONE complete, valid function.\n\n"
-            f"Type-3 Clone Requirements:\n"
-            f"- KEEP the core logic recognizable and aligned with the description\n"
-            f"- Apply these modifications (Type-3 transformations):\n"
-            f"  * Use DIFFERENT identifier names (variables, functions, parameters)\n"
-            f"  * Change literal values where appropriate\n"
-            f"  * Add extra validation lines or checks\n"
-            f"  * Remove some non-essential lines if reasonable\n"
-            f"  * Add small helper operations or computations\n"
-            f"  * Reorder closely related statements (where safe)\n"
-            f"  * Add extra if guards or defensive checks\n"
-            f"  * Include additional comments or change formatting\n"
-            f"  * Modify data types (e.g., int to float, list to tuple) where sensible\n"
-            f"  * Add small control flow changes (extra conditions, logging statements)\n\n"
-            f"Critical Constraints:\n"
-            f"- Generate VALID, compilable/executable code (no syntax errors)\n"
-            f"- The code must be COMPLETE and RUNNABLE\n"
-            f"- The two implementations must be MOSTLY SIMILAR\n"
-            f"- Core logic remains recognizable - NOT completely rewritten\n"
-            f"- Functional equivalence should be maintained\n"
-            f"- Do NOT create Type-4 clones (completely different implementations)\n"
-            f"- Do NOT include markdown formatting or code block markers\n"
-            f"- Do NOT include explanations or comments about the code itself\n\n"
-            f"Output only raw code, no markdown, no explanations."
+            f"You are a code generator. Generate COMPLETE, VALID, EXECUTABLE {lang} code.\n\n"
+            f"RULES:\n"
+            f"1. Generate ONE complete function/method with ALL logic\n"
+            f"2. The function MUST be complete (no TODO, no placeholder)\n"
+            f"3. Include ALL control flow (if/for/while), ALL returns, ALL logic\n"
+            f"4. Use different variable names but SAME logic\n"
+            f"5. Add 1-2 extra lines (validation, comments, intermediate variables)\n"
+            f"6. NO markdown, NO explanations, NO code blocks - JUST CODE\n"
+            f"7. NO import statements unless absolutely necessary\n"
+            f"8. Start with function/method signature, end with closing brace/dedent\n\n"
+            f"IMPORTANT: Generate the COMPLETE function with ALL original logic preserved!"
         )
         
         prompt = (
-            f"Generate ONE complete, valid {lang} function implementing this:\n\n"
+            f"Generate a COMPLETE {lang} function that:\n"
             f"{summary}\n\n"
-            f"Apply Type-3 transformations: rename identifiers, add validation checks, "
-            f"modify literals, add helper operations, reorder statements safely. "
-            f"Keep core logic recognizable and similar to typical implementation.\n\n"
-            f"Generate ONLY valid, complete {lang} code with no syntax errors:"
+            f"Requirements:\n"
+            f"- Rename variables/parameters to different names\n"
+            f"- Add 1-2 validation checks or intermediate steps\n"
+            f"- Keep ALL original logic (loops, conditions, returns)\n"
+            f"- Make it compilable and complete\n\n"
+            f"Generate the complete function now:"
         )
         
-        # Define stop sequences to prevent repetition
+        # Define stop sequences to prevent extra functions
         stop_sequences = []
         if lang.lower() == "python":
-            stop_sequences = ["\n\ndef ", "\n\nclass ", "\n\nif __name__"]
+            stop_sequences = ["\n\n\ndef ", "\n\n\nclass ", "\n\nif __name__", "```"]
         elif lang.lower() == "java":
-            stop_sequences = ["\n\npublic ", "\n\nprivate ", "\n\nprotected ", "\n\nclass "]
+            stop_sequences = ["\n\n\npublic ", "\n\n\nprivate ", "\n\nclass ", "```", "\n\n//"]
         
         try:
             generated_code = self._generate(prompt, system_prompt, stop_sequences)
@@ -383,6 +370,11 @@ class OllamaLLMClient(BaseLLMClient):
                 logger.error("Generated empty code from summary")
                 return self._get_placeholder_code(lang)
             
+            # Check minimum length before cleaning
+            if len(generated_code.strip()) < 30:
+                logger.error(f"Generated code too short ({len(generated_code)} chars), likely truncated")
+                return self._get_placeholder_code(lang)
+            
             generated_code = self._clean_generated_code(generated_code, lang)
             
             # Final validation
@@ -390,10 +382,20 @@ class OllamaLLMClient(BaseLLMClient):
                 logger.error("Code cleaning resulted in empty code")
                 return self._get_placeholder_code(lang)
             
+            # Check minimum length after cleaning
+            if len(generated_code.strip()) < 30:
+                logger.error(f"Cleaned code too short ({len(generated_code)} chars)")
+                return self._get_placeholder_code(lang)
+            
             # Validate syntax (basic check)
             if not self._is_valid_code(generated_code, lang):
                 logger.warning(f"Generated code may have syntax issues, applying fixes")
                 generated_code = self._fix_code_syntax(generated_code, lang)
+            
+            # Final length check
+            if len(generated_code.strip()) < 30:
+                logger.error(f"Final code too short ({len(generated_code)} chars)")
+                return self._get_placeholder_code(lang)
             
             logger.info(
                 f"Generated {len(generated_code)} chars of valid {lang} code from summary"
@@ -547,7 +549,7 @@ class OllamaLLMClient(BaseLLMClient):
             # Skip obvious junk lines
             stripped = line.strip()
             
-            # Skip explanation lines
+            # Skip explanation lines and import-only lines at start
             if any(skip_phrase in stripped.lower() for skip_phrase in [
                 'here is',
                 'this code',
@@ -558,6 +560,12 @@ class OllamaLLMClient(BaseLLMClient):
                 'example:',
             ]):
                 continue
+            
+            # Skip standalone import statements (unless already in function)
+            if stripped.startswith('import ') or stripped.startswith('from '):
+                if not any('def ' in l or 'class ' in l or '{' in l for l in cleaned_lines):
+                    # No function/class yet, skip import
+                    continue
             
             # Skip lines that are only quotes or special chars
             if stripped and all(c in '"\'\\ \t\n' for c in stripped):
