@@ -1,11 +1,49 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Code, GraduationCap, BookOpen, Shield } from "lucide-react"
+import { useUserStore, UserRole } from "@/store/useUserStore"
 
 export default function Home() {
+  const router = useRouter()
+  const { login } = useUserStore()
+
+  const handleRoleSelect = (role: UserRole) => {
+    // Set mock user for the selected role
+    const mockUsers = {
+      STUDENT: {
+        id: "student-1",
+        name: "Alex Student",
+        email: "student@gradeloop.com",
+        roles: ["STUDENT" as UserRole],
+        currentRole: "STUDENT" as UserRole
+      },
+      INSTRUCTOR: {
+        id: "instructor-1",
+        name: "Dr. Sarah Teacher",
+        email: "instructor@gradeloop.com",
+        roles: ["INSTRUCTOR" as UserRole],
+        currentRole: "INSTRUCTOR" as UserRole
+      },
+      ADMIN: {
+        id: "admin-1",
+        name: "System Admin",
+        email: "admin@gradeloop.com",
+        roles: ["ADMIN" as UserRole],
+        currentRole: "ADMIN" as UserRole
+      }
+    }
+
+    login(mockUsers[role])
+
+    // Navigate to the appropriate dashboard
+    if (role === "ADMIN") router.push("/admin")
+    else if (role === "INSTRUCTOR") router.push("/instructor")
+    else router.push("/student")
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-4xl space-y-8">
@@ -36,10 +74,8 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/student">
-                  Enter as Student
-                </Link>
+              <Button className="w-full" onClick={() => handleRoleSelect("STUDENT")}>
+                Enter as Student
               </Button>
             </CardContent>
           </Card>
@@ -56,10 +92,8 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/instructor">
-                  Enter as Instructor
-                </Link>
+              <Button className="w-full" onClick={() => handleRoleSelect("INSTRUCTOR")}>
+                Enter as Instructor
               </Button>
             </CardContent>
           </Card>
@@ -76,10 +110,8 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/admin">
-                  Enter as Admin
-                </Link>
+              <Button className="w-full" onClick={() => handleRoleSelect("ADMIN")}>
+                Enter as Admin
               </Button>
             </CardContent>
           </Card>
