@@ -317,8 +317,8 @@ export interface TestCase {
     points: number;
 }
 
-export interface DetailedSubmission extends Submission {
-    files: { name: string; content: string; language: string }[];
+export interface DetailedSubmission extends Omit<Submission, 'testResults'> {
+    files: { fileName: string; content: string; language: string }[];
     testResults: {
         testId: string;
         passed: boolean;
@@ -428,7 +428,7 @@ export const MOCK_DETAILED_SUBMISSIONS: DetailedSubmission[] = [
         aiLikelihood: 5,
         files: [
             {
-                name: 'Factory.java',
+                fileName: 'Factory.java',
                 content: `public class ShapeFactory {\n    public Shape getShape(String type) {\n        if(type == null) return null;\n        if(type.equals("CIRCLE")) return new Circle();\n        return null;\n    }\n}`,
                 language: 'java'
             }
