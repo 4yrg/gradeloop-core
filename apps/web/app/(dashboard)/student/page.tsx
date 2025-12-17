@@ -4,7 +4,7 @@ import { useUserStore } from "@/store/useUserStore"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { CalendarDays, Clock, BookOpen, Bell, MessageSquare } from "lucide-react"
+import { CalendarDays, Clock, BookOpen, Bell, MessageSquare, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useQuery } from "@tanstack/react-query"
@@ -26,6 +26,11 @@ export default function StudentDashboard() {
     const { data: announcements, isLoading: announcementsLoading } = useQuery({
         queryKey: ['student-announcements'],
         queryFn: StudentService.getAnnouncements
+    })
+
+    const { data: gradedAssignments, isLoading: gradedLoading } = useQuery({
+        queryKey: ['student-graded-assignments'],
+        queryFn: StudentService.getGradedAssignments
     })
 
     const notices = [
@@ -134,6 +139,43 @@ export default function StudentDashboard() {
                                 ))}
                                 {upcomingAssignments?.length === 0 && (
                                     <div className="text-center py-8 text-muted-foreground">No upcoming assignments.</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Graded Assignments */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-semibold tracking-tight">Recent Grades</h2>
+                        </div>
+                        {gradedLoading ? (
+                            <div className="h-20 bg-muted animate-pulse rounded-lg" />
+                        ) : (
+                            <div className="grid gap-4">
+                                {gradedAssignments?.map(a => (
+                                    <div key={a.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-2 bg-green-500/10 rounded-full">
+                                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium">{a.title}</h4>
+                                                <p className="text-sm text-muted-foreground">Course ID: {a.courseId}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <Badge variant="secondary" className="mb-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Graded</Badge>
+                                            <div>
+                                                <Button size="sm" variant="link" asChild className="px-0 h-auto">
+                                                    <Link href={`/student/graded/${a.id}`}>View Results</Link>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {gradedAssignments?.length === 0 && (
+                                    <div className="text-center py-8 text-muted-foreground">No graded assignments yet.</div>
                                 )}
                             </div>
                         )}

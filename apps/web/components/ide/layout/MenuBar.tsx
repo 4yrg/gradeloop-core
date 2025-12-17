@@ -11,17 +11,28 @@ import {
 } from "@/components/ui/menubar"
 import { Button } from "@/components/ui/button"
 import { useIdeStore } from "@/store/ide/use-ide-store"
-import { Settings, FileCode, Save, FolderOpen, Play, Bug, Sidebar as SidebarIcon, PanelBottom, MessageSquare } from "lucide-react"
+import { Settings, FileCode, Save, FolderOpen, Play, Bug, Sidebar as SidebarIcon, PanelBottom, MessageSquare, BookOpen, Ban } from "lucide-react"
 
 export function MenuBar() {
-    const { setActiveActivity, togglePanel, toggleAuxiliaryBar, toggleSidebar, sidebarVisible, panelVisible, auxiliaryBarVisible } = useIdeStore()
+    const { setActiveActivity, togglePanel, toggleAuxiliaryBar, toggleSidebar, sidebarVisible, panelVisible, auxiliaryBarVisible, mode } = useIdeStore()
+
+    const isSandbox = mode === 'sandbox'
 
     return (
         <div className="h-8 border-b flex items-center px-2 bg-background select-none justify-between">
             <div className="flex items-center">
                 <div className="mr-4 font-bold text-sm text-primary flex items-center gap-2">
-                    <FileCode className="h-4 w-4" />
-                    GradeLoop IDE
+                    {isSandbox ? (
+                        <>
+                            <BookOpen className="h-4 w-4 text-orange-500" />
+                            <span className="text-orange-500">Learning Sandbox</span>
+                        </>
+                    ) : (
+                        <>
+                            <FileCode className="h-4 w-4" />
+                            GradeLoop IDE
+                        </>
+                    )}
                 </div>
 
                 <Menubar className="border-none shadow-none bg-transparent h-auto p-0">
@@ -135,13 +146,24 @@ export function MenuBar() {
             </div>
 
             <div className="flex items-center gap-2 pl-2 border-l ml-1">
-                <Button
-                    size="sm"
-                    className="h-6 text-xs px-3 bg-green-600 hover:bg-green-700 text-white border-none"
-                    onClick={() => useIdeStore.getState().setActivePopup('submission')}
-                >
-                    Submit
-                </Button>
+                {isSandbox ? (
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-6 text-xs px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-300 border-none cursor-not-allowed opacity-80"
+                        title="Submission is disabled in sandbox mode"
+                    >
+                        <Ban className="mr-1.5 h-3 w-3" /> Sandbox Mode
+                    </Button>
+                ) : (
+                    <Button
+                        size="sm"
+                        className="h-6 text-xs px-3 bg-green-600 hover:bg-green-700 text-white border-none"
+                        onClick={() => useIdeStore.getState().setActivePopup('submission')}
+                    >
+                        Submit
+                    </Button>
+                )}
             </div>
         </div>
     )
