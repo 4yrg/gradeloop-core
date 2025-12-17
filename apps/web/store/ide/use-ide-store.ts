@@ -13,7 +13,7 @@ interface File {
     isReadOnly?: boolean
 }
 
-export type PopupType = 'annotation' | 'ask-ai'
+export type PopupType = 'annotation' | 'ask-ai' | 'submission'
 
 interface SelectionData {
     code: string
@@ -82,7 +82,7 @@ interface IdeState {
 
     updateFileContent: (id: string, content: string) => void
 
-    setActivePopup: (popup: PopupType | null) => void
+    setActivePopup: (popup: PopupType | 'submission' | null) => void
     setActiveSelection: (selection: SelectionData | null) => void
 
     // Annotations
@@ -152,7 +152,7 @@ export const useIdeStore = create<IdeState>((set, get) => ({
         }
     },
 
-    setActivePopup: (popup: PopupType | null) => set({ activePopup: popup }),
+    setActivePopup: (popup) => set({ activePopup: popup }),
     setActiveSelection: (selection: SelectionData | null) => set({ activeSelection: selection }),
 
     setActiveFile: (id) => set({ activeFileId: id }),

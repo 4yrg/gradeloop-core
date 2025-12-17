@@ -13,6 +13,7 @@ import { EditorPopups } from "@/components/ide/editor/EditorPopups"
 
 import { MenuBar } from "./MenuBar"
 import { SettingsDialog } from "@/components/ide/layout/SettingsDialog"
+import { SubmissionDialog } from "@/components/ide/layout/SubmissionDialog"
 
 export function Workbench() {
     const {
@@ -31,6 +32,7 @@ export function Workbench() {
             {/* Modals */}
             <SettingsDialog open={isSettingsOpen} onOpenChange={setSettingsOpen} />
             <EditorPopups />
+            <SubmissionDialog />
 
             {/* Top Menu Bar */}
             <MenuBar />

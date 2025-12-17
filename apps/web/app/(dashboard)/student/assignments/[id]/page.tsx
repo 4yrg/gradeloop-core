@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { StudentService } from "@/services/student.service"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -12,7 +12,9 @@ import { Clock, TriangleAlert, Code, CheckCircle, FileText, BarChart3, Bot, Hist
 export default function AssignmentDetailPage() {
     const params = useParams()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const assignmentId = params.id as string
+    const isSubmitted = searchParams.get('submitted') === 'true'
 
     const { data: assignment, isLoading } = useQuery({
         queryKey: ['assignment', assignmentId],
@@ -35,7 +37,7 @@ export default function AssignmentDetailPage() {
         router.push(`/ide/${assignmentId}`)
     }
 
-    const status = assignment?.status || 'open' // Mock status
+    const status = isSubmitted ? 'submitted' : (assignment?.status || 'open') // Mock status with override
 
     if (isLoading) return <div className="p-8">Loading...</div>
 

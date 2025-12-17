@@ -9,6 +9,7 @@ import {
     MenubarShortcut,
     MenubarTrigger,
 } from "@/components/ui/menubar"
+import { Button } from "@/components/ui/button"
 import { useIdeStore } from "@/store/ide/use-ide-store"
 import { Settings, FileCode, Save, FolderOpen, Play, Bug, Sidebar as SidebarIcon, PanelBottom, MessageSquare } from "lucide-react"
 
@@ -131,6 +132,16 @@ export function MenuBar() {
                 >
                     <MessageSquare className="h-4 w-4" />
                 </button>
+            </div>
+
+            <div className="flex items-center gap-2 pl-2 border-l ml-1">
+                <Button
+                    size="sm"
+                    className="h-6 text-xs px-3 bg-green-600 hover:bg-green-700 text-white border-none"
+                    onClick={() => useIdeStore.getState().setActivePopup('submission')}
+                >
+                    Submit
+                </Button>
             </div>
         </div>
     )
