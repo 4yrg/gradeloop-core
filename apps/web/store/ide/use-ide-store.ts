@@ -61,26 +61,29 @@ interface IdeState {
     openFiles: string[] // List of IDs
 
     // Panel
-    activePanelTab: PanelTabId
+    activePanelTab: PanelTabId,
 
-    // User Context
-    role: Role
+    role: Role,
+    mode: 'standard' | 'sandbox',
 
     // Actions
-    toggleSidebar: () => void
-    setSidebarVisible: (visible: boolean) => void
-    toggleAuxiliaryBar: () => void
-    togglePanel: () => void
-    setSettingsOpen: (open: boolean) => void
-    setActiveActivity: (id: ActivityId) => void
-    setActiveRightActivity: (id: RightActivityId) => void
-    setActiveFile: (id: string) => void
-    openFile: (file: File) => void
-    closeFile: (id: string) => void
-    setActivePanelTab: (id: PanelTabId) => void
-    setRole: (role: Role) => void
+    toggleSidebar: () => void,
+    setSidebarVisible: (visible: boolean) => void,
+    toggleAuxiliaryBar: () => void,
+    togglePanel: () => void,
+    setSettingsOpen: (open: boolean) => void,
+    setActiveActivity: (id: ActivityId) => void,
+    setActiveRightActivity: (id: RightActivityId) => void,
+    setActiveFile: (id: string) => void,
+    openFile: (file: File) => void,
+    closeFile: (id: string) => void,
+    setActivePanelTab: (id: PanelTabId) => void,
+    setRole: (role: Role) => void,
+    setMode: (mode: 'standard' | 'sandbox') => void,
 
-    updateFileContent: (id: string, content: string) => void
+    updateFileContent: (id: string, content: string) => void,
+
+
 
     setActivePopup: (popup: PopupType | 'submission' | null) => void
     setActiveSelection: (selection: SelectionData | null) => void
@@ -116,6 +119,7 @@ export const useIdeStore = create<IdeState>((set, get) => ({
     activePanelTab: 'terminal',
 
     role: 'student',
+    mode: 'standard',
 
 
 
@@ -181,6 +185,8 @@ export const useIdeStore = create<IdeState>((set, get) => ({
     setActivePanelTab: (id) => set({ activePanelTab: id }),
 
     setRole: (role) => set({ role }),
+
+    setMode: (mode) => set({ mode }),
 
     updateFileContent: (id, content) => set(state => ({
         files: state.files.map(f => f.id === id ? { ...f, content } : f)
