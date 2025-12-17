@@ -16,7 +16,8 @@ export function EditorGroup() {
         setActiveFile,
         closeFile,
         updateFileContent,
-        setActiveRightActivity
+        setActivePopup,
+        setActiveSelection
     } = useIdeStore()
 
     const { theme } = useTheme()
@@ -37,8 +38,20 @@ export function EditorGroup() {
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1,
             run: (ed) => {
-                // Open AI panel
-                setActiveRightActivity('ai')
+                const selection = ed.getSelection()
+                const model = ed.getModel()
+                if (selection && model) {
+                    const code = model.getValueInRange(selection)
+                    if (code.trim()) {
+                        setActiveSelection({
+                            code,
+                            line: selection.startLineNumber,
+                            endLine: selection.endLineNumber,
+                            fileId: activeFileId || ''
+                        })
+                        setActivePopup('ask-ai')
+                    }
+                }
             }
         })
 
@@ -48,8 +61,20 @@ export function EditorGroup() {
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
             run: (ed) => {
-                // Open Annotation panel
-                setActiveRightActivity('annotations')
+                const selection = ed.getSelection()
+                const model = ed.getModel()
+                if (selection && model) {
+                    const code = model.getValueInRange(selection)
+                    if (code.trim()) {
+                        setActiveSelection({
+                            code,
+                            line: selection.startLineNumber,
+                            endLine: selection.endLineNumber,
+                            fileId: activeFileId || ''
+                        })
+                        setActivePopup('annotation')
+                    }
+                }
             }
         })
 

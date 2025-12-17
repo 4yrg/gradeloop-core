@@ -9,6 +9,7 @@ import { AIAssistant } from "@/components/ide/ai/AIAssistant"
 import { StatusBar } from "@/components/ide/layout/StatusBar"
 import { RightActivityBar } from "@/components/ide/activity-bar/RightActivityBar"
 import { AnnotationPanel } from "@/components/ide/annotations/AnnotationPanel"
+import { EditorPopups } from "@/components/ide/editor/EditorPopups"
 
 import { MenuBar } from "./MenuBar"
 import { SettingsDialog } from "@/components/ide/layout/SettingsDialog"
@@ -29,6 +30,7 @@ export function Workbench() {
         <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
             {/* Modals */}
             <SettingsDialog open={isSettingsOpen} onOpenChange={setSettingsOpen} />
+            <EditorPopups />
 
             {/* Top Menu Bar */}
             <MenuBar />

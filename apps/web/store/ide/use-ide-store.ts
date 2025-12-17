@@ -13,6 +13,15 @@ interface File {
     isReadOnly?: boolean
 }
 
+export type PopupType = 'annotation' | 'ask-ai'
+
+interface SelectionData {
+    code: string
+    line: number
+    endLine?: number
+    fileId: string
+}
+
 interface IdeState {
     // Workbench Layout
     sidebarVisible: boolean
@@ -22,8 +31,10 @@ interface IdeState {
     panelVisible: boolean
     panelHeight: number
 
-    // Modals
+    // Modals & Popups
     isSettingsOpen: boolean
+    activePopup: PopupType | null
+    activeSelection: SelectionData | null
 
     // Activity Bar
     activeActivity: ActivityId | null
@@ -53,6 +64,7 @@ interface IdeState {
     closeFile: (id: string) => void
     setActivePanelTab: (id: PanelTabId) => void
     setRole: (role: Role) => void
+
     updateFileContent: (id: string, content: string) => void
 }
 
@@ -82,7 +94,11 @@ export const useIdeStore = create<IdeState>((set, get) => ({
 
     role: 'student',
 
+
+
     isSettingsOpen: false,
+    activePopup: null,
+    activeSelection: null,
 
     // Actions
     toggleSidebar: () => set(state => ({ sidebarVisible: !state.sidebarVisible })),
@@ -111,6 +127,9 @@ export const useIdeStore = create<IdeState>((set, get) => ({
             set({ activeRightActivity: id, auxiliaryBarVisible: true })
         }
     },
+
+    setActivePopup: (popup: PopupType | null) => set({ activePopup: popup }),
+    setActiveSelection: (selection: SelectionData | null) => set({ activeSelection: selection }),
 
     setActiveFile: (id) => set({ activeFileId: id }),
 
