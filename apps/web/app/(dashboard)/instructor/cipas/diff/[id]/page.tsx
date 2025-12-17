@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { DiffEditor } from "@monaco-editor/react"
-import { useTheme } from "next-themes"
+import { InlineDiff } from "@/components/diff/InlineDiff"
 import { AlertTriangle, CheckCircle2, XCircle, FileText, User } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -17,7 +16,6 @@ import { toast } from "sonner"
 export default function CIPASDiffPage() {
     const { id } = useParams()
     const submissionId = id as string
-    const { theme } = useTheme()
     const [notes, setNotes] = useState("")
     const [selectedStatus, setSelectedStatus] = useState<'flagged' | 'reviewed' | 'false-positive'>('flagged')
 
@@ -130,24 +128,14 @@ export default function CIPASDiffPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Code Comparison</CardTitle>
-                    <CardDescription>Side-by-side diff view</CardDescription>
+                    <CardDescription>Inline diff view (GitHub-style)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="border rounded-lg overflow-hidden">
-                        <DiffEditor
-                            height="600px"
-                            language="java"
-                            original={originalCode}
-                            modified={matchedCode}
-                            theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                            options={{
-                                readOnly: true,
-                                minimap: { enabled: false },
-                                renderSideBySide: true,
-                                scrollBeyondLastLine: false,
-                            }}
-                        />
-                    </div>
+                    <InlineDiff
+                        originalCode={originalCode}
+                        modifiedCode={matchedCode}
+                        language="java"
+                    />
                 </CardContent>
             </Card>
 
