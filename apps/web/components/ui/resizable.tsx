@@ -6,10 +6,20 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "reac
 
 import { cn } from "@/lib/utils"
 
+interface ResizablePanelGroupProps {
+  children: React.ReactNode
+  className?: string
+  direction: "horizontal" | "vertical"
+  autoSaveId?: string
+  storage?: any
+  id?: string
+  style?: React.CSSProperties
+}
+
 const ResizablePanelGroup = ({
   className,
   ...props
-}: React.ComponentProps<typeof PanelGroup>) => (
+}: ResizablePanelGroupProps) => (
   <PanelGroup
     className={cn(
       "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
