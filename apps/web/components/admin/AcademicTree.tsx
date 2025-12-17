@@ -17,19 +17,37 @@ import { cn } from "@/lib/utils"
 
 interface AcademicTreeProps {
     data: AcademicNode[]
+    onAddNode?: (parentNode: AcademicNode) => void
+    onEditNode?: (node: AcademicNode) => void
+    onDeleteNode?: (node: AcademicNode) => void
 }
 
-export function AcademicTree({ data }: AcademicTreeProps) {
+export function AcademicTree({ data, onAddNode, onEditNode, onDeleteNode }: AcademicTreeProps) {
     return (
         <div className="space-y-2">
             {data.map((node) => (
-                <TreeNode key={node.id} node={node} level={0} />
+                <TreeNode
+                    key={node.id}
+                    node={node}
+                    level={0}
+                    onAddNode={onAddNode}
+                    onEditNode={onEditNode}
+                    onDeleteNode={onDeleteNode}
+                />
             ))}
         </div>
     )
 }
 
-function TreeNode({ node, level }: { node: AcademicNode, level: number }) {
+interface TreeNodeProps {
+    node: AcademicNode
+    level: number
+    onAddNode?: (parentNode: AcademicNode) => void
+    onEditNode?: (node: AcademicNode) => void
+    onDeleteNode?: (node: AcademicNode) => void
+}
+
+function TreeNode({ node, level, onAddNode, onEditNode, onDeleteNode }: TreeNodeProps) {
     const [isOpen, setIsOpen] = useState(false)
     const hasChildren = node.children && node.children.length > 0
 
@@ -65,7 +83,16 @@ function TreeNode({ node, level }: { node: AcademicNode, level: number }) {
                 </div>
 
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAddNode?.(node);
+                        }}
+                        title="Add Child"
+                    >
                         <Plus className="h-4 w-4 text-muted-foreground" />
                     </Button>
                     <DropdownMenu>
@@ -76,8 +103,12 @@ function TreeNode({ node, level }: { node: AcademicNode, level: number }) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive"><Trash className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEditNode?.(node)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => onDeleteNode?.(node)}>
+                                <Trash className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -85,7 +116,14 @@ function TreeNode({ node, level }: { node: AcademicNode, level: number }) {
 
             <CollapsibleContent>
                 {node.children && node.children.map((child) => (
-                    <TreeNode key={child.id} node={child} level={level + 1} />
+                    <TreeNode
+                        key={child.id}
+                        node={child}
+                        level={level + 1}
+                        onAddNode={onAddNode}
+                        onEditNode={onEditNode}
+                        onDeleteNode={onDeleteNode}
+                    />
                 ))}
             </CollapsibleContent>
         </Collapsible>
