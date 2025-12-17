@@ -3,33 +3,35 @@
 import { useQuery } from "@tanstack/react-query"
 import { AdminService } from "@/services/admin.service"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Upload, Users, Server, Activity, Download, Plus, Search, FileSpreadsheet } from "lucide-react"
+import { Activity, Users, FileText, AlertTriangle, ShieldAlert, Cpu, Brain, Lock } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
 
 export default function AdminDashboard() {
 
-    // Mock Data
-    const { data: stats } = useQuery({
-        queryKey: ['admin-stats'],
-        queryFn: AdminService.getSystemStats
+    const { data: summary } = useQuery({
+        queryKey: ['admin-summary'],
+        queryFn: AdminService.getDashboardSummary
     })
 
-    const { data: users } = useQuery({
-        queryKey: ['admin-users'],
-        queryFn: AdminService.getAllUsers
+    const { data: aiStats } = useQuery({
+        queryKey: ['admin-ai-gov'],
+        queryFn: AdminService.getAIGovernanceStats
+    })
+
+    const { data: alerts } = useQuery({
+        queryKey: ['admin-alerts'],
+        queryFn: AdminService.getSystemAlerts
     })
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 p-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">System Administration</h1>
-                <p className="text-muted-foreground">Manage users, academic structure, and system configurations.</p>
+                <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
+                <p className="text-muted-foreground">Global health, AI governance, and system alerts.</p>
             </div>
 
-            {/* Stats Overview */}
+            {/* System Summary Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -37,116 +39,122 @@ export default function AdminDashboard() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats?.totalUsers || "..."}</div>
-                        <p className="text-xs text-muted-foreground">+180 from last month</p>
+                        <div className="text-2xl font-bold">{summary?.totalUsers.student ? summary.totalUsers.student + summary.totalUsers.instructor : "..."}</div>
+                        <p className="text-xs text-muted-foreground">
+                            {summary?.totalUsers.instructor} Instructors, {summary?.totalUsers.student} Students
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
+                        <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats?.activeCourses || "..."}</div>
+                        <div className="text-2xl font-bold">{summary?.activeClasses || "..."}</div>
+                        <p className="text-xs text-muted-foreground">{summary?.activeAssignments} Active Assignments</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Submissions Today</CardTitle>
-                        <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">System Load</CardTitle>
+                        <Cpu className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats?.submissionsToday || "..."}</div>
+                        <div className="text-2xl font-bold">{summary?.systemUsage.cpu || 0}%</div>
+                        <p className="text-xs text-muted-foreground">
+                            {summary?.systemUsage.executions.toLocaleString()} Executions today
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                        <Server className="h-4 w-4 text-green-500" />
+                        <CardTitle className="text-sm font-medium">Integrity Flags</CardTitle>
+                        <ShieldAlert className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{stats?.systemHealth || "..."}</div>
+                        <div className="text-2xl font-bold text-destructive">{summary?.flaggedCases || 0}</div>
+                        <p className="text-xs text-muted-foreground">Requires attention</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Admin Management Tabs */}
-            <Tabs defaultValue="users" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="users">User Management</TabsTrigger>
-                    <TabsTrigger value="academic">Academic Structure</TabsTrigger>
-                    <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
-                    <TabsTrigger value="integrations">Integrations</TabsTrigger>
-                </TabsList>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                {/* AI Governance Snapshot */}
+                <Card className="col-span-4">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Brain className="h-5 w-5 text-purple-500" />
+                            AI Governance Snapshot
+                        </CardTitle>
+                        <CardDescription>Overview of AI usage and grading reliability.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="p-4 border rounded-lg bg-card/50">
+                                    <div className="text-sm font-medium text-muted-foreground">AI Grading Enabled</div>
+                                    <div className="text-2xl font-bold mt-1">{aiStats?.aiGradingEnabledClasses || 0}</div>
+                                    <div className="text-xs text-muted-foreground">Classes</div>
+                                </div>
+                                <div className="p-4 border rounded-lg bg-card/50">
+                                    <div className="text-sm font-medium text-muted-foreground">Avg. AI Likelihood</div>
+                                    <div className="text-2xl font-bold mt-1">{aiStats?.avgAiLikelihood || 0}%</div>
+                                    <div className="text-xs text-muted-foreground">Across all submissions</div>
+                                </div>
+                                <div className="p-4 border rounded-lg bg-card/50">
+                                    <div className="text-sm font-medium text-muted-foreground">Agent Usage Rate</div>
+                                    <div className="text-2xl font-bold mt-1">{aiStats?.agentUsageRate || 0}%</div>
+                                    <div className="text-xs text-muted-foreground">Of active students</div>
+                                </div>
+                            </div>
 
-                {/* USERS TAB */}
-                <TabsContent value="users" className="mt-6 space-y-6">
-                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center p-4 border rounded-lg bg-card">
-                        <div className="space-y-1">
-                            <h3 className="font-semibold text-lg flex items-center gap-2">
-                                <Upload className="h-5 w-5" /> Batch User Import
-                            </h3>
-                            <p className="text-sm text-muted-foreground">Upload an Excel file to add users in bulk.</p>
+                            {/* Visual Placeholder for a chart */}
+                            <div className="h-[200px] w-full bg-secondary/20 rounded-lg flex items-center justify-center border border-dashed">
+                                <span className="text-muted-foreground text-sm">AI Activity Trend Chart Placeholder</span>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Template</Button>
-                            <Button><Upload className="mr-2 h-4 w-4" /> Upload Excel</Button>
-                        </div>
-                    </div>
+                    </CardContent>
+                </Card>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>All Users</CardTitle>
-                                <CardDescription>Manage individual user accounts.</CardDescription>
+                {/* Alerts Panel */}
+                <Card className="col-span-3">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            System Alerts
+                        </CardTitle>
+                        <CardDescription>Recent warnings and critical issues.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-[300px] pr-4">
+                            <div className="space-y-4">
+                                {alerts?.map((alert) => (
+                                    <div key={alert.id} className="flex gap-4 items-start p-3 rounded-lg border bg-card/50 hover:bg-card transition-colors">
+                                        <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${alert.type === 'error' ? 'bg-red-500' :
+                                                alert.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                                            }`} />
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-none">{alert.message}</p>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 capitalize">
+                                                    {alert.category}
+                                                </Badge>
+                                                <span>{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {!alerts?.length && (
+                                    <div className="text-sm text-center text-muted-foreground py-8">
+                                        No active alerts. System is healthy.
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Input placeholder="Search users..." className="w-[250px]" />
-                                <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add User</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Role</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users?.map((u: any) => (
-                                        <TableRow key={u.id}>
-                                            <TableCell className="font-medium">{u.name}</TableCell>
-                                            <TableCell>{u.email}</TableCell>
-                                            <TableCell className="capitalize">{u.role}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm">Edit</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* ACADEMIC TAB (Placeholder for structure) */}
-                <TabsContent value="academic" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Academic Hierarchy</CardTitle>
-                            <CardDescription>Manage Faculties, Batches, and Specializations.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex justify-center py-12 text-muted-foreground">
-                                Tree View Component Placeholder
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }

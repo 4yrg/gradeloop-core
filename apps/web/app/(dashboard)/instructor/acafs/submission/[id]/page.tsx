@@ -117,7 +117,7 @@ export default function ACAFSSubmissionPage() {
                                 </div>
                                 <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                                     <TrendingUp className="h-4 w-4" />
-                                    Confidence: {aiFeedback?.confidence}%
+                                    Confidence: {aiFeedback?.confidence || 0}%
                                 </div>
                             </div>
                         </CardContent>
@@ -233,14 +233,14 @@ export default function ACAFSSubmissionPage() {
                             <div>
                                 <div className="flex justify-between text-sm mb-2">
                                     <span>Overall</span>
-                                    <span className="font-bold">{aiFeedback?.confidence}%</span>
+                                    <span className="font-bold">{aiFeedback?.confidence || 0}%</span>
                                 </div>
                                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full transition-all ${aiFeedback?.confidence > 80 ? 'bg-green-500' :
-                                                aiFeedback?.confidence > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                        className={`h-full transition-all ${(aiFeedback?.confidence || 0) > 80 ? 'bg-green-500' :
+                                            (aiFeedback?.confidence || 0) > 60 ? 'bg-yellow-500' : 'bg-red-500'
                                             }`}
-                                        style={{ width: `${aiFeedback?.confidence}%` }}
+                                        style={{ width: `${aiFeedback?.confidence || 0}%` }}
                                     />
                                 </div>
                             </div>

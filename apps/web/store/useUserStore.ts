@@ -23,13 +23,18 @@ interface UserState {
 export const useUserStore = create<UserState>()(
     persist(
         (set) => ({
-            user: null, // Start with no user
+            user: {
+                id: 'u1', name: 'Dev User', email: 'dev@gradeloop.com',
+                roles: ['STUDENT', 'INSTRUCTOR', 'ADMIN'], currentRole: 'ADMIN' // Default to ADMIN for review
+            },
             isLoading: false,
             login: (user) => set({ user }),
             logout: () => set({ user: null }),
             switchRole: (role) =>
                 set((state) => {
-                    if (!state.user?.roles.includes(role)) return state
+                    // Dev override: Allow switching to any role even if user doesn't strictly have it
+                    // if (!state.user?.roles.includes(role)) return state
+                    if (!state.user) return state
                     return { user: { ...state.user, currentRole: role } }
                 }),
         }),

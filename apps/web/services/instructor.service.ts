@@ -193,17 +193,70 @@ export const InstructorService = {
     getAcafsSummary: async () => {
         await new Promise(resolve => setTimeout(resolve, 500));
         return {
-            totalGraded: 120,
-            avgAutoGradeAccuracy: 92.5,
-            interventionsRequired: 8
+            autoGradedCount: 120,
+            aiAccuracy: 92.5,
+            needsReviewCount: 8,
+            averageGrade: 78.5,
+            needsReviewSubmissions: [
+                {
+                    id: 's3',
+                    assignmentTitle: 'Data Structures - Queues',
+                    studentName: 'Charlie Davis',
+                    reviewReason: 'Low confidence in complexity analysis grading',
+                    aiGrade: 65,
+                    confidence: 45
+                },
+                {
+                    id: 's7',
+                    assignmentTitle: 'Algorithms - Sorting',
+                    studentName: 'Grace Lee',
+                    reviewReason: 'Potential edge case missed in test cases',
+                    aiGrade: 72,
+                    confidence: 52
+                }
+            ],
+            recentAssessments: [
+                {
+                    id: 's1',
+                    studentName: 'Alice Johnson',
+                    assignmentTitle: 'Data Structures - Queues',
+                    grade: 85,
+                    confidence: 92,
+                    timestamp: new Date().toISOString()
+                },
+                {
+                    id: 's2',
+                    studentName: 'Bob Smith',
+                    assignmentTitle: 'Data Structures - Queues',
+                    grade: 90,
+                    confidence: 88,
+                    timestamp: new Date(Date.now() - 3600000).toISOString()
+                },
+                {
+                    id: 's4',
+                    studentName: 'Diana Prince',
+                    assignmentTitle: 'Algorithms - Sorting',
+                    grade: 95,
+                    confidence: 95,
+                    timestamp: new Date(Date.now() - 7200000).toISOString()
+                }
+            ]
         };
     },
 
     getAcafsSubmission: async (submissionId: string) => {
         await new Promise(resolve => setTimeout(resolve, 500));
+        const aiFeedback = MOCK_AI_FEEDBACK.find(f => f.submissionId === submissionId);
+        const submission = MOCK_DETAILED_SUBMISSIONS.find(s => s.id === submissionId);
+
         return {
-            submission: MOCK_DETAILED_SUBMISSIONS.find(s => s.id === submissionId),
-            aiFeedback: MOCK_AI_FEEDBACK.find(f => f.submissionId === submissionId)
+            submission: submission ? {
+                ...submission,
+                student: MOCK_USERS.find(u => u.id === submission.studentId),
+                assignment: MOCK_ASSIGNMENTS.find(a => a.id === submission.assignmentId)
+            } : undefined,
+            aiFeedback: aiFeedback,
+            interactionLog: aiFeedback?.interactionLog || []
         };
     },
 
@@ -224,7 +277,7 @@ export const InstructorService = {
         return {
             ...assignment,
             course: MOCK_COURSES.find(c => c.id === assignment?.courseId),
-            rubric: MOCK_RUBRICS.filter(r => r.assignmentId === assignmentId),
+            rubric: MOCK_RUBRICS[assignmentId] || [],
             testCases: MOCK_TEST_CASES.filter(t => t.assignmentId === assignmentId),
             totalStudents: 45
         };

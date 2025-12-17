@@ -29,6 +29,12 @@ export interface Assignment {
     status: 'open' | 'closed' | 'draft';
     type: 'individual' | 'group';
     points: number;
+    language?: string;
+    timeLimit?: number;
+    aiAssistanceEnabled?: boolean;
+    cipasEnabled?: boolean;
+    allowResubmissions?: boolean;
+    maxResubmissions?: number;
 }
 
 export interface Submission {
@@ -66,12 +72,24 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
     {
         id: 'a1', courseId: 'c1', title: 'Calculus Quiz 1', description: 'Solve problems 1-10.',
         dueDate: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days from now
-        status: 'open', type: 'individual', points: 100
+        status: 'open', type: 'individual', points: 100,
+        language: 'Python',
+        timeLimit: 5000,
+        aiAssistanceEnabled: true,
+        cipasEnabled: true,
+        allowResubmissions: true,
+        maxResubmissions: 3
     },
     {
         id: 'a2', courseId: 'c2', title: 'Design Pattern Implementation', description: 'Implement Factory pattern.',
         dueDate: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-        status: 'closed', type: 'individual', points: 50
+        status: 'closed', type: 'individual', points: 50,
+        language: 'Java',
+        timeLimit: 10000,
+        aiAssistanceEnabled: false,
+        cipasEnabled: true,
+        allowResubmissions: false,
+        maxResubmissions: 0
     }
 ];
 
@@ -191,16 +209,27 @@ export interface AIFeedback {
     id: string;
     submissionId: string;
     overallFeedback: string;
-    criteriaFeedback: {
+    totalGrade: number;
+    confidence: number;
+    needsReview: boolean;
+    reviewReason?: string;
+    rubricScores: {
         criterionId: string;
-        feedback: string;
-        suggestedScore: number;
+        criterionName: string;
+        description: string;
+        score: number;
+        maxScore: number;
+        aiReasoning: string;
     }[];
+    strengths: string[];
+    improvements: string[];
     aiLikelihood: number; // 0-100
     interactionLog: {
+        id: string;
+        type: 'student' | 'ai';
+        category: string;
+        message: string;
         timestamp: string;
-        studentQuery: string;
-        aiResponse: string;
     }[];
 }
 
@@ -289,17 +318,60 @@ export const MOCK_AI_FEEDBACK: AIFeedback[] = [
     {
         id: 'ai1',
         submissionId: 's1',
-        overallFeedback: 'Your implementation demonstrates understanding of the Factory pattern. Consider adding null checks and using enums for type safety.',
-        criteriaFeedback: [
-            { criterionId: 'r5', feedback: 'Pattern correctly implemented', suggestedScore: 45 },
-            { criterionId: 'r6', feedback: 'Code structure is clear but could benefit from better organization', suggestedScore: 25 }
+        overallFeedback: 'Good effort. Your implementation of the Factory pattern is correct, but there are some inefficiencies in the Circle class.',
+        totalGrade: 85,
+        confidence: 92,
+        needsReview: false,
+        strengths: [
+            'Correct implementation of Factory Pattern',
+            'Clean code structure',
+            'Good error handling'
+        ],
+        improvements: [
+            'Optimize Circle.draw() method',
+            'Add more comments for complex logic'
+        ],
+        rubricScores: [
+            {
+                criterionId: 'r1',
+                criterionName: 'Functionality',
+                description: 'Does the code work as expected?',
+                score: 45,
+                maxScore: 50,
+                aiReasoning: 'All test cases passed except for the edge case with zero input.'
+            },
+            {
+                criterionId: 'r2',
+                criterionName: 'Code Quality',
+                description: 'Is the code readable and maintainable?',
+                score: 18,
+                maxScore: 20,
+                aiReasoning: 'Variable names are descriptive and indentation is consistent.'
+            },
+            {
+                criterionId: 'r6',
+                criterionName: 'Structure',
+                description: 'code structure',
+                score: 22,
+                maxScore: 30,
+                aiReasoning: 'Code structure is clear but could benefit from better organization'
+            }
         ],
         aiLikelihood: 15,
         interactionLog: [
             {
-                timestamp: new Date(Date.now() - 3600000).toISOString(),
-                studentQuery: 'How do I implement the Factory pattern?',
-                aiResponse: 'The Factory pattern involves creating objects without specifying their exact class. Start by defining an interface...'
+                id: 'int1',
+                type: 'student',
+                category: 'Question',
+                message: 'How do I implement the Factory pattern?',
+                timestamp: new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+                id: 'int2',
+                type: 'ai',
+                category: 'Hint',
+                message: 'The Factory pattern involves creating objects without specifying their exact class. Start by defining an interface...',
+                timestamp: new Date(Date.now() - 3599000).toISOString()
             }
         ]
     }

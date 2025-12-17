@@ -16,6 +16,7 @@ import {
     Clock
 } from "lucide-react"
 import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
 
 export default function InstructorDashboard() {
     const { data: summary, isLoading: summaryLoading } = useQuery({
@@ -162,7 +163,7 @@ export default function InstructorDashboard() {
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium">{notif.message}</p>
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    {new Date(notif.timestamp).toRelativeTimeString?.() || 'Just now'}
+                                                    {formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })}
                                                 </p>
                                             </div>
                                         </div>
