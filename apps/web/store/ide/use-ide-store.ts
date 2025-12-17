@@ -28,10 +28,13 @@ export interface Annotation {
     line: number
     endLine?: number
     content: string         // Code content
-    text?: string           // User comment
-    author?: string
-    type?: 'question' | 'note'
-    timestamp?: number
+    // text?: string        // Deprecated: use comments
+    comments: {
+        id: string
+        author: string
+        text: string
+        timestamp: number
+    }[]
 }
 
 interface IdeState {
@@ -85,6 +88,7 @@ interface IdeState {
     // Annotations
     annotations: Annotation[]
     addAnnotation: (annotation: Annotation) => void
+    addComment: (annotationId: string, comment: { id: string, author: string, text: string, timestamp: number }) => void
 }
 
 const DEFAULT_FILES: File[] = [
@@ -182,5 +186,13 @@ export const useIdeStore = create<IdeState>((set, get) => ({
         files: state.files.map(f => f.id === id ? { ...f, content } : f)
     })),
 
-    addAnnotation: (annotation) => set(state => ({ annotations: [...state.annotations, annotation] }))
+    addAnnotation: (annotation) => set(state => ({ annotations: [...state.annotations, annotation] })),
+
+    addComment: (annotationId: string, comment: any) => set(state => ({
+        annotations: state.annotations.map(a =>
+            a.id === annotationId
+                ? { ...a, comments: [...a.comments, comment] }
+                : a
+        )
+    }))
 }))

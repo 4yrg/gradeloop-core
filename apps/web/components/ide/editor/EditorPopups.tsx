@@ -13,6 +13,13 @@ export function EditorPopups() {
     const { activePopup, activeSelection, setActivePopup, setActiveSelection, addAnnotation } = useIdeStore()
     const annotationRef = useRef<HTMLTextAreaElement>(null)
 
+    const existingAnnotation = useIdeStore(state =>
+        state.annotations.find(a =>
+            a.fileId === activeSelection?.fileId &&
+            a.line === activeSelection?.line
+        ) // Basic matching logic
+    )
+
     const isOpen = activePopup !== null
     const close = () => {
         setActivePopup(null)
@@ -22,16 +29,28 @@ export function EditorPopups() {
     const handleSaveAnnotation = () => {
         if (!activeSelection || !annotationRef.current?.value) return
 
-        addAnnotation({
-            id: Date.now().toString(),
-            fileId: activeSelection.fileId,
-            line: activeSelection.line,
-            endLine: activeSelection.endLine,
-            text: annotationRef.current.value,
-            author: "Student",
-            type: 'question',
-            timestamp: Date.now()
-        })
+        if (existingAnnotation) {
+            useIdeStore.getState().addComment(existingAnnotation.id, {
+                id: Date.now().toString(),
+                author: "Student", // In real app, get from auth
+                text: annotationRef.current.value,
+                timestamp: Date.now()
+            })
+        } else {
+            addAnnotation({
+                id: Date.now().toString(),
+                fileId: activeSelection.fileId,
+                line: activeSelection.line,
+                endLine: activeSelection.endLine,
+                content: activeSelection.code, // Add content field
+                comments: [{
+                    id: Date.now().toString(),
+                    author: "Student",
+                    text: annotationRef.current.value,
+                    timestamp: Date.now()
+                }]
+            })
+        }
         close()
     }
 
@@ -45,20 +64,41 @@ export function EditorPopups() {
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                                 <MessageCircleCode className="h-5 w-5" />
-                                Add Annotation
+                                {existingAnnotation ? 'Discussion' : 'Add Annotation'}
                             </DialogTitle>
                             <DialogDescription>
-                                Add a comment or suggestion for lines {activeSelection.line}-{activeSelection.endLine || activeSelection.line}.
+                                {existingAnnotation
+                                    ? `Discussion for lines ${existingAnnotation.line}-${existingAnnotation.endLine || existingAnnotation.line}`
+                                    : `Add a comment or suggestion for lines ${activeSelection.line}-${activeSelection.endLine || activeSelection.line}`
+                                }
                             </DialogDescription>
                         </DialogHeader>
+
                         <div className="grid gap-4 py-4">
                             <div className="bg-muted p-2 rounded-md text-xs font-mono max-h-32 overflow-auto whitespace-pre">
                                 {activeSelection.code}
                             </div>
+
+                            {existingAnnotation && (
+                                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                                    <div className="flex flex-col gap-4">
+                                        {existingAnnotation.comments.map((comment) => (
+                                            <div key={comment.id} className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <span className="font-semibold text-foreground">{comment.author}</span>
+                                                    <span>{new Date(comment.timestamp).toLocaleString()}</span>
+                                                </div>
+                                                <p className="text-sm">{comment.text}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            )}
+
                             <div className="grid w-full gap-1.5">
-                                <Label htmlFor="message">Your Annotation</Label>
+                                <Label htmlFor="message">{existingAnnotation ? 'Reply' : 'Your Annotation'}</Label>
                                 <Textarea
-                                    placeholder="Type your message here."
+                                    placeholder={existingAnnotation ? "Type your reply..." : "Type your message here."}
                                     id="message"
                                     ref={annotationRef}
                                 />
@@ -66,7 +106,9 @@ export function EditorPopups() {
                         </div>
                         <DialogFooter>
                             <Button variant="secondary" onClick={close}>Cancel</Button>
-                            <Button onClick={handleSaveAnnotation}>Save Annotation</Button>
+                            <Button onClick={handleSaveAnnotation}>
+                                {existingAnnotation ? 'Post Reply' : 'Save Annotation'}
+                            </Button>
                         </DialogFooter>
                     </>
                 )}

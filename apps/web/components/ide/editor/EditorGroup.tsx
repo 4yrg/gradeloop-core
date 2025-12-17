@@ -145,13 +145,59 @@ export function EditorGroup() {
                             position.lineNumber,
                             model.getLineMaxColumn(position.lineNumber)
                         ),
-                        contents: lineAnnotations.map(a => ({
-                            value: `**${a.author || 'User'}**: ${a.text || 'No content'}\n\n*${new Date(a.timestamp || Date.now()).toLocaleString()}*`
-                        }))
+                        contents: lineAnnotations.map(a => {
+                            const latestComment = a.comments[a.comments.length - 1]
+                            const content = latestComment
+                                ? `**${latestComment.author}**: ${latestComment.text}\n\n*${new Date(latestComment.timestamp).toLocaleString()}*`
+                                : '(No comments)'
+
+                            return { value: content }
+                        })
                     }
                 }
             })
         }
+
+        // Add Content Widgets for Annotations
+        // Clear previous widgets if any (manual management required or use effect cleanup)
+        // For simplicity in this iteration, we'll just add new ones. In a real app, diff them.
+
+        annotations.filter(a => a.fileId === activeFileId).forEach(annotation => {
+            const widgetId = `annotation-widget-${annotation.id}`;
+            // Check if widget already exists to avoid duplicates
+            // @ts-ignore
+            if (editor._contentWidgets && editor._contentWidgets.hasOwnProperty(widgetId)) return;
+
+            editor.addContentWidget({
+                getId: () => widgetId,
+                getDomNode: () => {
+                    const domNode = document.createElement('div');
+                    domNode.className = 'annotation-widget';
+                    domNode.innerHTML = `<button class="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:scale-110 transition-transform" title="View Discussion">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </button>`;
+
+                    domNode.onclick = (e) => {
+                        e.stopPropagation();
+                        setActiveSelection({
+                            code: annotation.content,
+                            line: annotation.line,
+                            endLine: annotation.endLine,
+                            fileId: annotation.fileId
+                        })
+                        setActivePopup('annotation'); // Re-use annotation popup for now, will update to thread view next
+                    };
+                    return domNode;
+                },
+                getPosition: () => ({
+                    position: {
+                        lineNumber: annotation.line,
+                        column: 1 // Position at start of line or use endColumn 
+                    },
+                    preference: [monaco.editor.ContentWidgetPositionPreference.EXACT]
+                })
+            });
+        });
     }
 
     if (!activeFile) {
