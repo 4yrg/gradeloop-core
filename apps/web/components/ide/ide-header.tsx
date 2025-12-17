@@ -1,9 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Play, Send, Save, ArrowLeft, Clock } from "lucide-react"
+import { Play, Send, ArrowLeft, Clock } from "lucide-react"
 import Link from "next/link"
-import { ModeToggle } from "@/components/layout/mode-toggle"
 
 interface IdeHeaderProps {
     isExecuting: boolean
