@@ -1,5 +1,8 @@
 "use client"
 
+import { useState, useRef } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { AdminService } from "@/services/admin.service"
 import {
     Table,
     TableBody,
@@ -10,7 +13,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Shield, GraduationCap, UserCog } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { MoreHorizontal, Shield, GraduationCap, UserCog, Upload, Loader2, Download } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,6 +24,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { toast } from "sonner"
+import Papa from 'papaparse'
 
 const users = [
     { id: "1", name: "Alice Student", email: "alice@gradeloop.com", role: "STUDENT", status: "Active" },
@@ -30,11 +36,92 @@ const users = [
 ]
 
 export default function UserManagementPage() {
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isUploading, setIsUploading] = useState(false)
+
+    const bulkCreateMutation = useMutation({
+        mutationFn: (data: any[]) => AdminService.bulkCreateStudents(data),
+        onSuccess: (data, variables) => {
+            toast.success(`Successfully queued ${variables.length} users for creation`)
+            setIsUploading(false)
+        },
+        onError: () => {
+            toast.error("Failed to import users")
+            setIsUploading(false)
+        }
+    })
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsUploading(true)
+        Papa.parse(file, {
+            header: true,
+            complete: (results) => {
+                if (results.data && results.data.length > 0) {
+                    bulkCreateMutation.mutate(results.data)
+                } else {
+                    toast.error("CSV file is empty or invalid")
+                    setIsUploading(false)
+                }
+                // Reset input
+                if (fileInputRef.current) fileInputRef.current.value = ""
+            },
+            error: (error) => {
+                toast.error(`CSV Parsing Error: ${error.message}`)
+                setIsUploading(false)
+            }
+        })
+    }
+
+    const handleDownloadTemplate = () => {
+        const headers = ["name", "email", "studentId", "role"]
+        const rows = [
+            ["John Doe", "john.doe@example.com", "IT210001", "STUDENT"],
+            ["Jane Smith", "jane.smith@example.com", "IT210002", "STUDENT"]
+        ]
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n")
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+        const link = document.createElement("a")
+        const url = URL.createObjectURL(blob)
+        link.setAttribute("href", url)
+        link.setAttribute("download", "students_template.csv")
+        link.style.visibility = "hidden"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
+
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                <p className="text-muted-foreground">Manage system access and roles.</p>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+                    <p className="text-muted-foreground">Manage system access and roles.</p>
+                </div>
+                <div className="flex gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept=".csv"
+                        onChange={handleFileChange}
+                    />
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                        Import from CSV
+                    </Button>
+                    <Button variant="outline" onClick={handleDownloadTemplate}>
+                        <Download className="mr-2 h-4 w-4" /> Template
+                    </Button>
+                    <Button>Add User</Button>
+                </div>
             </div>
 
             <div className="rounded-md border bg-card">

@@ -2,136 +2,211 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { InstructorService } from "@/services/instructor.service"
-import { useUserStore } from "@/store/useUserStore"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Users, FileText, TriangleAlert, MessageSquare, TrendingUp, MoreHorizontal, ArrowRight } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import {
+    Users,
+    FileText,
+    AlertTriangle,
+    CheckCircle2,
+    Calendar,
+    Bell,
+    TrendingUp,
+    Clock
+} from "lucide-react"
 import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
 
 export default function InstructorDashboard() {
-    const { user } = useUserStore()
-
-    const { data: courses, isLoading } = useQuery({
-        queryKey: ['instructor-courses'],
-        queryFn: InstructorService.getCourses
+    const { data: summary, isLoading: summaryLoading } = useQuery({
+        queryKey: ['instructor-dashboard-summary'],
+        queryFn: InstructorService.getDashboardSummary
     })
 
-    // Mock specific stats
-    const stats = [
-        { label: "Active Students", value: "142", icon: Users, color: "text-blue-500" },
-        { label: "Pending Reviews", value: "18", icon: FileText, color: "text-orange-500" },
-        { label: "Plagiarism Alerts", value: "3", icon: TriangleAlert, color: "text-red-500" },
-        { label: "Unread Messages", value: "5", icon: MessageSquare, color: "text-purple-500" },
-    ]
+    const { data: notifications } = useQuery({
+        queryKey: ['instructor-notifications'],
+        queryFn: InstructorService.getNotifications
+    })
 
-    const submissions = [
-        { id: 1, student: "Alice Cooper", assignment: "Lab 2: Loops", status: "Submitted", time: "10 mins ago" },
-        { id: 2, student: "Bob Smith", assignment: "Lab 2: Loops", status: "Late", time: "1 hour ago" },
-        { id: 3, student: "Charlie Day", assignment: "Project 1", status: "Flagged", time: "2 hours ago" },
+    const { data: upcomingEvents } = useQuery({
+        queryKey: ['instructor-upcoming-events'],
+        queryFn: InstructorService.getUpcomingEvents
+    })
+
+    const summaryCards = [
+        {
+            title: "Active Classes",
+            value: summary?.activeClasses || 0,
+            icon: Users,
+            color: "text-blue-600",
+            bgColor: "bg-blue-50 dark:bg-blue-900/20",
+            link: "/instructor/classes"
+        },
+        {
+            title: "Pending Submissions",
+            value: summary?.pendingSubmissions || 0,
+            icon: FileText,
+            color: "text-orange-600",
+            bgColor: "bg-orange-50 dark:bg-orange-900/20",
+            link: "/instructor/assignments"
+        },
+        {
+            title: "Flagged Cases",
+            value: summary?.flaggedCases || 0,
+            icon: AlertTriangle,
+            color: "text-red-600",
+            bgColor: "bg-red-50 dark:bg-red-900/20",
+            link: "/instructor/cipas"
+        },
+        {
+            title: "Requiring Review",
+            value: summary?.assignmentsRequiringReview || 0,
+            icon: CheckCircle2,
+            color: "text-green-600",
+            bgColor: "bg-green-50 dark:bg-green-900/20",
+            link: "/instructor/acafs"
+        }
     ]
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Instructor Dashboard</h1>
-                    <p className="text-muted-foreground">Manage your courses and assess student performance.</p>
-                </div>
-                <Button>Create New Course</Button>
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">Welcome back, Dr. John Smith</p>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat, i) => (
-                    <Card key={i}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stat.value}</div>
-                        </CardContent>
-                    </Card>
+            {/* Summary Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {summaryCards.map((card) => (
+                    <Link key={card.title} href={card.link}>
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">
+                                    {card.title}
+                                </CardTitle>
+                                <div className={`p-2 rounded-lg ${card.bgColor}`}>
+                                    <card.icon className={`h-5 w-5 ${card.color}`} />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {summaryLoading ? (
+                                    <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                                ) : (
+                                    <div className="text-3xl font-bold">{card.value}</div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Link>
                 ))}
             </div>
 
-            <div className="grid gap-6 md:grid-cols-7">
-                {/* Course List */}
-                <Card className="col-span-4 lg:col-span-4">
+            <div className="grid gap-6 lg:grid-cols-3">
+                {/* Teaching Timeline */}
+                <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>My Courses</CardTitle>
-                        <CardDescription>Courses you are currently teaching.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {isLoading ? (
-                            <div className="space-y-4">
-                                <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
-                                <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Calendar className="h-5 w-5" />
+                                    Teaching Timeline
+                                </CardTitle>
+                                <CardDescription>Upcoming deadlines and events</CardDescription>
                             </div>
-                        ) : (
-                            courses?.map(course => (
-                                <div key={course.id} className="flex items-center justify-between border p-4 rounded-lg bg-card/50 hover:bg-card transition-colors">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-semibold">{course.name}</h4>
-                                            <Badge variant="outline">{course.code}</Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">{course.semester} - {course.enrolledCount} Students</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="hidden md:block text-right">
-                                            <div className="text-sm font-medium">Progress</div>
-                                            <Progress value={course.progress} className="w-24 h-2 mt-1" />
-                                        </div>
-                                        <Button variant="ghost" size="icon" asChild>
-                                            <Link href={`/instructor/courses/${course.id}`}>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Recent Submissions */}
-                <Card className="col-span-3 lg:col-span-3">
-                    <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                        <CardDescription>Latest submissions needing attention.</CardDescription>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href="/instructor/analytics">View All</Link>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {submissions.map(sub => (
-                                <div key={sub.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-9 w-9">
-                                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                                                {sub.student[0]}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="text-sm font-medium leading-none">{sub.student}</p>
-                                            <p className="text-xs text-muted-foreground">{sub.assignment}</p>
-                                        </div>
+                            {upcomingEvents?.map((event: any) => (
+                                <div key={event.id} className="flex items-start gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+                                    <div className="p-2 rounded-full bg-primary/10">
+                                        <Clock className="h-4 w-4 text-primary" />
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <Badge variant={sub.status === 'Flagged' ? "destructive" : sub.status === 'Late' ? "secondary" : "outline"} className="text-[10px] px-1.5 py-0.5 h-auto">
-                                            {sub.status}
-                                        </Badge>
-                                        <span className="text-[10px] text-muted-foreground">{sub.time}</span>
+                                    <div className="flex-1">
+                                        <p className="font-medium">{event.title}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {new Date(event.date).toLocaleDateString()} at {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
                                     </div>
+                                    <Badge variant={event.type === 'deadline' ? 'destructive' : 'secondary'}>
+                                        {event.type}
+                                    </Badge>
                                 </div>
                             ))}
-                            <Button variant="ghost" size="sm" className="w-full text-xs">View All Activity</Button>
+                            {(!upcomingEvents || upcomingEvents.length === 0) && (
+                                <p className="text-center text-muted-foreground py-8">No upcoming events</p>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Notifications Panel */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Bell className="h-5 w-5" />
+                            Notifications
+                        </CardTitle>
+                        <CardDescription>Recent activity</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {notifications?.map((notif: any) => (
+                                <Link key={notif.id} href={notif.link}>
+                                    <div className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer">
+                                        <div className="flex items-start gap-2">
+                                            <div className={`mt-0.5 h-2 w-2 rounded-full ${notif.type === 'plagiarism' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">{notif.message}</p>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    {formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                            {(!notifications || notifications.length === 0) && (
+                                <p className="text-center text-muted-foreground py-8 text-sm">No new notifications</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Quick Actions */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Common tasks and shortcuts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <Button variant="outline" className="h-auto flex-col gap-2 p-6" asChild>
+                            <Link href="/instructor/assignments/create">
+                                <FileText className="h-6 w-6" />
+                                <span>Create Assignment</span>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" className="h-auto flex-col gap-2 p-6" asChild>
+                            <Link href="/instructor/classes">
+                                <Users className="h-6 w-6" />
+                                <span>Manage Classes</span>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" className="h-auto flex-col gap-2 p-6" asChild>
+                            <Link href="/instructor/analytics">
+                                <TrendingUp className="h-6 w-6" />
+                                <span>View Analytics</span>
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

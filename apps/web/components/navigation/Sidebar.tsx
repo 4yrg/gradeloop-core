@@ -39,8 +39,14 @@ const navItems: NavItem[] = [
 
     // Admin
     { title: "Overview", href: "/admin", icon: BarChart, roles: ["ADMIN"] },
-    { title: "User Management", href: "/admin/users", icon: Users, roles: ["ADMIN"] },
-    { title: "System Tools", href: "/admin/tools", icon: Settings, roles: ["ADMIN"] },
+    { title: "Academic Structure", href: "/admin/academic-structure", icon: BookOpen, roles: ["ADMIN"] },
+    { title: "Users & Roles", href: "/admin/users", icon: Users, roles: ["ADMIN"] },
+    { title: "Classes & Courses", href: "/admin/classes", icon: GraduationCap, roles: ["ADMIN"] },
+    { title: "Tools & Infra", href: "/admin/tools", icon: Settings, roles: ["ADMIN"] },
+    { title: "CIPAS Integrity", href: "/admin/cipas", icon: ShieldAlert, roles: ["ADMIN"] },
+    { title: "ACAFS Assessment", href: "/admin/acafs", icon: FileCode, roles: ["ADMIN"] },
+    { title: "Analytics", href: "/admin/analytics", icon: BarChart, roles: ["ADMIN"] },
+    { title: "Settings", href: "/admin/settings", icon: Settings, roles: ["ADMIN"] },
 ]
 
 export function Sidebar() {
@@ -88,6 +94,18 @@ export function Sidebar() {
                         <span className="text-sm font-medium truncate">{user?.name || "Guest User"}</span>
                         <span className="text-xs text-muted-foreground truncate">{role}</span>
                     </div>
+                </div>
+                {/* Dev Role Switcher */}
+                <div className="mt-2 text-xs text-muted-foreground">
+                    <select
+                        className="w-full bg-background border rounded px-1 py-1"
+                        value={role}
+                        onChange={(e) => useUserStore.getState().switchRole(e.target.value as UserRole)}
+                    >
+                        <option value="STUDENT">Student View</option>
+                        <option value="INSTRUCTOR">Instructor View</option>
+                        <option value="ADMIN">Admin View</option>
+                    </select>
                 </div>
             </div>
         </div>
