@@ -133,10 +133,10 @@
 }
 
 .annotation-inline {
-  background-color: var(--primary);
-  opacity: 0.2;
+  background-color: rgba(255, 255, 0, 0.2);
+  /* Light yellow with transparency */
 }
 
 .dark .annotation-inline {
-  opacity: 0.3;
+  background-color: rgba(255, 255, 0, 0.1);
 }
