@@ -12,7 +12,7 @@ export function SubmissionDialog() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const router = useRouter()
     const params = useParams()
-    const assignmentId = params.id as string
+    const assignmentId = params.assignmentId as string // Matches [assignmentId] folder naming
 
     const isOpen = activePopup === 'submission'
     const close = () => setActivePopup(null)
