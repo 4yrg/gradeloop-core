@@ -30,12 +30,12 @@ export default function AssignmentDetailPage() {
     const assignmentId = id as string
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-    const { data: assignment } = useQuery({
+    const { data: assignment, isLoading: assignmentLoading, error: assignmentError } = useQuery({
         queryKey: ['assignment-detail', assignmentId],
         queryFn: () => InstructorService.getAssignmentDetail(assignmentId)
     })
 
-    const { data: submissions } = useQuery({
+    const { data: submissions, isLoading: submissionsLoading } = useQuery({
         queryKey: ['assignment-submissions', assignmentId],
         queryFn: () => InstructorService.getAssignmentSubmissions(assignmentId)
     })
@@ -50,8 +50,25 @@ export default function AssignmentDetailPage() {
         }
     }
 
-    if (!assignment) {
-        return <div className="p-8">Loading...</div>
+    if (assignmentLoading) {
+        return <div className="p-8">Loading assignment...</div>
+    }
+
+    if (assignmentError || !assignment) {
+        return (
+            <div className="p-8">
+                <Card>
+                    <CardContent className="pt-6">
+                        <p className="text-center text-muted-foreground">
+                            Assignment not found or error loading data.
+                        </p>
+                        <Button className="mt-4 mx-auto block" onClick={() => router.push("/instructor/assignments")}>
+                            Back to Assignments
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     const submittedCount = submissions?.filter((s: any) => s.status !== 'NOT_SUBMITTED').length || 0
