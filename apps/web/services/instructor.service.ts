@@ -215,5 +215,69 @@ export const InstructorService = {
             averageGrade: 78.5,
             gradeDistribution: { A: 20, B: 35, C: 30, D: 10, F: 5 }
         };
+    },
+
+    // Assignment Detail & Management
+    getAssignmentDetail: async (assignmentId: string) => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const assignment = MOCK_ASSIGNMENTS.find(a => a.id === assignmentId);
+        return {
+            ...assignment,
+            course: MOCK_COURSES.find(c => c.id === assignment?.courseId),
+            rubric: MOCK_RUBRICS.filter(r => r.assignmentId === assignmentId),
+            testCases: MOCK_TEST_CASES.filter(t => t.assignmentId === assignmentId),
+            totalStudents: 45
+        };
+    },
+
+    getAssignmentSubmissions: async (assignmentId: string) => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return MOCK_DETAILED_SUBMISSIONS
+            .filter(s => s.assignmentId === assignmentId)
+            .map(s => ({
+                ...s,
+                student: MOCK_USERS.find(u => u.id === s.studentId),
+                assignment: MOCK_ASSIGNMENTS.find(a => a.id === assignmentId)
+            }));
+    },
+
+    deleteAssignment: async (assignmentId: string) => {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Mock deletion - in real app would call API
+        return { success: true };
+    },
+
+    // Student Profile
+    getStudentProfile: async (studentId: string) => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const student = MOCK_USERS.find(u => u.id === studentId);
+        const submissions = MOCK_DETAILED_SUBMISSIONS.filter(s => s.studentId === studentId);
+
+        return {
+            ...student,
+            studentId: `STU${studentId.slice(-4)}`,
+            program: 'Computer Science',
+            averageGrade: 82,
+            totalSubmissions: submissions.length,
+            onTimeSubmissions: submissions.filter(s => s.submittedAt).length,
+            cipasFlags: MOCK_PLAGIARISM_REPORTS.filter(r => {
+                const sub = MOCK_DETAILED_SUBMISSIONS.find(s => s.id === r.submissionId);
+                return sub?.studentId === studentId;
+            }).length,
+            completionRate: 90,
+            recentSubmissions: submissions.slice(0, 5).map(s => ({
+                ...s,
+                assignmentTitle: MOCK_ASSIGNMENTS.find(a => a.id === s.assignmentId)?.title
+            })),
+            performanceByType: [
+                { type: 'Coding Assignments', average: 85 },
+                { type: 'Quizzes', average: 78 },
+                { type: 'Projects', average: 88 }
+            ],
+            recentActivity: [
+                { action: 'Submitted Assignment 3', timestamp: new Date().toISOString() },
+                { action: 'Viewed feedback for Assignment 2', timestamp: new Date(Date.now() - 86400000).toISOString() }
+            ]
+        };
     }
 };

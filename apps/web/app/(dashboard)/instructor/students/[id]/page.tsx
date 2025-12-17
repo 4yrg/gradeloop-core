@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/parameter"
+import { useParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { InstructorService } from "@/services/instructor.service"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
