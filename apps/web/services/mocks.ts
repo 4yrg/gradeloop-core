@@ -82,3 +82,48 @@ export const MOCK_SUBMISSIONS: Submission[] = [
         plagiarismScore: 12, aiLikelihood: 5
     }
 ];
+
+export interface Announcement {
+    id: string;
+    courseId: string;
+    title: string;
+    content: string;
+    instructorId: string;
+    date: string;
+    attachments?: string[];
+}
+
+export interface CalendarEvent {
+    id: string;
+    title: string;
+    date: Date;
+    type: 'assignment' | 'exam' | 'session' | 'other';
+    courseId?: string;
+    description?: string;
+}
+
+export const MOCK_ANNOUNCEMENTS: Announcement[] = [
+    {
+        id: 'ann1', courseId: 'c1', title: 'Midterm Exam Schedule', content: ' The midterm exam will be held on Oct 25th in Main Hall.', instructorId: 'u2', date: new Date(Date.now() - 86400000 * 2).toISOString()
+    },
+    {
+        id: 'ann2', courseId: 'c2', title: 'Lecture Cancelled', content: 'Todays lecture is cancelled due to illness.', instructorId: 'u2', date: new Date(Date.now() - 86400000 * 5).toISOString()
+    }
+];
+
+export const MOCK_EVENTS: CalendarEvent[] = [
+    ...MOCK_ASSIGNMENTS.map(a => ({
+        id: `evt-${a.id}`,
+        title: `Due: ${a.title}`,
+        date: new Date(a.dueDate),
+        type: 'assignment' as const,
+        courseId: a.courseId,
+        description: 'Assignment Deadline'
+    })),
+    {
+        id: 'evt-1', title: 'Calculus Review Session', date: new Date(Date.now() + 86400000), type: 'session', courseId: 'c1'
+    },
+    {
+        id: 'evt-2', title: 'System Maintenance', date: new Date(Date.now() + 86400000 * 3), type: 'other', description: 'GradeLoop maintenance'
+    }
+];

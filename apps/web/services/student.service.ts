@@ -1,5 +1,5 @@
 
-import { MOCK_ASSIGNMENTS, MOCK_COURSES, MOCK_SUBMISSIONS, MOCK_USERS } from './mocks';
+import { MOCK_ASSIGNMENTS, MOCK_COURSES, MOCK_SUBMISSIONS, MOCK_USERS, MOCK_ANNOUNCEMENTS, MOCK_EVENTS } from './mocks';
 
 export const StudentService = {
     getProfile: async () => {
@@ -26,5 +26,20 @@ export const StudentService = {
     getAssignmentDetails: async (id: string) => {
         await new Promise(resolve => setTimeout(resolve, 500));
         return MOCK_ASSIGNMENTS.find(a => a.id === id);
+    },
+
+    getAnnouncements: async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return MOCK_ANNOUNCEMENTS;
+    },
+
+    getCalendarEvents: async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return MOCK_EVENTS;
+    },
+
+    getCourseDetails: async (id: string) => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return MOCK_COURSES.find(c => c.id === id);
     }
 };

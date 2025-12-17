@@ -1,6 +1,8 @@
 "use client"
 
+
 import { useIdeStore } from "@/store/ide/use-ide-store"
+import { StudentService } from "@/services/student.service"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, CheckCircle2, FileText, Loader2 } from "lucide-react"
@@ -32,10 +34,24 @@ export function SubmissionDialog() {
         // Redirect to assignment overview
         // We use replace to prevent going back to IDE with back button easily if that's desired, 
         // but push is standard.
-        if (assignmentId) {
-            router.push(`/student/assignments/${assignmentId}?submitted=true`)
-        } else {
-            console.error("No assignment ID found to redirect to")
+        // Fetch assignment details to get the course ID for redirection
+        try {
+            if (assignmentId) {
+                const assignment = await StudentService.getAssignmentDetails(assignmentId)
+
+                if (assignment && assignment.courseId) {
+                    // Redirect to Course Assignments page
+                    router.push(`/student/courses/${assignment.courseId}/assignments?submitted=true`)
+                } else {
+                    // Fallback if course ID not found
+                    router.push(`/student/assignments/${assignmentId}?submitted=true`)
+                }
+            } else {
+                console.error("No assignment ID found to redirect to")
+                router.push('/student/assignments')
+            }
+        } catch (error) {
+            console.error("Error fetching assignment details during submission redirect:", error)
             // Fallback
             router.push('/student/assignments')
         }

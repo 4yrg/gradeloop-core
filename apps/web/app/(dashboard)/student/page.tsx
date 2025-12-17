@@ -23,11 +23,10 @@ export default function StudentDashboard() {
         queryFn: StudentService.getUpcomingAssignments
     })
 
-    // Mock Announcements & Messages (Can be moved to service later)
-    const announcements = [
-        { id: 1, title: "System Maintenance", content: "GradeLoop will be down for maintenance on Sunday 2 AM.", date: "2 hours ago" },
-        { id: 2, title: "Welcome to GradeLoop", content: "Check out the new AI coding assistant.", date: "1 day ago" },
-    ]
+    const { data: announcements, isLoading: announcementsLoading } = useQuery({
+        queryKey: ['student-announcements'],
+        queryFn: StudentService.getAnnouncements
+    })
 
     const notices = [
         { id: 1, from: "Dr. Smith", subject: "Assignment 1 Extended", date: "Today" },
@@ -45,8 +44,10 @@ export default function StudentDashboard() {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                        <CalendarDays className="mr-2 h-4 w-4" /> Calendar
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/student/calendar">
+                            <CalendarDays className="mr-2 h-4 w-4" /> Calendar
+                        </Link>
                     </Button>
                     <Button variant="default" size="sm">
                         <BookOpen className="mr-2 h-4 w-4" /> Go to LMS
@@ -182,11 +183,16 @@ export default function StudentDashboard() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-4">
-                            {announcements.map(ann => (
+                            {announcementsLoading ? (
+                                <div className="space-y-4">
+                                    <div className="h-12 bg-muted animate-pulse rounded" />
+                                    <div className="h-12 bg-muted animate-pulse rounded" />
+                                </div>
+                            ) : announcements?.map(ann => (
                                 <div key={ann.id} className="border-l-2 border-primary pl-3 space-y-1">
                                     <p className="text-sm font-medium leading-none">{ann.title}</p>
                                     <p className="text-xs text-muted-foreground line-clamp-2">{ann.content}</p>
-                                    <p className="text-[10px] text-muted-foreground pt-1">{ann.date}</p>
+                                    <p className="text-[10px] text-muted-foreground pt-1">{new Date(ann.date).toLocaleDateString()}</p>
                                 </div>
                             ))}
                             <Button variant="ghost" size="sm" className="w-full text-xs">View All Announcements</Button>
