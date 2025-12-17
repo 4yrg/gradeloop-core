@@ -3,7 +3,7 @@
 import { useIdeStore } from "@/store/ide/use-ide-store"
 import Editor, { DiffEditor, OnMount } from "@monaco-editor/react"
 import { useTheme } from "next-themes"
-import { X, Circle, SplitSquareHorizontal } from "lucide-react"
+import { X, Circle, SplitSquareHorizontal, Code2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -44,10 +44,17 @@ export function EditorGroup() {
 
     if (!activeFile) {
         return (
-            <div className="h-full w-full flex items-center justify-center bg-background text-muted-foreground">
-                <div className="text-center">
-                    <div className="text-2xl font-semibold mb-2">GradeLoop IDE</div>
-                    <p className="text-sm">Select a file to start editing</p>
+            <div className="h-full w-full flex items-center justify-center bg-background text-muted-foreground select-none">
+                <div className="flex flex-col items-center gap-4">
+                    <Code2 className="h-24 w-24 opacity-20" />
+                    <div className="text-center">
+                        <div className="text-2xl font-semibold mb-2">GradeLoop IDE</div>
+                        <p className="text-sm">Select a file to start editing</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="text-xs bg-muted px-2 py-1 rounded">⌘P to search files</span>
+                        <span className="text-xs bg-muted px-2 py-1 rounded">⇧⌘F to search</span>
+                    </div>
                 </div>
             </div>
         )

@@ -7,7 +7,7 @@ import { EditorGroup } from "@/components/ide/editor/EditorGroup"
 import { Panel } from "@/components/ide/panel/Panel"
 import { AIAssistant } from "@/components/ide/ai/AIAssistant"
 import { StatusBar } from "@/components/ide/layout/StatusBar"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+
 
 import { MenuBar } from "./MenuBar"
 import { SettingsDialog } from "@/components/ide/layout/SettingsDialog"
@@ -36,61 +36,43 @@ export function Workbench() {
                 {/* Activity Bar (Fixed Width) */}
                 <ActivityBar />
 
-                {/* Resizable Horizontally */}
-                <ResizablePanelGroup direction="horizontal" className="flex-1">
+                {/* Left Sidebar */}
+                {sidebarVisible && (
+                    <div
+                        className="border-r bg-muted/30 flex-none"
+                        style={{ width: sidebarWidth || 250 }}
+                    >
+                        <Sidebar />
+                    </div>
+                )}
 
-                    {/* Left Sidebar */}
-                    {sidebarVisible && (
-                        <>
-                            <ResizablePanel
-                                defaultSize={20}
-                                minSize={15}
-                                maxSize={30}
-                                className="border-r bg-muted/30"
-                            >
-                                <Sidebar />
-                            </ResizablePanel>
-                            <ResizableHandle />
-                        </>
+                {/* Center Area (Editor + Panel) */}
+                <div className="flex-1 flex flex-col min-w-0 bg-background">
+                    {/* Editor Area */}
+                    <div className="flex-1 overflow-hidden relative">
+                        <EditorGroup />
+                    </div>
+
+                    {/* Bottom Panel */}
+                    {panelVisible && (
+                        <div
+                            className="border-t flex-none bg-background"
+                            style={{ height: 200 }}
+                        >
+                            <Panel />
+                        </div>
                     )}
+                </div>
 
-                    {/* Editor & Panel Area */}
-                    <ResizablePanel defaultSize={60}>
-                        <ResizablePanelGroup direction="vertical">
-                            {/* Editor Area */}
-                            <ResizablePanel defaultSize={panelVisible ? 70 : 100} className="relative">
-                                <EditorGroup />
-                            </ResizablePanel>
-
-                            {/* Bottom Panel */}
-                            {panelVisible && (
-                                <>
-                                    <ResizableHandle />
-                                    <ResizablePanel defaultSize={30} minSize={10}>
-                                        <Panel />
-                                    </ResizablePanel>
-                                </>
-                            )}
-                        </ResizablePanelGroup>
-                    </ResizablePanel>
-
-                    {/* Right AI Assistant */}
-                    {auxiliaryBarVisible && (
-                        <>
-                            <ResizableHandle />
-                            <ResizablePanel
-                                defaultSize={25}
-                                minSize={20}
-                                maxSize={40}
-                                className="border-l bg-card"
-                            >
-                                <AIAssistant />
-                            </ResizablePanel>
-
-                        </>
-                    )}
-
-                </ResizablePanelGroup>
+                {/* Right AI Assistant */}
+                {auxiliaryBarVisible && (
+                    <div
+                        className="border-l bg-card flex-none"
+                        style={{ width: auxiliaryBarWidth || 300 }}
+                    >
+                        <AIAssistant />
+                    </div>
+                )}
             </div>
 
             {/* Status Bar (Fixed Height) */}
