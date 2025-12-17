@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Save, Shield } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 export default function RolesPage() {
     const queryClient = useQueryClient()
