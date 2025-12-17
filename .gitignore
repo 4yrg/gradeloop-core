@@ -21,6 +21,7 @@ venv/
 .envrc
 /apps/*/.gitignore
 
+
 # =========================
 # Node / React / Next.js
 # =========================

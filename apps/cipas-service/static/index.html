@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Clone Detection</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #results { margin-top: 20px; }
+        .result-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
+        .score { font-weight: bold; color: #28a745; }
+        pre { background: #eee; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Clone Detection</h1>
+        <p>Enter a code fragment to find similar clones.</p>
+        
+        <textarea id="codeInput" placeholder="// Paste Java code here..."></textarea>
+        <button onclick="detectClones()">Detect Clones</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function detectClones() {
+            const code = document.getElementById('codeInput').value;
+            if (!code) return;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Searching...';
+
+            try {
+                const response = await fetch('/detect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, language: 'java' })
+                });
+                
+                const data = await response.json();
+                resultsDiv.innerHTML = `<h3>Matches found: ${data.matches.length}</h3>`;
+                
+                if (data.matches.length === 0) {
+                    resultsDiv.innerHTML += "<p>No matches found in the index.</p>";
+                    return;
+                }
+
+                data.matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.innerHTML = `
+                        <div>Type: <strong>${match.predicted_type === 0 ? "Non-clone" : "Type-" + match.predicted_type}</strong></div>
+                        <div class="score">Distance: ${match.similarity_score.toFixed(4)}</div>
+                        <pre>${escapeHtml(match.code)}</pre>
+                    `;
+                    resultsDiv.appendChild(div);
+                });
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
+            }
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
