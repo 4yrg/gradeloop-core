@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 export type ActivityId = 'explorer' | 'search' | 'git' | 'extensions' | 'settings' | 'run'
+export type RightActivityId = 'ai' | 'annotations'
 export type PanelTabId = 'terminal' | 'output' | 'problems' | 'test-results'
 export type Role = 'student' | 'instructor' | 'admin'
 
@@ -26,6 +27,7 @@ interface IdeState {
 
     // Activity Bar
     activeActivity: ActivityId | null
+    activeRightActivity: RightActivityId | null
 
     // Editor
     files: File[]
@@ -45,6 +47,7 @@ interface IdeState {
     togglePanel: () => void
     setSettingsOpen: (open: boolean) => void
     setActiveActivity: (id: ActivityId) => void
+    setActiveRightActivity: (id: RightActivityId) => void
     setActiveFile: (id: string) => void
     openFile: (file: File) => void
     closeFile: (id: string) => void
@@ -69,6 +72,7 @@ export const useIdeStore = create<IdeState>((set, get) => ({
     panelHeight: 200,
 
     activeActivity: 'explorer',
+    activeRightActivity: 'ai',
 
     files: DEFAULT_FILES,
     activeFileId: '1',
@@ -96,6 +100,15 @@ export const useIdeStore = create<IdeState>((set, get) => ({
             set({ sidebarVisible: false }) // Toggle off
         } else {
             set({ activeActivity: id, sidebarVisible: true })
+        }
+    },
+
+    setActiveRightActivity: (id) => {
+        const { activeRightActivity, auxiliaryBarVisible } = get()
+        if (activeRightActivity === id && auxiliaryBarVisible) {
+            set({ auxiliaryBarVisible: false })
+        } else {
+            set({ activeRightActivity: id, auxiliaryBarVisible: true })
         }
     },
 

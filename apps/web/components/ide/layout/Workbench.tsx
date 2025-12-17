@@ -7,7 +7,8 @@ import { EditorGroup } from "@/components/ide/editor/EditorGroup"
 import { Panel } from "@/components/ide/panel/Panel"
 import { AIAssistant } from "@/components/ide/ai/AIAssistant"
 import { StatusBar } from "@/components/ide/layout/StatusBar"
-
+import { RightActivityBar } from "@/components/ide/activity-bar/RightActivityBar"
+import { AnnotationPanel } from "@/components/ide/annotations/AnnotationPanel"
 
 import { MenuBar } from "./MenuBar"
 import { SettingsDialog } from "@/components/ide/layout/SettingsDialog"
@@ -20,7 +21,8 @@ export function Workbench() {
         sidebarWidth,
         auxiliaryBarWidth,
         isSettingsOpen,
-        setSettingsOpen
+        setSettingsOpen,
+        activeRightActivity
     } = useIdeStore()
 
     return (
@@ -64,15 +66,18 @@ export function Workbench() {
                     )}
                 </div>
 
-                {/* Right AI Assistant */}
+                {/* Right Panel (AI or Annotations) */}
                 {auxiliaryBarVisible && (
                     <div
                         className="border-l bg-card flex-none"
                         style={{ width: auxiliaryBarWidth || 300 }}
                     >
-                        <AIAssistant />
+                        {activeRightActivity === 'ai' ? <AIAssistant /> : <AnnotationPanel />}
                     </div>
                 )}
+
+                {/* Right Activity Bar */}
+                <RightActivityBar />
             </div>
 
             {/* Status Bar (Fixed Height) */}

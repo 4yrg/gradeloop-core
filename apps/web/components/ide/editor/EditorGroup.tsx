@@ -15,7 +15,8 @@ export function EditorGroup() {
         openFiles,
         setActiveFile,
         closeFile,
-        updateFileContent
+        updateFileContent,
+        setActiveRightActivity
     } = useIdeStore()
 
     const { theme } = useTheme()
@@ -26,6 +27,32 @@ export function EditorGroup() {
     const openFileObjects = openFiles.map(id => files.find(f => f.id === id)).filter(Boolean) as typeof files
 
     const handleEditorMount: OnMount = (editor, monaco) => {
+        // Add context menu actions
+        editor.addAction({
+            id: 'ask-ai',
+            label: 'Ask GradeLoop AI',
+            keybindings: [
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI
+            ],
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1,
+            run: (ed) => {
+                // Open AI panel
+                setActiveRightActivity('ai')
+            }
+        })
+
+        editor.addAction({
+            id: 'add-annotation',
+            label: 'Add Annotation',
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: (ed) => {
+                // Open Annotation panel
+                setActiveRightActivity('annotations')
+            }
+        })
+
         // Mock diagnostics
         const model = editor.getModel()
         if (model) {
