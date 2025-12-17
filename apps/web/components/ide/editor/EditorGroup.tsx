@@ -5,7 +5,7 @@ import Editor, { DiffEditor, OnMount } from "@monaco-editor/react"
 import { useTheme } from "next-themes"
 import { X, Circle, SplitSquareHorizontal, Code2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 
 export function EditorGroup() {
@@ -17,17 +17,46 @@ export function EditorGroup() {
         closeFile,
         updateFileContent,
         setActivePopup,
-        setActiveSelection
+        setActiveSelection,
+        annotations
     } = useIdeStore()
 
     const { theme } = useTheme()
+    const editorRef = useRef<any>(null)
+    const decorationIdsRef = useRef<string[]>([])
 
     const activeFile = files.find(f => f.id === activeFileId)
 
     // Get file objects for open tabs
     const openFileObjects = openFiles.map(id => files.find(f => f.id === id)).filter(Boolean) as typeof files
 
+    useEffect(() => {
+        const editor = editorRef.current
+        if (!editor || !activeFileId) return
+
+        const currentAnnotations = annotations.filter(a => a.fileId === activeFileId)
+        const newDecorations = currentAnnotations.map(a => ({
+            range: {
+                startLineNumber: a.line,
+                startColumn: 1,
+                endLineNumber: a.endLine || a.line,
+                endColumn: 1
+            },
+            options: {
+                isWholeLine: false,
+                glyphMarginClassName: 'annotation-glyph text-primary', // Use primary color
+                inlineClassName: 'annotation-inline',
+            }
+        }))
+
+        // @ts-ignore
+        decorationIdsRef.current = editor.deltaDecorations(decorationIdsRef.current, newDecorations)
+
+    }, [activeFileId, annotations, activeFile])
+
     const handleEditorMount: OnMount = (editor, monaco) => {
+        editorRef.current = editor
+
         // Add context menu actions
         editor.addAction({
             id: 'ask-ai',
@@ -91,6 +120,37 @@ export function EditorGroup() {
                     severity: monaco.MarkerSeverity.Info
                 }
             ])
+        }
+        // Add hover provider for annotations
+        // We use a disposable list to track registrations if we needed to unmount cleanly, 
+        // but for this simple case, we'll register it once per editor instance or just global
+        // Ideally should store the disposable
+        if (activeFile) {
+            monaco.languages.registerHoverProvider(activeFile.language, {
+                // @ts-ignore - Monaco types might be slightly mismatched in this context
+                provideHover: (model, position) => {
+                    // Find annotations for this line
+                    const lineAnnotations = annotations.filter(a =>
+                        a.fileId === activeFileId &&
+                        position.lineNumber >= a.line &&
+                        position.lineNumber <= (a.endLine || a.line)
+                    )
+
+                    if (lineAnnotations.length === 0) return null
+
+                    return {
+                        range: new monaco.Range(
+                            position.lineNumber,
+                            1,
+                            position.lineNumber,
+                            model.getLineMaxColumn(position.lineNumber)
+                        ),
+                        contents: lineAnnotations.map(a => ({
+                            value: `**${a.author || 'User'}**: ${a.text || 'No content'}\n\n*${new Date(a.timestamp || Date.now()).toLocaleString()}*`
+                        }))
+                    }
+                }
+            })
         }
     }
 
@@ -192,7 +252,8 @@ export function EditorGroup() {
                             lineNumbers: 'on',
                             scrollBeyondLastLine: false,
                             automaticLayout: true,
-                            padding: { top: 16 }
+                            padding: { top: 16 },
+                            glyphMargin: true
                         }}
                     />
                 )}

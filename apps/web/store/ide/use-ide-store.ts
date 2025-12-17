@@ -22,6 +22,18 @@ interface SelectionData {
     fileId: string
 }
 
+export interface Annotation {
+    id: string
+    fileId: string
+    line: number
+    endLine?: number
+    content: string         // Code content
+    text?: string           // User comment
+    author?: string
+    type?: 'question' | 'note'
+    timestamp?: number
+}
+
 interface IdeState {
     // Workbench Layout
     sidebarVisible: boolean
@@ -66,6 +78,13 @@ interface IdeState {
     setRole: (role: Role) => void
 
     updateFileContent: (id: string, content: string) => void
+
+    setActivePopup: (popup: PopupType | null) => void
+    setActiveSelection: (selection: SelectionData | null) => void
+
+    // Annotations
+    annotations: Annotation[]
+    addAnnotation: (annotation: Annotation) => void
 }
 
 const DEFAULT_FILES: File[] = [
@@ -99,6 +118,7 @@ export const useIdeStore = create<IdeState>((set, get) => ({
     isSettingsOpen: false,
     activePopup: null,
     activeSelection: null,
+    annotations: [], // Initial state
 
     // Actions
     toggleSidebar: () => set(state => ({ sidebarVisible: !state.sidebarVisible })),
@@ -160,5 +180,7 @@ export const useIdeStore = create<IdeState>((set, get) => ({
 
     updateFileContent: (id, content) => set(state => ({
         files: state.files.map(f => f.id === id ? { ...f, content } : f)
-    }))
+    })),
+
+    addAnnotation: (annotation) => set(state => ({ annotations: [...state.annotations, annotation] }))
 }))

@@ -7,14 +7,32 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bot, MessageCircleCode } from "lucide-react"
+import { useRef } from "react"
 
 export function EditorPopups() {
-    const { activePopup, activeSelection, setActivePopup, setActiveSelection } = useIdeStore()
+    const { activePopup, activeSelection, setActivePopup, setActiveSelection, addAnnotation } = useIdeStore()
+    const annotationRef = useRef<HTMLTextAreaElement>(null)
 
     const isOpen = activePopup !== null
     const close = () => {
         setActivePopup(null)
         setActiveSelection(null)
+    }
+
+    const handleSaveAnnotation = () => {
+        if (!activeSelection || !annotationRef.current?.value) return
+
+        addAnnotation({
+            id: Date.now().toString(),
+            fileId: activeSelection.fileId,
+            line: activeSelection.line,
+            endLine: activeSelection.endLine,
+            text: annotationRef.current.value,
+            author: "Student",
+            type: 'question',
+            timestamp: Date.now()
+        })
+        close()
     }
 
     if (!activeSelection) return null
@@ -39,12 +57,16 @@ export function EditorPopups() {
                             </div>
                             <div className="grid w-full gap-1.5">
                                 <Label htmlFor="message">Your Annotation</Label>
-                                <Textarea placeholder="Type your message here." id="message" />
+                                <Textarea
+                                    placeholder="Type your message here."
+                                    id="message"
+                                    ref={annotationRef}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button variant="secondary" onClick={close}>Cancel</Button>
-                            <Button onClick={close}>Save Annotation</Button>
+                            <Button onClick={handleSaveAnnotation}>Save Annotation</Button>
                         </DialogFooter>
                     </>
                 )}
