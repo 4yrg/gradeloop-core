@@ -125,7 +125,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+
 lib64/
 parts/
 sdist/
@@ -181,6 +181,9 @@ runs/
 tensorboard/
 lightning_logs/
 
+# AI model files and directories
+apps/ai-services/models/
+
 # =========================
 # OS / Editor junk
 # =========================
@@ -225,17 +228,4 @@ logs/
 tmp/
 pids/
 
-# =========================
-# CIPAS Project
-# =========================
-
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/raw/java/
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/tokens/
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/embeddings/
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/normalized/
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/ast/
-apps/model-orchestrator/app/models/cipas/code_clone_detection/data/features/
-
-# Data files
-*.jsonl
-*.parquet
+Sudila.md
