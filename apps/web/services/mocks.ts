@@ -127,3 +127,187 @@ export const MOCK_EVENTS: CalendarEvent[] = [
         id: 'evt-2', title: 'System Maintenance', date: new Date(Date.now() + 86400000 * 3), type: 'other', description: 'GradeLoop maintenance'
     }
 ];
+
+// ============================================
+// INSTRUCTOR-SPECIFIC INTERFACES & MOCK DATA
+// ============================================
+
+export interface RubricCriterion {
+    id: string;
+    name: string;
+    description: string;
+    weight: number; // percentage
+    autoGrade: boolean;
+}
+
+export interface TestCase {
+    id: string;
+    assignmentId: string;
+    type: 'text' | 'code';
+    input: string;
+    expectedOutput: string;
+    isHidden: boolean;
+    points: number;
+}
+
+export interface DetailedSubmission extends Submission {
+    files: { name: string; content: string; language: string }[];
+    testResults: {
+        testId: string;
+        passed: boolean;
+        actualOutput?: string;
+        executionTime?: number;
+    }[];
+    rubricScores: {
+        criterionId: string;
+        score: number;
+        comment?: string;
+    }[];
+    comments: {
+        id: string;
+        instructorId: string;
+        line?: number;
+        text: string;
+        timestamp: string;
+    }[];
+}
+
+export interface PlagiarismReport {
+    id: string;
+    submissionId: string;
+    matchedSubmissionId: string;
+    similarityPercentage: number;
+    matchedBlocks: {
+        startLine: number;
+        endLine: number;
+        matchedCode: string;
+    }[];
+    status: 'flagged' | 'reviewed' | 'false-positive';
+    reviewedBy?: string;
+    reviewNotes?: string;
+}
+
+export interface AIFeedback {
+    id: string;
+    submissionId: string;
+    overallFeedback: string;
+    criteriaFeedback: {
+        criterionId: string;
+        feedback: string;
+        suggestedScore: number;
+    }[];
+    aiLikelihood: number; // 0-100
+    interactionLog: {
+        timestamp: string;
+        studentQuery: string;
+        aiResponse: string;
+    }[];
+}
+
+export interface InstructorClass {
+    id: string;
+    courseId: string;
+    batch: string;
+    academicYear: string;
+    studentCount: number;
+    assignmentCount: number;
+    status: 'active' | 'archived';
+}
+
+// Mock Rubrics
+export const MOCK_RUBRICS: Record<string, RubricCriterion[]> = {
+    'a1': [
+        { id: 'r1', name: 'Correctness', description: 'Solution produces correct output', weight: 40, autoGrade: true },
+        { id: 'r2', name: 'Code Quality', description: 'Clean, readable code', weight: 30, autoGrade: false },
+        { id: 'r3', name: 'Efficiency', description: 'Optimal time/space complexity', weight: 20, autoGrade: false },
+        { id: 'r4', name: 'Documentation', description: 'Comments and documentation', weight: 10, autoGrade: false }
+    ],
+    'a2': [
+        { id: 'r5', name: 'Pattern Implementation', description: 'Correct design pattern usage', weight: 50, autoGrade: false },
+        { id: 'r6', name: 'Code Structure', description: 'Proper class hierarchy', weight: 30, autoGrade: false },
+        { id: 'r7', name: 'Testing', description: 'Unit tests provided', weight: 20, autoGrade: true }
+    ]
+};
+
+// Mock Test Cases
+export const MOCK_TEST_CASES: TestCase[] = [
+    { id: 't1', assignmentId: 'a1', type: 'code', input: '5', expectedOutput: '120', isHidden: false, points: 10 },
+    { id: 't2', assignmentId: 'a1', type: 'code', input: '0', expectedOutput: '1', isHidden: false, points: 10 },
+    { id: 't3', assignmentId: 'a1', type: 'code', input: '10', expectedOutput: '3628800', isHidden: true, points: 10 },
+];
+
+// Mock Detailed Submissions
+export const MOCK_DETAILED_SUBMISSIONS: DetailedSubmission[] = [
+    {
+        id: 's1',
+        assignmentId: 'a2',
+        studentId: 'u1',
+        submittedAt: new Date(Date.now() - 90000000).toISOString(),
+        status: 'graded',
+        grade: 85,
+        feedback: 'Good implementation of Factory pattern. Consider edge cases.',
+        plagiarismScore: 12,
+        aiLikelihood: 5,
+        files: [
+            {
+                name: 'Factory.java',
+                content: `public class ShapeFactory {\n    public Shape getShape(String type) {\n        if(type == null) return null;\n        if(type.equals("CIRCLE")) return new Circle();\n        return null;\n    }\n}`,
+                language: 'java'
+            }
+        ],
+        testResults: [
+            { testId: 't1', passed: true, actualOutput: '120', executionTime: 45 },
+            { testId: 't2', passed: true, actualOutput: '1', executionTime: 42 }
+        ],
+        rubricScores: [
+            { criterionId: 'r5', score: 45, comment: 'Good pattern usage' },
+            { criterionId: 'r6', score: 25, comment: 'Structure could be improved' },
+            { criterionId: 'r7', score: 15, comment: 'Missing some test cases' }
+        ],
+        comments: [
+            { id: 'c1', instructorId: 'u2', line: 3, text: 'Consider using a map for type lookup', timestamp: new Date().toISOString() }
+        ]
+    }
+];
+
+// Mock Plagiarism Reports
+export const MOCK_PLAGIARISM_REPORTS: PlagiarismReport[] = [
+    {
+        id: 'p1',
+        submissionId: 's1',
+        matchedSubmissionId: 's2',
+        similarityPercentage: 78,
+        matchedBlocks: [
+            { startLine: 5, endLine: 12, matchedCode: 'public Shape getShape(String type)' }
+        ],
+        status: 'flagged',
+    }
+];
+
+// Mock AI Feedback
+export const MOCK_AI_FEEDBACK: AIFeedback[] = [
+    {
+        id: 'ai1',
+        submissionId: 's1',
+        overallFeedback: 'Your implementation demonstrates understanding of the Factory pattern. Consider adding null checks and using enums for type safety.',
+        criteriaFeedback: [
+            { criterionId: 'r5', feedback: 'Pattern correctly implemented', suggestedScore: 45 },
+            { criterionId: 'r6', feedback: 'Code structure is clear but could benefit from better organization', suggestedScore: 25 }
+        ],
+        aiLikelihood: 15,
+        interactionLog: [
+            {
+                timestamp: new Date(Date.now() - 3600000).toISOString(),
+                studentQuery: 'How do I implement the Factory pattern?',
+                aiResponse: 'The Factory pattern involves creating objects without specifying their exact class. Start by defining an interface...'
+            }
+        ]
+    }
+];
+
+// Mock Instructor Classes
+export const MOCK_INSTRUCTOR_CLASSES: InstructorClass[] = [
+    { id: 'ic1', courseId: 'c1', batch: 'Y2.S1', academicYear: '2024/2025', studentCount: 150, assignmentCount: 5, status: 'active' },
+    { id: 'ic2', courseId: 'c2', batch: 'Y3.S2', academicYear: '2024/2025', studentCount: 80, assignmentCount: 3, status: 'active' }
+];
+
