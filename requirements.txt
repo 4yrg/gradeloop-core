@@ -1,3 +1,4 @@
+--index-url https://download.pytorch.org/whl/cu121
 fastapi
 uvicorn
 sqlmodel
@@ -11,3 +12,9 @@ pyarrow
 rapidfuzz
 scikit-learn
 joblib
+torch
+torchvision 
+torchaudio 
+transformers
+accelerate
+datasets
