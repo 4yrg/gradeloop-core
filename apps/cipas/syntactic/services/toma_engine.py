@@ -1,4 +1,5 @@
 # 6-dimensional metric calculation (Type-3) [cite: 130, 131]
+import rapidfuzz
 from typing import List, Set
 from ..schemas import CandidatePair, MethodMetadata
 from ..repository import SyntacticRepository
@@ -10,6 +11,60 @@ class TOMACandidateGenerator:
         self.repository = repository
         self.normalizer = normalizer
 
+
+    def compute_similarity_features(
+        self, 
+        code_a: str, 
+        code_b: str, 
+        tokens_a: List[str], 
+        tokens_b: List[str]
+    ) -> List[float]:
+        """
+        Compute 6-dimensional similarity metrics.
+        Returns [Jaccard, Dice, Cosine, LevDist, LevRatio, JaroWinkler]
+        All normalized to [0, 1].
+        """
+        # Set-based metrics
+        set_a = set(tokens_a)
+        set_b = set(tokens_b)
+        intersection = len(set_a.intersection(set_b))
+        union = len(set_a.union(set_b))
+        
+        # 1. Jaccard
+        jaccard = intersection / union if union > 0 else 0.0
+        
+        # 2. Sørensen–Dice
+        dice = (2 * intersection) / (len(set_a) + len(set_b)) if (len(set_a) + len(set_b)) > 0 else 0.0
+        
+        # 3. Cosine Similarity (TF vectors)
+        # Simplified TF cosine for tokens (Frequency vector dot product)
+        from collections import Counter
+        import math
+        
+        tf_a = Counter(tokens_a)
+        tf_b = Counter(tokens_b)
+        
+        dot_product = sum(tf_a[t] * tf_b[t] for t in set_a.intersection(set_b))
+        mag_a = math.sqrt(sum(c**2 for c in tf_a.values()))
+        mag_b = math.sqrt(sum(c**2 for c in tf_b.values()))
+        
+        cosine = dot_product / (mag_a * mag_b) if (mag_a * mag_b) > 0 else 0.0
+        
+        # String-based metrics (Rapidfuzz)
+        # 4. Levenshtein Distance (Normalized)
+        # rapidfuzz.distance.Levenshtein.normalized_similarity returns 0-1 directly? 
+        # Checking rapidfuzz docs: normalized_similarity is 1.0 (identical) to 0.0
+        lev_dist = rapidfuzz.distance.Levenshtein.normalized_similarity(code_a, code_b)
+        
+        # 5. Levenshtein Ratio (Fuzz Ratio)
+        # rapidfuzz.fuzz.ratio returns 0-100
+        lev_ratio = rapidfuzz.fuzz.ratio(code_a, code_b) / 100.0
+        
+        # 6. Jaro-Winkler
+        jaro_winkler = rapidfuzz.distance.JaroWinkler.similarity(code_a, code_b)
+        
+        return [jaccard, dice, cosine, lev_dist, lev_ratio, jaro_winkler]
+
     async def generate_candidates(
         self, 
         query_code: str, 
@@ -20,6 +75,7 @@ class TOMACandidateGenerator:
         Generate candidate pairs for Tier-2 (TOMA) detection.
         Excludes methods already matched in Tier-1.
         Applies token overlap threshold and length similarity constraint.
+        Computes 6-dimensional similarity features.
         """
         # 1. Tokenize query code
         tokens = self.normalizer.tokenize(query_code)
@@ -51,23 +107,23 @@ class TOMACandidateGenerator:
             if not (0.5 * query_metadata.length <= cand_metadata.length <= 2.0 * query_metadata.length):
                 continue
                 
-            # Calculate actual token overlap (if not fully provided by search)
-            # For this stub, we assume search_by_tokens returns relevant ones, but we calculate score here.
-            # In a real inverted index, the overlap count might be returned. 
-            # Here we simulate/calculate it if needed, or just create the candidate.
+            # Fetch candidate code for feature computation
+            cand_code = await self.repository.get_method_code(cid)
+            if not cand_code:
+                # Stub behavior: we might not have code in mock/stub env
+                cand_code = "" 
             
-            # Simplified overlap calculation (would be optimized in real engine)
-            # Since we don't have the candidate code here, we rely on the repository search guarantee
-            # or we would fetch the tokens. For now, we assume the repo did the heavy lifting.
-            # We will assign a placeholder overlap/score based on the search result.
+            cand_tokens = self.normalizer.tokenize(cand_code)
             
-            # NOTE: In a full implementation, we'd fetch the candidate's tokens or pre-computed signature.
+            # Compute features
+            features = self.compute_similarity_features(query_code, cand_code, tokens, cand_tokens)
             
             candidates.append(CandidatePair(
                 query_id=query_id,
                 candidate_id=cid,
                 token_overlap=min_overlap_threshold, # Placeholder
-                similarity_score=0.5 # Placeholder
+                similarity_score=sum(features) / len(features), # Simple average as score for now
+                features=features
             ))
             
         return candidates

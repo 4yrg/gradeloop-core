@@ -8,3 +8,4 @@ pandas
 tree-sitter
 tree-sitter-java
 pyarrow
+rapidfuzz

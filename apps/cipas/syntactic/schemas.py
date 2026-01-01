@@ -18,3 +18,4 @@ class CandidatePair(BaseModel):
     candidate_id: str
     token_overlap: int
     similarity_score: float
+    features: list[float] = [] 
