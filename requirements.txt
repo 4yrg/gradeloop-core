@@ -9,3 +9,5 @@ tree-sitter
 tree-sitter-java
 pyarrow
 rapidfuzz
+scikit-learn
+joblib

@@ -19,3 +19,5 @@ class CandidatePair(BaseModel):
     token_overlap: int
     similarity_score: float
     features: list[float] = [] 
+    classification: str = "UNKNOWN"
+    confidence: float = 0.0
