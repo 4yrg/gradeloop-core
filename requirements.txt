@@ -4,3 +4,7 @@ sqlmodel
 asyncpg
 redis
 python-dotenv
+pandas
+tree-sitter
+tree-sitter-java
+pyarrow
