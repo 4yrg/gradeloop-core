@@ -18,3 +18,5 @@ torchaudio
 transformers
 accelerate
 datasets
+seaborn
+
