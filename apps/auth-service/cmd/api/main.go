@@ -25,9 +25,8 @@ func main() {
 
 	// Auto Migrate is called within Connect or separately
 	// Seeding is called here
-	if err := service.SeedUsers(database); err != nil {
-		log.Printf("Seeding warning: %v", err)
-	}
+	// Seeding is called here
+	seedUsers(database)
 
 	// Initialize Fiber
 	app := fiber.New()

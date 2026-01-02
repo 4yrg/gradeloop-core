@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { forgotPasswordSchema, ForgotPasswordValues } from "../schemas/auth"
 import Link from "next/link"
 
@@ -37,42 +38,47 @@ export function ForgotPasswordForm() {
 
     if (success) {
         return (
-            <div className="mx-auto max-w-sm w-full space-y-6 text-center">
-                <h2 className="text-2xl font-bold">Check your email</h2>
-                <p className="text-gray-500">We have sent a password reset link to your email.</p>
-                <Button asChild className="w-full">
-                    <Link href="/login">Back to Login</Link>
-                </Button>
-            </div>
+            <Card className="mx-auto max-w-sm w-full text-center">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+                    <CardDescription>We have sent a password reset link to your email.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link href="/login">Back to Login</Link>
+                    </Button>
+                </CardContent>
+            </Card>
         )
     }
 
     return (
-        <div className="mx-auto max-w-sm w-full space-y-6">
-            <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold">Forgot Password</h1>
-                <p className="text-gray-500">Enter your email to reset your password</p>
-            </div>
+        <Card className="mx-auto max-w-sm w-full">
+            <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
+                <CardDescription>Enter your email to reset your password</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="space-y-2">
+                        <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Email
+                        </label>
+                        <Input id="email" placeholder="m@example.com" {...register("email")} />
+                        {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
+                    </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Email
-                    </label>
-                    <Input id="email" placeholder="m@example.com" {...register("email")} />
-                    {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Send Reset Link
+                    </Button>
+                </form>
+                <div className="text-center text-sm">
+                    <Link href="/login" className="underline">
+                        Back to Login
+                    </Link>
                 </div>
-
-                <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Send Reset Link
-                </Button>
-            </form>
-            <div className="text-center text-sm">
-                <Link href="/login" className="underline">
-                    Back to Login
-                </Link>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     )
 }
