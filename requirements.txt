@@ -1,0 +1,27 @@
+fastapi
+uvicorn
+sqlmodel
+asyncpg
+redis
+python-dotenv
+pandas
+tree-sitter
+tree-sitter-java
+pyarrow
+rapidfuzz
+scikit-learn
+joblib
+transformers
+datasets
+matplotlib
+seaborn
+tqdm
+ipykernel
+jupyterlab
+
+# TensorFlow with GPU support (CUDA 12.x compatible with GTX 1050)
+tensorflow==2.18.0
+nvidia-cudnn-cu12
+nvidia-cuda-nvcc-cu12
+nvidia-cuda-runtime-cu12
+tf-keras
