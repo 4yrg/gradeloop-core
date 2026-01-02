@@ -125,8 +125,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+
 parts/
 sdist/
 var/
@@ -234,4 +233,10 @@ apps/model-orchestrator/app/models/cipas/code_clone_detection/data/tokens/
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/embeddings/
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/normalized/
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/ast/
+
 apps/model-orchestrator/app/models/cipas/code_clone_detection/data/features/
+
+# CIPAS Datasets
+apps/cipas/datasets/raw/
+apps/cipas/datasets/processing/
+

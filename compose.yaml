@@ -1,29 +1,67 @@
 services:
-  client:
-    build:
-      context: apps/client
-      dockerfile: Dockerfile
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - gradeloop-net
+
+  web:
+    build:
+      context: apps/web
+      dockerfile: Dockerfile
     environment:
-      - NODE_ENV=\${NODE_ENV:-development}
-      - DATABASE_URL=postgresql://\${POSTGRES_USER:-postgres}:\${POSTGRES_PASSWORD:-postgres}@db:5432/\${POSTGRES_DB:-gradeloop}
+      - NODE_ENV=production
+      - NEXTAUTH_URL=http://localhost
+      - NEXTAUTH_SECRET=changeme123
+      # Add other necessary env vars
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.services.web.loadbalancer.server.port=3000"
+    networks:
+      - gradeloop-net
+    depends_on:
+      - auth-service
+
+  auth-service:
+    build:
+      context: apps/auth-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gradeloop}?sslmode=disable
+      - JWT_SECRET=supersecretkey
+      - PORT=8080
+      # Add OAuth credentials here later
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.middlewares.auth-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.auth.middlewares=auth-strip"
+      - "traefik.http.services.auth.loadbalancer.server.port=8080"
+    networks:
+      - gradeloop-net
     depends_on:
       db:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync
-          path: apps/client
-          target: /app
 
   db:
     image: postgres:15-alpine
     restart: always
     environment:
-      - POSTGRES_USER=\${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=\${POSTGRES_DB:-gradeloop}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-gradeloop}
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
@@ -33,6 +71,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - gradeloop-net
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gradeloop-net
+
+# CIPAS service kept from original file if needed, otherwise can be commented out if not part of this task.
+# Assuming we simply replacing existing file structure for this task as requested.
 
 volumes:
   db-data:
+  redis-data:
+
+networks:
+  gradeloop-net:
+    driver: bridge
