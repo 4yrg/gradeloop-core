@@ -12,7 +12,6 @@ rapidfuzz
 scikit-learn
 joblib
 transformers
-accelerate
 datasets
 matplotlib
 seaborn
@@ -20,8 +19,9 @@ tqdm
 ipykernel
 jupyterlab
 
-# PyTorch with CUDA 12.1 support
---extra-index-url https://download.pytorch.org/whl/cu121
-torch
-torchvision
-torchaudio
+# TensorFlow with GPU support (CUDA 12.x compatible with GTX 1050)
+tensorflow==2.18.0
+nvidia-cudnn-cu12
+nvidia-cuda-nvcc-cu12
+nvidia-cuda-runtime-cu12
+tf-keras

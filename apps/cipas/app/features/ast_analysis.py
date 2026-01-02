@@ -1,11 +1,10 @@
-from tree_sitter import Language, Parser
-import tree_sitter_java
+import tree_sitter_java as tsjava
+from tree_sitter import Parser, Language
 from collections import Counter
 from typing import Dict
 
-JAVA_LANGUAGE = Language(tree_sitter_java.language())
 parser = Parser()
-parser.set_language(JAVA_LANGUAGE)
+parser.language = Language(tsjava.language())
 
 # Relevant node types for syntactic similarity
 INTERESTING_NODES = {

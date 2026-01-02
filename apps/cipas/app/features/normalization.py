@@ -1,11 +1,10 @@
-from tree_sitter import Language, Parser
+from tree_sitter import Language, Parser, Query, QueryCursor
 import tree_sitter_java
 import re
 
 # Initialize Tree-sitter
 JAVA_LANGUAGE = Language(tree_sitter_java.language())
-parser = Parser()
-parser.set_language(JAVA_LANGUAGE)
+parser = Parser(JAVA_LANGUAGE)
 
 def remove_comments_and_whitespace(code: str) -> str:
     """
@@ -40,8 +39,17 @@ def normalize_code_ast(code: str) -> str:
     (decimal_integer_literal) @num
     (decimal_floating_point_literal) @float
     """
-    query = JAVA_LANGUAGE.query(query_scm)
-    captures = query.captures(root_node)
+    query = Query(JAVA_LANGUAGE, query_scm)
+    # In tree-sitter 0.25.x, use QueryCursor
+    cursor = QueryCursor(query)
+    matches = cursor.matches(root_node)
+    
+    captures = []
+    for pattern_index, captures_dict in matches:
+        for capture_name, capture_nodes in captures_dict.items():
+            # capture_nodes is a list of nodes
+            for node in capture_nodes:
+                captures.append((node, capture_name))
     
     # Sort captures by byte range to handle them in order
     captures.sort(key=lambda x: x[0].start_byte)
