@@ -64,11 +64,21 @@ export function AppSidebar() {
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
-                <div className="flex h-[--header-height] items-center px-4">
-                    <Link href="/" className="flex items-center gap-2 font-bold text-xl text-sidebar-foreground">
-                        <span className="text-primary truncate">Gradeloop</span>
-                    </Link>
-                </div>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-transparent hover:text-sidebar-foreground disabled:opacity-100"
+                        >
+                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                                <img src="/gradeloop_logo.png" alt="Gradeloop Logo" className="size-full object-contain" />
+                            </div>
+                            <div className="grid flex-1 text-left text-sm leading-tight">
+                                <span className="truncate font-bold font-[family-name:var(--font-red-hat-display)] text-xl">Gradeloop</span>
+                            </div>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>

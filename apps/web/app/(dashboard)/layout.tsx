@@ -18,7 +18,7 @@ export default function DashboardLayout({
                         <span className="font-medium">Dashboard</span>
                     </div>
                 </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 lg:p-8">
+                <div className="flex flex-1 flex-col gap-4 bg-white p-4 dark:bg-zinc-950 lg:p-8">
                     {children}
                 </div>
             </SidebarInset>
