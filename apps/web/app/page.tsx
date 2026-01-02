@@ -92,12 +92,12 @@ export default function Home() {
                 variants={item}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8 transition-all dark:border-zinc-800 dark:bg-zinc-900/50 ${portal.border}`}
+                className={`relative overflow-hidden border border-zinc-200 bg-white p-8 transition-all dark:border-zinc-800 dark:bg-zinc-900/50 ${portal.border}`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${portal.color}`} />
 
                 <div className="relative z-10 flex flex-col gap-4">
-                  <div className={`w-fit rounded-lg bg-zinc-100 p-3 transition-colors dark:bg-zinc-800 ${portal.text}`}>
+                  <div className={`w-fit bg-zinc-100 p-3 transition-colors dark:bg-zinc-800 ${portal.text}`}>
                     <portal.icon className="h-6 w-6" />
                   </div>
 
