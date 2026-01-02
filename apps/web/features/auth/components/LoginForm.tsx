@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -15,13 +14,13 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+        <div className="flex justify-between items-center">
+            <CardTitle>Login to your account</CardTitle>
+            <Button variant="link">Sign Up</Button>
+        </div>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
-        <CardAction>
-          <Button variant="link">Sign Up</Button>
-        </CardAction>
       </CardHeader>
       <CardContent>
         <form>
