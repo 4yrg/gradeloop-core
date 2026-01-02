@@ -37,6 +37,19 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  --color-emerald-50: hsl(151.8 81% 95.9%);
+  --color-emerald-100: hsl(149.3 80.4% 90%);
+  --color-emerald-200: hsl(152.4 76% 80.4%);
+  --color-emerald-300: hsl(156.2 71.6% 66.9%);
+  --color-emerald-400: hsl(158.1 64.4% 51.6%);
+  --color-emerald-500: hsl(160.1 84.1% 39.4%);
+  --color-emerald-600: hsl(161.4 93.5% 30.4%);
+  --color-emerald-700: hsl(162.9 93.5% 24.3%);
+  --color-emerald-800: hsl(163.1 88.1% 19.8%);
+  --color-emerald-900: hsl(164.2 85.7% 16.5%);
+  --color-emerald-950: hsl(165.7 91.3% 9%);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -48,73 +61,108 @@
 
 :root {
   --radius: 0rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.581 0.245 142.506);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.962 0.018 272.314);
-  --secondary-foreground: oklch(0.129 0.042 264.695);
-  --muted: oklch(0.962 0.018 272.314);
-  --muted-foreground: oklch(0.469 0.013 291.517);
-  --accent: oklch(0.962 0.018 272.314);
-  --accent-foreground: oklch(0.129 0.042 264.695);
-  --destructive: oklch(0.511 0.262 27.695);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.581 0.245 142.506);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.01 264.695);
-  --sidebar-foreground: oklch(0.25 0.02 264.695);
-  --sidebar-primary: oklch(0.581 0.245 142.506);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.962 0.018 272.314);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0.01 264.695);
-  --sidebar-ring: oklch(0.581 0.245 142.506);
+
+  /* Backgrounds: White */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(164.2 85.7% 16.5%);
+  /* Emerald 900 for text for slight tint, or keep black? Let's use Emerald 950/900 for deep text */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(164.2 85.7% 16.5%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(164.2 85.7% 16.5%);
+
+  /* Primary: Emerald 600 */
+  --primary: hsl(161.4 93.5% 30.4%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* Secondary/Accent/Muted: Emerald 50 */
+  --secondary: hsl(151.8 81% 95.9%);
+  --secondary-foreground: hsl(163.1 88.1% 19.8%);
+  /* Emerald 800 */
+
+  --muted: hsl(151.8 81% 95.9%);
+  --muted-foreground: hsl(162.9 93.5% 24.3%);
+  /* Emerald 700 */
+
+  --accent: hsl(151.8 81% 95.9%);
+  --accent-foreground: hsl(161.4 93.5% 30.4%);
+
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  /* Border/Input: Emerald 100 (90% L) or 200 (80% L)? 90% is good for subtle borders */
+  --border: hsl(152.4 76% 80.4%);
+  /* Emerald 200 */
+  --input: hsl(152.4 76% 80.4%);
+  /* Emerald 200 */
+  --ring: hsl(161.4 93.5% 30.4%);
+
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+
+  --sidebar: hsl(151.8 81% 95.9%);
+  --sidebar-foreground: hsl(164.2 85.7% 16.5%);
+  --sidebar-primary: hsl(161.4 93.5% 30.4%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(149.3 80.4% 90%);
+  /* Slightly darker than sidebar bg */
+  --sidebar-accent-foreground: hsl(164.2 85.7% 16.5%);
+  --sidebar-border: hsl(149.3 80.4% 90%);
+  --sidebar-ring: hsl(161.4 93.5% 30.4%);
 }
 
 .dark {
-  --background: oklch(0.10 0.02 255.508);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.13 0.02 255.508);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.13 0.02 255.508);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.581 0.245 142.506);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0.042 264.695);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0.042 264.695);
-  --muted-foreground: oklch(0.708 0.03 264.695);
-  --accent: oklch(0.269 0.042 264.695);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.511 0.262 27.695);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0.042 264.695);
-  --input: oklch(0.269 0.042 264.695);
-  --ring: oklch(0.581 0.245 142.506);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.15 0.02 255.508);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.581 0.245 142.506);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0.042 264.695);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0.042 264.695);
-  --sidebar-ring: oklch(0.581 0.245 142.506);
+  /* Background: Emerald 950 */
+  --background: hsl(165.7 91.3% 9%);
+  /* Very dark emerald */
+  --foreground: hsl(151.8 81% 95.9%);
+  /* Emerald 50 text */
+  --card: hsl(165.7 91.3% 9%);
+  --card-foreground: hsl(151.8 81% 95.9%);
+  --popover: hsl(165.7 91.3% 9%);
+  --popover-foreground: hsl(151.8 81% 95.9%);
+
+  /* Primary: Emerald 500 */
+  --primary: hsl(160.1 84.1% 39.4%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* Secondary/Accent/Muted: Emerald 900 */
+  --secondary: hsl(164.2 85.7% 16.5%);
+  --secondary-foreground: hsl(151.8 81% 95.9%);
+
+  --muted: hsl(164.2 85.7% 16.5%);
+  --muted-foreground: hsl(158.1 64.4% 51.6%);
+  /* Emerald 400 */
+
+  --accent: hsl(164.2 85.7% 16.5%);
+  --accent-foreground: hsl(151.8 81% 95.9%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  /* Border/Input: Emerald 900 or 800? 900 is 16.5% L. 950 is 9%. contrast is low. */
+  /* Let's use 800 (19.8%) for borders for visibility? Or mostly 900. */
+  --border: hsl(164.2 85.7% 16.5%);
+  --input: hsl(164.2 85.7% 16.5%);
+  --ring: hsl(160.1 84.1% 39.4%);
+
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+
+  --sidebar: hsl(164.2 85.7% 16.5%);
+  --sidebar-foreground: hsl(151.8 81% 95.9%);
+  --sidebar-primary: hsl(160.1 84.1% 39.4%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(163.1 88.1% 19.8%);
+  --sidebar-accent-foreground: hsl(151.8 81% 95.9%);
+  --sidebar-border: hsl(163.1 88.1% 19.8%);
+  --sidebar-ring: hsl(160.1 84.1% 39.4%);
 }
 
 @layer base {
