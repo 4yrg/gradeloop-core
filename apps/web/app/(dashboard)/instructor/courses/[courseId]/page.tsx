@@ -33,10 +33,6 @@ const COURSE_DATA = {
         "Develop proficiency in Python programming and debugging techniques.",
         "Create programs using object-oriented programming principles.",
     ],
-    instructor: {
-        name: "John Doe",
-        avatar: "JD"
-    }
 }
 
 const ASSIGNMENTS = [
@@ -94,16 +90,15 @@ const ASSIGNMENTS = [
 
 export default function CourseDetailPage() {
     return (
-        <div className="flex gap-6 min-h-[calc(100vh-theme(spacing.16))]">
+        <div className="min-h-[calc(100vh-theme(spacing.16))]">
             {/* Main Content */}
-            <div className="flex-1 space-y-6">
+            <div className="space-y-8 max-w-6xl">
                 {/* Course Header */}
                 <div className="space-y-4">
+                    <h1 className="text-2xl font-semibold tracking-tight">{COURSE_DATA.title}</h1>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <span className="font-medium">{COURSE_DATA.title}</span>
-                        <span>|</span>
                         <span>{COURSE_DATA.semester}</span>
-                        <span>|</span>
+                        <span>•</span>
                         <span className="font-mono uppercase tracking-wider">
                             {COURSE_DATA.department} {COURSE_DATA.code}
                         </span>
@@ -111,9 +106,9 @@ export default function CourseDetailPage() {
                 </div>
 
                 {/* Description and Objectives */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Description */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <h3 className="text-sm font-semibold">Description</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             {COURSE_DATA.description}
@@ -121,13 +116,13 @@ export default function CourseDetailPage() {
                     </div>
 
                     {/* Objectives / Todos */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <h3 className="text-sm font-semibold">Objectives / Todos</h3>
-                        <ul className="space-y-1.5">
+                        <ul className="space-y-2">
                             {COURSE_DATA.objectives.map((objective, index) => (
                                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                                    <span className="text-foreground">•</span>
-                                    {objective}
+                                    <span className="text-foreground mt-0.5">•</span>
+                                    <span>{objective}</span>
                                 </li>
                             ))}
                         </ul>
@@ -139,59 +134,59 @@ export default function CourseDetailPage() {
                     <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
                         <TabsTrigger
                             value="dashboard"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             <ArrowUpDown className="h-4 w-4" />
                             ACTIVE ASSIGNMENTS
                         </TabsTrigger>
                         <TabsTrigger
                             value="released"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             RELEASED
                         </TabsTrigger>
                         <TabsTrigger
                             value="due"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             <ChevronDown className="h-4 w-4" />
                             DUE (UTF)
                         </TabsTrigger>
                         <TabsTrigger
                             value="submissions"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             <ChevronDown className="h-4 w-4" />
                             SUBMISSIONS
                         </TabsTrigger>
                         <TabsTrigger
                             value="graded"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             <ChevronDown className="h-4 w-4" />
                             GRADED
                         </TabsTrigger>
                         <TabsTrigger
                             value="published"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             PUBLISHED
                         </TabsTrigger>
                         <TabsTrigger
                             value="regrades"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4"
                         >
                             REGRADES
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="dashboard" className="mt-6">
+                    <TabsContent value="dashboard" className="mt-8">
                         {/* Assignments Table */}
                         <div className="border rounded-md">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">
-                                        <TableHead className="w-[300px]">Assignment</TableHead>
+                                        <TableHead className="w-[280px] pl-4">Assignment</TableHead>
                                         <TableHead>RELEASED</TableHead>
                                         <TableHead>DUE (UTF)</TableHead>
                                         <TableHead>SUBMISSIONS</TableHead>
@@ -204,7 +199,7 @@ export default function CourseDetailPage() {
                                 <TableBody>
                                     {ASSIGNMENTS.map((assignment) => (
                                         <TableRow key={assignment.id}>
-                                            <TableCell className="font-medium">
+                                            <TableCell className="font-medium pl-4">
                                                 {assignment.name}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
@@ -266,43 +261,29 @@ export default function CourseDetailPage() {
                     </TabsContent>
 
                     <TabsContent value="released">
-                        <div className="text-sm text-muted-foreground">Released assignments view</div>
+                        <div className="text-sm text-muted-foreground py-8">Released assignments view</div>
                     </TabsContent>
 
                     <TabsContent value="due">
-                        <div className="text-sm text-muted-foreground">Due assignments view</div>
+                        <div className="text-sm text-muted-foreground py-8">Due assignments view</div>
                     </TabsContent>
 
                     <TabsContent value="submissions">
-                        <div className="text-sm text-muted-foreground">Submissions view</div>
+                        <div className="text-sm text-muted-foreground py-8">Submissions view</div>
                     </TabsContent>
 
                     <TabsContent value="graded">
-                        <div className="text-sm text-muted-foreground">Graded assignments view</div>
+                        <div className="text-sm text-muted-foreground py-8">Graded assignments view</div>
                     </TabsContent>
 
                     <TabsContent value="published">
-                        <div className="text-sm text-muted-foreground">Published assignments view</div>
+                        <div className="text-sm text-muted-foreground py-8">Published assignments view</div>
                     </TabsContent>
 
                     <TabsContent value="regrades">
-                        <div className="text-sm text-muted-foreground">Regrades view</div>
+                        <div className="text-sm text-muted-foreground py-8">Regrades view</div>
                     </TabsContent>
                 </Tabs>
-            </div>
-
-            {/* Sidebar */}
-            <div className="w-64 space-y-6 hidden lg:block">
-                {/* Instructor Card */}
-                <div className="space-y-3">
-                    <h3 className="text-sm font-semibold">Instructor</h3>
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-sm font-medium">
-                            {COURSE_DATA.instructor.avatar}
-                        </div>
-                        <span className="text-sm font-medium">{COURSE_DATA.instructor.name}</span>
-                    </div>
-                </div>
             </div>
         </div>
     )
