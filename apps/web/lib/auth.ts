@@ -1,32 +1,29 @@
 
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import Google from "next-auth/providers/google"
+import NextAuth, { NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
 import { z } from "zod"
 import axios from "axios"
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const authOptions: NextAuthOptions = {
     providers: [
-        Google({
+        GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         }),
-        Credentials({
+        CredentialsProvider({
+            name: "Credentials",
             credentials: {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
             },
-            authorize: async (credentials) => {
+            async authorize(credentials) {
                 try {
                     const { email, password } = await z
                         .object({ email: z.string().email(), password: z.string().min(1) })
                         .parseAsync(credentials)
 
                     // Call Go Auth Service
-                    // In Docker, this would be http://auth-service:8080/api/auth/login
-                    // From client browser, it goes through Traefik: /api/auth/login
-                    // Server-side calls from NextAuth run in the container/server
-
                     const authServiceUrl = process.env.AUTH_SERVICE_URL || "http://auth-service:8080/api/auth"
 
                     const res = await axios.post(`${authServiceUrl}/login`, {
@@ -38,8 +35,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     const token = res.data.token
 
                     if (user && token) {
-                        // Return user object extended with token if needed, or just user
-                        // We need to persist the token to session
                         return { ...user, accessToken: token }
                     }
 
@@ -62,10 +57,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return token
         },
         async session({ session, token }) {
-            if (token) {
-                session.user.id = token.id as string
-                session.user.role = token.role as string
-                session.user.instituteId = token.instituteId as string
+            if (token && session.user) {
+                const user = session.user as any
+                user.id = token.id
+                user.role = token.role
+                user.instituteId = token.instituteId
             }
             return session
         },
@@ -74,5 +70,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         signIn: "/login",
         error: "/login",
     },
-    session: { strategy: "jwt" },
-})
+    session: {
+        strategy: "jwt",
+    },
+}
+
+export default NextAuth(authOptions)
