@@ -4,10 +4,7 @@ import {
     BadgeCheck,
     Bell,
     ChevronsUpDown,
-    CreditCard,
     LogOut,
-    Sparkles,
-    UserCircle,
     ShieldCheck,
 } from "lucide-react"
 
@@ -31,23 +28,17 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar"
-import { useSession, signOut } from "next-auth/react"
-import { useAuthStore } from "@/store/use-auth-store"
 
-const roles = [
-    { label: "System Admin", value: "SYSTEM_ADMIN" },
-    { label: "Institute Admin", value: "INSTITUTE_ADMIN" },
-    { label: "Instructor", value: "INSTRUCTOR" },
-    { label: "Student", value: "STUDENT" },
-] as const;
+const MOCK_USER = {
+    name: "Admin User",
+    email: "admin@gradeloop.com",
+    image: "",
+    role: "SYSTEM_ADMIN",
+};
 
 export function UserMenu() {
     const { isMobile } = useSidebar()
-    const { data: session } = useSession()
-    const { actingRole, setActingRole } = useAuthStore()
-
-    const user = session?.user
-    const currentRole = actingRole || user?.role
+    const user = MOCK_USER
 
     return (
         <SidebarMenu>
@@ -59,14 +50,14 @@ export function UserMenu() {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
+                                <AvatarImage src={user.image} alt={user.name} />
                                 <AvatarFallback className="rounded-lg">
-                                    {user?.name?.charAt(0) || "U"}
+                                    {user.name.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">{user?.name}</span>
-                                <span className="truncate text-xs">{currentRole?.replace("_", " ")}</span>
+                                <span className="truncate font-semibold">{user.name}</span>
+                                <span className="truncate text-xs">{user.role}</span>
                             </div>
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
@@ -80,31 +71,17 @@ export function UserMenu() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
+                                    <AvatarImage src={user.image} alt={user.name} />
                                     <AvatarFallback className="rounded-lg">
-                                        {user?.name?.charAt(0) || "U"}
+                                        {user.name.charAt(0)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">{user?.name}</span>
-                                    <span className="truncate text-xs">{user?.email}</span>
+                                    <span className="truncate font-semibold">{user.name}</span>
+                                    <span className="truncate text-xs">{user.email}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">Switch Role</DropdownMenuLabel>
-                            {roles.map((role) => (
-                                <DropdownMenuItem
-                                    key={role.value}
-                                    onClick={() => setActingRole(role.value)}
-                                    className={currentRole === role.value ? "bg-accent" : ""}
-                                >
-                                    <ShieldCheck className="mr-2 size-4" />
-                                    {role.label}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem>
@@ -117,7 +94,7 @@ export function UserMenu() {
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => signOut()} className="text-red-500">
+                        <DropdownMenuItem className="text-red-500">
                             <LogOut className="mr-2 size-4" />
                             Log out
                         </DropdownMenuItem>
