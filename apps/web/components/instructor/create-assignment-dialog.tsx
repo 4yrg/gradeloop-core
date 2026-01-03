@@ -9,6 +9,7 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -51,6 +52,9 @@ const assignmentTypes = [
 
 export function CreateAssignmentDialog() {
     const { isOpen, step, formData, setOpen, setStep, setFormData, reset } = useAssignmentStore()
+    const router = useRouter()
+    const params = useParams()
+    const courseId = params?.id as string // Assuming we are in a course context
 
     const form = useForm<CreateAssignmentValues>({
         resolver: zodResolver(createAssignmentSchema) as any,
@@ -78,8 +82,18 @@ export function CreateAssignmentDialog() {
             const isValid = await form.trigger()
             if (isValid) {
                 console.log("Form submitted:", form.getValues())
-                // In a real app, call mutation here
+                // In a real app, call mutation here.
+                // For now, we simulate creation and redirect to the configuration flow.
+                const newAssignmentId = Math.random().toString(36).substr(2, 9) // Mock ID
+
+                // Close dialog
+                setOpen(false)
                 reset()
+
+                // Redirect to the new Manage Assignment Flow
+                // Use a default ID or the one created
+                const targetUrl = `/instructor/courses/${courseId || "1"}/assignments/${newAssignmentId}/manage`
+                router.push(targetUrl)
             }
         }
     }
