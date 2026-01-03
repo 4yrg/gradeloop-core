@@ -1,24 +1,28 @@
 "use client"
 
+import { use } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { ArrowLeft, Save } from "lucide-react"
 
 interface PageProps {
-    params: {
+    params: Promise<{
         courseId: string
-    }
+    }>
 }
 
 export default function CreateAssignmentPage({ params }: PageProps) {
+    const { courseId } = use(params)
+
     return (
         <div className="flex flex-col min-h-[calc(100vh-theme(spacing.16))]">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
-                <Link href={`/instructor/courses/${params.courseId}`}>
+                <Link href={`/instructor/courses/${courseId}`}>
                     <Button variant="outline" size="icon" className="h-8 w-8">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
@@ -31,6 +35,20 @@ export default function CreateAssignmentPage({ params }: PageProps) {
                     <div className="grid gap-2">
                         <Label htmlFor="name">Assignment Name</Label>
                         <Input id="name" placeholder="e.g. Python Basics & Variables" />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="type">Assignment Type</Label>
+                        <Select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="lab">LAB</SelectItem>
+                                <SelectItem value="exam">EXAM</SelectItem>
+                                <SelectItem value="demo">DEMO</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid gap-2">
@@ -63,7 +81,7 @@ export default function CreateAssignmentPage({ params }: PageProps) {
             {/* Sticky Footer */}
             <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
                 <div className="flex h-14 items-center justify-between px-4 lg:px-8 max-w-screen-2xl mx-auto">
-                    <Link href={`/instructor/courses/${params.courseId}`}>
+                    <Link href={`/instructor/courses/${courseId}`}>
                         <Button variant="ghost" size="sm">
                             Cancel
                         </Button>
