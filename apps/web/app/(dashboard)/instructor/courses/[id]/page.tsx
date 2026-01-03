@@ -14,11 +14,14 @@ import {
 import { Plus, FileText, Calendar, CheckCircle2, Clock } from "lucide-react";
 import { mockCourse, mockAssignments } from "@/lib/mock-data";
 import { AssignmentActions } from "@/components/instructor/assignment-actions";
+import { useAssignmentStore } from "@/store/use-assignment-store";
+import { CreateAssignmentDialog } from "@/components/instructor/create-assignment-dialog";
 
 export default function InstructorCourseDetailPage() {
     const params = useParams();
     const router = useRouter();
     const courseId = params.id as string;
+    const { setOpen } = useAssignmentStore();
 
     // Filter for active assignments (published only for the dashboard view)
     const activeAssignments = mockAssignments.filter(a => a.published);
@@ -42,12 +45,14 @@ export default function InstructorCourseDetailPage() {
                 </div>
                 <div className="flex items-center justify-between">
                     <h1 className="text-4xl font-bold tracking-tight">{mockCourse.name}</h1>
-                    <Button>
+                    <Button onClick={() => setOpen(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Create Assignment
                     </Button>
                 </div>
             </div>
+
+            <CreateAssignmentDialog />
 
             {/* Description & Objectives */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
