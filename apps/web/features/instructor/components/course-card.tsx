@@ -7,16 +7,14 @@ interface CourseCardProps {
     code: string
     description: string
     assignmentsCount: number
-    onClick?: () => void
 }
 
-export function CourseCard({ title, code, description, assignmentsCount, onClick }: CourseCardProps) {
+export function CourseCard({ title, code, description, assignmentsCount }: CourseCardProps) {
     return (
         <Card
             className={cn(
                 "flex flex-col h-full transition-shadow hover:shadow-md cursor-pointer border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50",
             )}
-            onClick={onClick}
         >
             <CardHeader className="pb-3 space-y-1">
                 <CardTitle className="text-lg font-medium leading-none tracking-tight">
