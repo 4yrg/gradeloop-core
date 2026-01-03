@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Plus } from "lucide-react"
 
 interface PageProps {
     params: Promise<{
@@ -80,16 +80,18 @@ export default function CreateAssignmentPage({ params }: PageProps) {
 
             {/* Sticky Footer */}
             <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                <div className="flex h-14 items-center justify-between px-4 lg:px-8 max-w-screen-2xl mx-auto">
+                <div className="flex h-14 items-center px-4 lg:px-8">
                     <Link href={`/instructor/courses/${courseId}`}>
                         <Button variant="ghost" size="sm">
                             Cancel
                         </Button>
                     </Link>
-                    <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
-                        <Save className="h-4 w-4" />
-                        Create assignment
-                    </Button>
+                    <div className="ml-auto">
+                        <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
+                            <Plus className="h-4 w-4" />
+                            Create assignment
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
