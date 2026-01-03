@@ -11,8 +11,9 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
-import { Plus, MoreHorizontal, FileText, Calendar, Clock, Filter, Download } from "lucide-react";
+import { Plus, FileText, Calendar, Clock, Filter, Download } from "lucide-react";
 import { mockAssignments } from "@/lib/mock-data";
+import { AssignmentActions } from "@/components/instructor/assignment-actions";
 
 export default function InstructorAssignmentsPage() {
     const params = useParams();
@@ -120,9 +121,11 @@ export default function InstructorAssignmentsPage() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()}>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
+                                        <AssignmentActions
+                                            courseId={courseId}
+                                            assignmentId={assignment.id}
+                                            published={assignment.published}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}
