@@ -1,0 +1,108 @@
+import { Course } from "../types";
+
+export const MOCK_COURSES: Course[] = [
+    // Degree 1: Comp Sci (Core)
+    {
+        id: "cs-101",
+        name: "Introduction to Computer Science",
+        code: "CS-101",
+        description: "Introduction to algorithms, data structures, and programming concepts using Python.",
+        credits: 4,
+        department: "Computer Science",
+        degreeId: "1",
+    },
+    {
+        id: "cs-102",
+        name: "Data Structures & Algorithms",
+        code: "CS-102",
+        description: "Advanced data structures (trees, graphs, heaps) and algorithm analysis.",
+        credits: 4,
+        department: "Computer Science",
+        degreeId: "1",
+    },
+    {
+        id: "cs-201",
+        name: "Computer Organization & Architecture",
+        code: "CS-201",
+        description: "Digital logic, CPU design, memory hierarchy, and assembly language.",
+        credits: 3,
+        department: "Computer Science",
+        degreeId: "1",
+    },
+    {
+        id: "cs-202",
+        name: "Operating Systems",
+        code: "CS-202",
+        description: "Processes, threads, scheduling, synchronization, and file systems.",
+        credits: 4,
+        department: "Computer Science",
+        degreeId: "1",
+    },
+    {
+        id: "cs-301",
+        name: "Software Engineering",
+        code: "CS-301",
+        description: "Software development lifecycle, agile methodologies, and testing patterns.",
+        credits: 3,
+        department: "Computer Science",
+        degreeId: "1",
+    },
+
+    // Degree 2: IT (BS-IT)
+    {
+        id: "it-101",
+        name: "Introduction to Networking",
+        code: "IT-101",
+        description: "OSI model, TCP/IP, and network fundamentals.",
+        credits: 3,
+        department: "Information Technology",
+        degreeId: "2",
+    },
+    {
+        id: "it-102",
+        name: "System Administration",
+        code: "IT-102",
+        description: "Linux/Windows server management and shell scripting.",
+        credits: 4,
+        department: "Information Technology",
+        degreeId: "2",
+    },
+    {
+        id: "it-201",
+        name: "Fundamentals of Cybersecurity",
+        code: "IT-201",
+        description: "Network security, encryption, and threat analysis.",
+        credits: 3,
+        department: "Information Technology",
+        degreeId: "2",
+    },
+
+    // Degree 3: Data Science
+    {
+        id: "ds-101",
+        name: "Introduction to Data Science",
+        code: "DS-101",
+        description: "Overview of data analysis pipeline, statistics, and visualization.",
+        credits: 3,
+        department: "Data Science",
+        degreeId: "3",
+    },
+    {
+        id: "ds-102",
+        name: "Probability & Statistics",
+        code: "DS-102",
+        description: "Statistical methods, probability theory, and hypothesis testing for data science.",
+        credits: 4,
+        department: "Mathematics",
+        degreeId: "3",
+    },
+    {
+        id: "ds-201",
+        name: "Machine Learning I",
+        code: "DS-201",
+        description: "Supervised and unsupervised learning algorithms and applications.",
+        credits: 4,
+        department: "Data Science",
+        degreeId: "3",
+    },
+];
