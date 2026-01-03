@@ -11,16 +11,13 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
-import { Plus, MoreHorizontal, FileText, Calendar, CheckCircle2, Clock } from "lucide-react";
-import { mockCourse, mockAssignments } from "@/lib/mock-data";
+import { Plus, MoreHorizontal, FileText, Calendar, Clock, Filter, Download } from "lucide-react";
+import { mockAssignments } from "@/lib/mock-data";
 
-export default function InstructorCourseDetailPage() {
+export default function InstructorAssignmentsPage() {
     const params = useParams();
     const router = useRouter();
     const courseId = params.id as string;
-
-    // Filter for active assignments (published only for the dashboard view)
-    const activeAssignments = mockAssignments.filter(a => a.published);
 
     const handleRowClick = (assignmentId: string) => {
         router.push(`/instructor/courses/${courseId}/assignments/${assignmentId}`);
@@ -28,56 +25,30 @@ export default function InstructorCourseDetailPage() {
 
     return (
         <div className="flex flex-col gap-8 pb-20">
-            {/* Header */}
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wider font-medium">
-                    <span>{mockCourse.semester}</span>
-                    <span>•</span>
-                    <span>{mockCourse.degree}</span>
-                    <span>•</span>
-                    <span>{mockCourse.specialization}</span>
-                    <span>•</span>
-                    <span className="font-bold text-primary">{mockCourse.code}</span>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">All Assignments</h1>
+                    <p className="text-muted-foreground mt-1">Manage and track all assignments for this course.</p>
                 </div>
-                <div className="flex items-center justify-between">
-                    <h1 className="text-4xl font-bold tracking-tight">{mockCourse.name}</h1>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline">
+                        <Download className="h-4 w-4 mr-2" />
+                        Export
+                    </Button>
                     <Button>
                         <Plus className="h-4 w-4 mr-2" />
-                        Create Assignment
+                        New Assignment
                     </Button>
                 </div>
             </div>
 
-            {/* Description & Objectives */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 flex flex-col gap-4">
-                    <h2 className="text-xl font-bold">Description</h2>
-                    <p className="text-muted-foreground leading-relaxed">
-                        {mockCourse.description}
-                    </p>
-                </div>
-                <div className="flex flex-col gap-4">
-                    <h2 className="text-xl font-bold">Objectives</h2>
-                    <ul className="space-y-2">
-                        {mockCourse.objectives.map((obj, i) => (
-                            <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                <span>{obj}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
-
-            {/* Assignments Table */}
             <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold italic tracking-tight underline underline-offset-8 decoration-primary/20">Active Assignments</h2>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>Next deadline: Oct 15</span>
-                        </div>
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" size="sm">
+                            <Filter className="h-4 w-4 mr-2" />
+                            Filter
+                        </Button>
                     </div>
                 </div>
 
@@ -90,13 +61,13 @@ export default function InstructorCourseDetailPage() {
                                 <TableHead className="font-bold text-primary">Due</TableHead>
                                 <TableHead className="text-center font-bold text-primary">Submissions</TableHead>
                                 <TableHead className="text-center font-bold text-primary">Graded %</TableHead>
-                                <TableHead className="text-center font-bold text-primary">Published</TableHead>
+                                <TableHead className="text-center font-bold text-primary">Status</TableHead>
                                 <TableHead className="text-center font-bold text-primary">Regrades</TableHead>
                                 <TableHead className="text-right font-bold text-primary">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {activeAssignments.map((assignment) => (
+                            {mockAssignments.map((assignment) => (
                                 <TableRow
                                     key={assignment.id}
                                     className="hover:bg-muted/30 transition-colors cursor-pointer"
@@ -137,7 +108,11 @@ export default function InstructorCourseDetailPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        <Badge className="bg-primary hover:bg-primary/90">Published</Badge>
+                                        {assignment.published ? (
+                                            <Badge className="bg-primary hover:bg-primary/90">Published</Badge>
+                                        ) : (
+                                            <Badge variant="secondary">Draft</Badge>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <span className={assignment.regrades > 0 ? "text-primary font-bold" : "text-muted-foreground"}>
