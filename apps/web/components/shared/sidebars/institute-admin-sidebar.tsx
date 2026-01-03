@@ -1,33 +1,9 @@
-<<<<<<< HEAD
-'use client';
-
-import { BaseSidebar } from "./base-sidebar";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Building2, Users, School, LayoutDashboard } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-export function InstituteAdminSidebar() {
-    const pathname = usePathname();
-
-    return (
-        <BaseSidebar>
-            <SidebarGroup>
-                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Institute Admin</SidebarGroupLabel>
-                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
-                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
-                        Manage your institute, staff, and student enrollments.
-                    </p>
-                </SidebarGroupContent>
-            </SidebarGroup>
-=======
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-    LayoutDashboard,
     Building2,
     GraduationCap,
     CalendarDays,
@@ -44,7 +20,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SidebarShell } from "./sidebar-shell"
+import { BaseSidebar } from "./base-sidebar"
 
 export function InstituteAdminSidebar() {
     const pathname = usePathname()
@@ -55,7 +31,7 @@ export function InstituteAdminSidebar() {
     // If we are inside a specific degree (and not just the list), show Context Menu
     if (degreeId && degreeId !== "new") {
         return (
-            <SidebarShell>
+            <BaseSidebar>
                 <SidebarGroup>
                     <SidebarGroupLabel>Degree Management</SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -118,49 +94,26 @@ export function InstituteAdminSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-            </SidebarShell>
+            </BaseSidebar>
         )
     }
 
     // Default Admin Sidebar
     return (
-        <SidebarShell>
->>>>>>> origin/develop
+        <BaseSidebar>
+            <SidebarGroup>
+                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Institute Admin</SidebarGroupLabel>
+                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
+                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
+                        Manage your institute&apos;s degrees, semesters and people efficiently.
+                    </p>
+                </SidebarGroupContent>
+            </SidebarGroup>
             <SidebarGroup>
                 <SidebarGroupLabel>Institute</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem>
-<<<<<<< HEAD
-                            <SidebarMenuButton asChild isActive={pathname === "/institute-admin"} tooltip="Dashboard">
-                                <Link href="/institute-admin">
-                                    <LayoutDashboard />
-                                    <span>Dashboard</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/institute-admin/staff"} tooltip="Staff Management">
-                                <Link href="/institute-admin">
-                                    <Users />
-                                    <span>Staff Management</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/institute-admin/departments"} tooltip="Departments">
-                                <Link href="/institute-admin">
-                                    <School />
-                                    <span>Departments</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/institute-admin/settings"} tooltip="Institute Settings">
-                                <Link href="/institute-admin">
-                                    <Building2 />
-                                    <span>Settings</span>
-=======
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === "/institute-admin/dashboard"}
@@ -169,17 +122,12 @@ export function InstituteAdminSidebar() {
                                 <Link href="/institute-admin/dashboard">
                                     <Building2 />
                                     <span>Dashboard</span>
->>>>>>> origin/develop
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-<<<<<<< HEAD
-        </BaseSidebar>
-    );
-=======
             <SidebarGroup>
                 <SidebarGroupLabel>Management</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -224,7 +172,6 @@ export function InstituteAdminSidebar() {
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-        </SidebarShell>
+        </BaseSidebar>
     )
->>>>>>> origin/develop
 }

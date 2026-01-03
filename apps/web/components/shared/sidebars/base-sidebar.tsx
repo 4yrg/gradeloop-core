@@ -11,7 +11,8 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "@/components/ui/sidebar";
-import { Users, PanelLeftClose, PanelLeftOpen, ChevronUp, UserCircle } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { UserMenu } from "./user-menu";
 import { useSidebar } from "@/components/ui/sidebar";
 
 interface BaseSidebarProps {
@@ -52,19 +53,7 @@ export function BaseSidebar({ children }: BaseSidebarProps) {
                 {children}
             </SidebarContent>
             <SidebarFooter className="border-t">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton className="flex items-center gap-2 py-6">
-                            <div className="flex aspect-square size-8 items-center justify-center bg-muted border">
-                                <UserCircle className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                            <div className="flex flex-1 items-center justify-between group-data-[collapsible=icon]:hidden">
-                                <span className="font-bold text-base">Account</span>
-                                <ChevronUp className="h-4 w-4" />
-                            </div>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+                <UserMenu />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>
