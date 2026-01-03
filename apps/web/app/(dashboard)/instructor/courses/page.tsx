@@ -59,14 +59,14 @@ export default function InstructorCoursesPage() {
                         <h2 className="text-sm font-semibold text-foreground/90">{semester.name}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {semester.courses.map((course) => (
-                                <div key={course.id} className="aspect-[4/3] w-full max-w-sm">
+                                <Link key={course.id} href={`/instructor/courses/${course.id}`} className="aspect-[4/3] w-full max-w-sm">
                                     <CourseCard
                                         title={course.title}
                                         code={course.code}
                                         description={course.description}
                                         assignmentsCount={course.assignmentsCount}
                                     />
-                                </div>
+                                </Link>
                             ))}
                             <div className="aspect-[4/3] w-full max-w-sm">
                                 <CreateCourseCard />
