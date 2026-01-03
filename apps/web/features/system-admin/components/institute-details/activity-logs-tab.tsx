@@ -7,7 +7,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { format } from "date-fns"
 
 interface ActivityLogsTabProps {
     instituteId: string
@@ -33,7 +32,14 @@ export function ActivityLogsTab({ instituteId }: ActivityLogsTabProps) {
                     {logs?.map((log) => (
                         <TableRow key={log.id}>
                             <TableCell className="text-xs whitespace-nowrap">
-                                {format(new Date(log.timestamp), "MMM dd, yyyy HH:mm")}
+                                {new Intl.DateTimeFormat("en-US", {
+                                    month: "short",
+                                    day: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                }).format(new Date(log.timestamp))}
                             </TableCell>
                             <TableCell className="font-medium text-xs">{log.user}</TableCell>
                             <TableCell className="text-xs font-semibold">{log.action}</TableCell>
