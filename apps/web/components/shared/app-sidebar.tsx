@@ -29,4 +29,4 @@ export function AppSidebar() {
     // Default or fallback
     return <SystemAdminSidebar />;
 }
-}
+

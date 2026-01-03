@@ -104,7 +104,7 @@ export function CreateAssignmentDialog() {
                                 <ChevronLeft className="h-6 w-6" />
                             </button>
                         )}
-                        <h2 className="text-xl font-bold tracking-tight">{step === 1 ? "Create assignment" : "Assignment Settings"}</h2>
+                        <DialogTitle className="text-xl font-bold tracking-tight">{step === 1 ? "Create assignment" : "Assignment Settings"}</DialogTitle>
                     </div>
                     <button onClick={() => reset()} className="hover:opacity-70 transition-opacity">
                         <X className="h-6 w-6" />
