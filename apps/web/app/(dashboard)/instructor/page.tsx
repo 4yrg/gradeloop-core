@@ -1,6 +1,6 @@
 import { Info, Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CourseCard } from "@/components/instructor/course-card";
+import { CourseCard } from "@/components/shared/course-card";
 import { CreateCourseCard } from "@/components/instructor/create-course-card";
 
 const semesters = [
@@ -8,7 +8,7 @@ const semesters = [
         title: "2025 Semester 1 (Jan-June)",
         courses: [
             {
-                id: 1,
+                id: "1",
                 name: "Introduction to programming",
                 degree: "IT",
                 specialization: "SE",
@@ -22,7 +22,7 @@ const semesters = [
         title: "2025 Semester 2 (Jan-June)",
         courses: [
             {
-                id: 2,
+                id: "2",
                 name: "Data structures and algorithms",
                 degree: "IT",
                 specialization: "SE",
