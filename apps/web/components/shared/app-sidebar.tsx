@@ -23,6 +23,7 @@ import {
     GraduationCap,
     Building2,
     LogOut,
+    Plus,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -82,7 +83,15 @@ export function AppSidebar() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+                    <SidebarGroupLabel className="text-zinc-900 font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Your Courses</SidebarGroupLabel>
+                    <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
+                        <p className="px-2 py-4 text-sm text-zinc-500 leading-relaxed">
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit nec, blandit maecenas ad laoreet sodales luctus mauris cubilia, ullamcorper curae massa penatibus erat netus consequat.
+                        </p>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Navigation (Role Switcher)</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {sidebarItems.map((item) => (
@@ -103,12 +112,17 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-t">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20">
-                            <LogOut />
-                            <span>Sign Out</span>
+                        <SidebarMenuButton className="flex items-center gap-2 py-6">
+                            <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800">
+                                <Users className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                            </div>
+                            <div className="flex flex-1 items-center justify-between group-data-[collapsible=icon]:hidden">
+                                <span className="font-bold">Account</span>
+                                <Plus className="h-4 w-4 rotate-45" />
+                            </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
