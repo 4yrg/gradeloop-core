@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpDown, CheckSquare, ChevronDown, Edit, MoreVertical, Users } from "lucide-react"
+import { ArrowUpDown, CheckSquare, ChevronDown, Edit, MoreVertical, Users, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -18,6 +18,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Link from "next/link"
 
 // Mock data - in real app this would come from params and API
 const COURSE_DATA = {
@@ -284,6 +285,18 @@ export default function CourseDetailPage() {
                         <div className="text-sm text-muted-foreground py-8">Regrades view</div>
                     </TabsContent>
                 </Tabs>
+            </div>
+
+            {/* Sticky Footer */}
+            <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+                <div className="flex h-14 items-center justify-end px-4 lg:px-8 max-w-6xl mx-auto">
+                    <Link href={`/instructor/courses/${COURSE_DATA.id}/assignments/create`}>
+                        <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
+                            <Plus className="h-4 w-4" />
+                            Create assignment
+                        </Button>
+                    </Link>
+                </div>
             </div>
         </div>
     )
