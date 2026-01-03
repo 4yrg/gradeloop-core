@@ -1,24 +1,3 @@
-<<<<<<< HEAD
-'use client';
-
-import { BaseSidebar } from "./base-sidebar";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { GraduationCap, LayoutDashboard, BookText } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-export function StudentSidebar() {
-    const pathname = usePathname();
-
-    return (
-        <BaseSidebar>
-            <SidebarGroup>
-                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Learning</SidebarGroupLabel>
-                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
-                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
-                        Access your courses, track your progress, and complete assignments.
-                    </p>
-=======
 "use client"
 
 import * as React from "react"
@@ -36,13 +15,21 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SidebarShell } from "./sidebar-shell"
+import { BaseSidebar } from "./base-sidebar"
 
 export function StudentSidebar() {
     const pathname = usePathname()
 
     return (
-        <SidebarShell>
+        <BaseSidebar>
+            <SidebarGroup>
+                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Learning</SidebarGroupLabel>
+                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
+                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
+                        Access your courses, track your progress, and complete assignments.
+                    </p>
+                </SidebarGroupContent>
+            </SidebarGroup>
             <SidebarGroup>
                 <SidebarGroupLabel>Student</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -60,7 +47,6 @@ export function StudentSidebar() {
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
->>>>>>> origin/develop
                 </SidebarGroupContent>
             </SidebarGroup>
             <SidebarGroup>
@@ -68,28 +54,6 @@ export function StudentSidebar() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem>
-<<<<<<< HEAD
-                            <SidebarMenuButton asChild isActive={pathname === "/student"} tooltip="Dashboard">
-                                <Link href="/student">
-                                    <LayoutDashboard />
-                                    <span>Dashboard</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/student/my-courses"} tooltip="My Courses">
-                                <Link href="/student">
-                                    <GraduationCap />
-                                    <span>My Courses</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/student/assignments"} tooltip="Assignments">
-                                <Link href="/student">
-                                    <BookText />
-                                    <span>Assignments</span>
-=======
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === "/dashboard"}
@@ -98,18 +62,12 @@ export function StudentSidebar() {
                                 <Link href="/dashboard">
                                     <LayoutDashboard />
                                     <span>Overview</span>
->>>>>>> origin/develop
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-<<<<<<< HEAD
         </BaseSidebar>
-    );
-=======
-        </SidebarShell>
     )
->>>>>>> origin/develop
 }

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 'use client';
 
 import { BaseSidebar } from "./base-sidebar";
@@ -19,38 +18,6 @@ export function InstructorSidebar() {
                     <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
                         Manage your courses, assignments and students effectively with our instructor tools.
                     </p>
-=======
-"use client"
-
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import {
-    LayoutDashboard,
-    BookOpen,
-} from "lucide-react"
-import {
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { SidebarShell } from "./sidebar-shell"
-
-export function InstructorSidebar() {
-    const pathname = usePathname()
-
-    return (
-        <SidebarShell>
-            <SidebarGroup>
-                <SidebarGroupLabel>Instructor</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-
-                    </SidebarMenu>
->>>>>>> origin/develop
                 </SidebarGroupContent>
             </SidebarGroup>
             <SidebarGroup>
@@ -58,7 +25,6 @@ export function InstructorSidebar() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem>
-<<<<<<< HEAD
                             <SidebarMenuButton asChild isActive={pathname === "/instructor"} tooltip="Dashboard">
                                 <Link href="/instructor">
                                     <LayoutDashboard />
@@ -71,27 +37,12 @@ export function InstructorSidebar() {
                                 <Link href="/instructor">
                                     <BookOpen />
                                     <span>Courses</span>
-=======
-                            <SidebarMenuButton
-                                asChild
-                                isActive={pathname === "/dashboard"}
-                                tooltip="Overview"
-                            >
-                                <Link href="/dashboard">
-                                    <LayoutDashboard />
-                                    <span>Overview</span>
->>>>>>> origin/develop
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-<<<<<<< HEAD
         </BaseSidebar>
     );
-=======
-        </SidebarShell>
-    )
->>>>>>> origin/develop
 }
