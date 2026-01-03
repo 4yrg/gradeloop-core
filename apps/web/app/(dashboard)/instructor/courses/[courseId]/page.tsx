@@ -289,7 +289,7 @@ export default function CourseDetailPage() {
 
             {/* Sticky Footer */}
             <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                <div className="flex h-14 items-center justify-end px-4 lg:px-8 max-w-6xl mx-auto">
+                <div className="flex h-14 items-center justify-end px-4 lg:px-8">
                     <Link href={`/instructor/courses/${COURSE_DATA.id}/assignments/create`}>
                         <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
                             <Plus className="h-4 w-4" />
