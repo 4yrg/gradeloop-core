@@ -33,7 +33,6 @@ const navItems = [
     { title: "Assignments", icon: FileText, href: "/assignments" },
     { title: "Roster", icon: Users, href: "/roster" },
     { title: "Extension", icon: Clock, href: "/extension" },
-    { title: "Course Settings", icon: Settings, href: "/settings" },
 ];
 
 export function CourseSidebar() {

@@ -6,7 +6,7 @@ import { useRosterStore } from "@/store/use-roster-store";
 import { RosterSearch } from "@/components/instructor/roster/roster-search";
 import { ParticipantCard } from "@/components/instructor/roster/participant-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, UserX, Users, GraduationCap, ArrowLeft, Settings } from "lucide-react";
+import { Loader2, UserX, Users, GraduationCap, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockCourse } from "@/lib/mock-data";
@@ -109,9 +109,6 @@ export default function RosterPage() {
                 </div>
                 <div className="flex items-center gap-4">
                     <RosterSearch />
-                    <Button variant="ghost" size="icon">
-                        <Settings className="h-4 w-4" />
-                    </Button>
                 </div>
             </div>
 
