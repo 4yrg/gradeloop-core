@@ -1,119 +1,33 @@
 'use client';
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarRail,
-} from "@/components/ui/sidebar";
-import {
-    LayoutDashboard,
-    Users,
-    BookOpen,
-    Settings,
-    GraduationCap,
-    Building2,
-    LogOut,
-} from "lucide-react";
+import { useSession } from "next-auth/react";
+import { SystemAdminSidebar } from "./sidebars/system-admin-sidebar";
+import { InstituteAdminSidebar } from "./sidebars/institute-admin-sidebar";
+import { InstructorSidebar } from "./sidebars/instructor-sidebar";
+import { StudentSidebar } from "./sidebars/student-sidebar";
+import { SidebarShell } from "./sidebars/sidebar-shell";
 
-const sidebarItems = [
-    {
-        title: "Overview",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-    },
-    {
-        title: "System Admin",
-        href: "/system-admin",
-        icon: Settings,
-    },
-    {
-        title: "Institute Admin",
-        href: "/institute-admin",
-        icon: Building2,
-    },
-    {
-        title: "Instructor",
-        href: "/instructor",
-        icon: BookOpen,
-    },
-    {
-        title: "Student",
-        href: "/student",
-        icon: GraduationCap,
-    },
-    {
-        title: "Users",
-        href: "/users",
-        icon: Users,
-    },
-];
+import { useAuthStore } from "@/store/use-auth-store";
 
 export function AppSidebar() {
-    const pathname = usePathname();
+    const { data: session, status } = useSession();
+    const { actingRole } = useAuthStore();
+    const userRole = actingRole || session?.user?.role;
 
-    return (
-        <Sidebar collapsible="icon">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-transparent hover:text-sidebar-foreground disabled:opacity-100"
-                        >
-                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                                <img src="/gradeloop_logo.png" alt="Gradeloop Logo" className="size-full object-contain" />
-                            </div>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-bold font-[family-name:var(--font-red-hat-display)] text-xl">Gradeloop</span>
-                            </div>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {sidebarItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={pathname === item.href}
-                                        tooltip={item.title}
-                                    >
-                                        <Link href={item.href}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-            </SidebarContent>
-            <SidebarFooter>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20">
-                            <LogOut />
-                            <span>Sign Out</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
-            <SidebarRail />
-        </Sidebar>
-    );
+    if (status === "loading") {
+        return <SidebarShell><div>Loading...</div></SidebarShell>;
+    }
+
+    switch (userRole) {
+        case "SYSTEM_ADMIN":
+            return <SystemAdminSidebar />;
+        case "INSTITUTE_ADMIN":
+            return <InstituteAdminSidebar />;
+        case "INSTRUCTOR":
+            return <InstructorSidebar />;
+        case "STUDENT":
+            return <StudentSidebar />;
+        default:
+            return <SidebarShell><div>No access ({userRole})</div></SidebarShell>;
+    }
 }

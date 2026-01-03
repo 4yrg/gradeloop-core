@@ -12,10 +12,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { useSystemAdminStore } from "@/features/system-admin/store/use-system-admin-store"
 
 export default function MonitoringPage() {
     const { data: institutes, isLoading } = useInstitutes()
+    const setSelectedInstituteId = useSystemAdminStore((state) => state.setSelectedInstituteId)
+    const setDetailsModalOpen = useSystemAdminStore((state) => state.setDetailsModalOpen)
 
     const pendingInstitutes = institutes?.filter((i) => i.setupProgress < 100) || []
     const avgProgress = institutes?.length
@@ -83,12 +86,16 @@ export default function MonitoringPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Link
-                                                href={`/system-admin/institutes/${institute.id}`}
-                                                className="text-primary hover:underline text-sm font-medium"
+                                            <Button
+                                                variant="link"
+                                                className="h-auto p-0 text-primary font-medium"
+                                                onClick={() => {
+                                                    setSelectedInstituteId(institute.id!)
+                                                    setDetailsModalOpen(true)
+                                                }}
                                             >
                                                 Review
-                                            </Link>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))

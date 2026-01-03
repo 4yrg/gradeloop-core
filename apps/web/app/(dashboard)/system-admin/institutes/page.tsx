@@ -4,10 +4,11 @@ import { useInstitutes } from "@/features/system-admin/api/queries"
 import { InstituteTable } from "@/features/system-admin/components/institute-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import Link from "next/link"
+import { useSystemAdminStore } from "@/features/system-admin/store/use-system-admin-store"
 
 export default function InstitutesPage() {
     const { data: institutes, isLoading } = useInstitutes()
+    const setCreateModalOpen = useSystemAdminStore((state) => state.setCreateModalOpen)
 
     return (
         <div className="flex flex-col gap-6">
@@ -18,10 +19,8 @@ export default function InstitutesPage() {
                         Manage your platform's institutes and their administrators.
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href="/system-admin/institutes/create">
-                        <Plus className="mr-2 h-4 w-4" /> Create Institute
-                    </Link>
+                <Button onClick={() => setCreateModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Create Institute
                 </Button>
             </div>
 
