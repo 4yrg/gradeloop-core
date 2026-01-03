@@ -62,7 +62,7 @@ export default function CreateCoursePage() {
 
             {/* Sticky Footer */}
             <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
-                <div className="flex h-14 items-center justify-between px-4 lg:px-8 max-w-screen-2xl mx-auto">
+                <div className="flex h-14 items-center justify-between px-4 lg:px-8">
                     <Link href="/instructor/courses">
                         <Button variant="ghost" size="sm">
                             Cancel
