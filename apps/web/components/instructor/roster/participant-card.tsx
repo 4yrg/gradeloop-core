@@ -6,9 +6,10 @@ import { Star } from "lucide-react";
 
 interface ParticipantCardProps {
     participant: Participant;
+    onClick?: () => void;
 }
 
-export function ParticipantCard({ participant }: ParticipantCardProps) {
+export function ParticipantCard({ participant, onClick }: ParticipantCardProps) {
     const initials = participant.name
         .split(" ")
         .map((n) => n[0])
@@ -18,7 +19,10 @@ export function ParticipantCard({ participant }: ParticipantCardProps) {
     if (participant.role === 'INSTRUCTOR') {
         const isLead = participant.instructorRole === 'LEAD';
         return (
-            <Card className="text-center pt-6 relative group border-2 border-transparent hover:border-primary/20 transition-all">
+            <Card
+                className="text-center pt-6 relative group border-2 border-transparent hover:border-primary/20 transition-all cursor-pointer"
+                onClick={onClick}
+            >
                 {isLead && (
                     <div className="absolute top-2 right-2">
                         <Badge variant="default" className="bg-amber-500 hover:bg-amber-600 text-white border-0 px-2 py-0">
@@ -45,7 +49,10 @@ export function ParticipantCard({ participant }: ParticipantCardProps) {
 
     // Student style (similar to Class cards)
     return (
-        <Card className="relative group overflow-hidden transition-all hover:shadow-md border-l-4 border-l-primary/70">
+        <Card
+            className="relative group overflow-hidden transition-all hover:shadow-md border-l-4 border-l-primary/70 cursor-pointer"
+            onClick={onClick}
+        >
             <CardContent className="flex items-center gap-4 p-4">
                 <Avatar className="h-10 w-10 border border-muted">
                     <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${participant.name}`} />

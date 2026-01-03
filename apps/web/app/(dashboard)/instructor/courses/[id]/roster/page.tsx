@@ -12,6 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockCourse } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { PersonProfileModal } from "@/features/institute-admin/components/person-profile-modal";
+import { Person, UserRole } from "@/features/institute-admin/types";
+import { Participant } from "@/types/roster";
 
 export default function RosterPage() {
     const params = useParams();
@@ -20,6 +24,28 @@ export default function RosterPage() {
     const { searchQuery } = useRosterStore();
 
     const { data, isLoading, isError, error } = useRoster(courseId);
+
+    const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleParticipantClick = (participant: Participant) => {
+        const [firstName, ...lastNameParts] = participant.name.split(" ");
+        const lastName = lastNameParts.join(" ") || "";
+
+        const person: Person = {
+            id: participant.id,
+            firstName,
+            lastName,
+            email: participant.email,
+            role: participant.role.toLowerCase() as UserRole,
+            // For students in roster, we don't have studentId in the Participant type yet, 
+            // but we can map it if we add it to Participant later.
+            studentId: "",
+        };
+
+        setSelectedPerson(person);
+        setIsModalOpen(true);
+    };
 
     if (isLoading) {
         return (
@@ -121,7 +147,11 @@ export default function RosterPage() {
                                     <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Lead Instructors</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                         {leadInstructors.map((instructor) => (
-                                            <ParticipantCard key={instructor.id} participant={instructor} />
+                                            <ParticipantCard
+                                                key={instructor.id}
+                                                participant={instructor}
+                                                onClick={() => handleParticipantClick(instructor)}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -132,7 +162,11 @@ export default function RosterPage() {
                                     <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Supporting Staff</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                         {supportingInstructors.map((instructor) => (
-                                            <ParticipantCard key={instructor.id} participant={instructor} />
+                                            <ParticipantCard
+                                                key={instructor.id}
+                                                participant={instructor}
+                                                onClick={() => handleParticipantClick(instructor)}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -148,13 +182,24 @@ export default function RosterPage() {
                         <ScrollArea className="h-[calc(100vh-350px)] w-full rounded-xl border border-dashed p-6 bg-muted/5">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredStudents.map((student) => (
-                                    <ParticipantCard key={student.id} participant={student} />
+                                    <ParticipantCard
+                                        key={student.id}
+                                        participant={student}
+                                        onClick={() => handleParticipantClick(student)}
+                                    />
                                 ))}
                             </div>
                         </ScrollArea>
                     )}
                 </TabsContent>
             </Tabs>
+
+            <PersonProfileModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                person={selectedPerson}
+                key={selectedPerson ? selectedPerson.id : 'new'}
+            />
         </div>
     );
 }
