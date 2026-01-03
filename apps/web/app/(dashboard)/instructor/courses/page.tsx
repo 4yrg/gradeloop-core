@@ -68,9 +68,9 @@ export default function InstructorCoursesPage() {
                                     />
                                 </Link>
                             ))}
-                            <div className="aspect-[4/3] w-full max-w-sm">
+                            <Link href="/instructor/courses/create" className="aspect-[4/3] w-full max-w-sm">
                                 <CreateCourseCard />
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 ))}
@@ -87,10 +87,12 @@ export default function InstructorCoursesPage() {
                         <Button variant="secondary" size="sm">
                             Enroll in course
                         </Button>
-                        <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
-                            <Plus className="h-4 w-4" />
-                            Create course
-                        </Button>
+                        <Link href="/instructor/courses/create">
+                            <Button size="sm" className="gap-2 bg-black hover:bg-black/90 text-white">
+                                <Plus className="h-4 w-4" />
+                                Create course
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
