@@ -15,6 +15,8 @@ interface SystemAdminState {
     setCreateModalOpen: (open: boolean) => void;
     isEditModalOpen: boolean;
     setEditModalOpen: (open: boolean) => void;
+    isDetailsModalOpen: boolean;
+    setDetailsModalOpen: (open: boolean) => void;
 }
 
 export const useSystemAdminStore = create<SystemAdminState>((set) => ({
@@ -28,5 +30,7 @@ export const useSystemAdminStore = create<SystemAdminState>((set) => ({
     isCreateModalOpen: false,
     setCreateModalOpen: (open) => set({ isCreateModalOpen: open }),
     isEditModalOpen: false,
-    setEditModalOpen: (open) => set({ isEditModalOpen: open }),
+    setEditModalOpen: (open: boolean) => set({ isEditModalOpen: open }),
+    isDetailsModalOpen: false,
+    setDetailsModalOpen: (open: boolean) => set({ isDetailsModalOpen: open }),
 }));

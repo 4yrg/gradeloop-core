@@ -21,9 +21,9 @@ export const instituteSchema = z.object({
     code: z.string().min(2, "Code must be at least 2 characters"),
     domain: z.string().url("Invalid domain URL").or(z.string().min(3)),
     contactEmail: z.string().email("Invalid contact email"),
-    status: instituteStatusSchema.default("pending"),
+    status: instituteStatusSchema,
     admins: z.array(instituteAdminSchema).min(1, "At least one admin is required"),
-    setupProgress: z.number().min(0).max(100).default(0),
+    setupProgress: z.number().min(0).max(100),
     createdAt: z.string().optional(),
 });
 

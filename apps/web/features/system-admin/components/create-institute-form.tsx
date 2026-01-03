@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { useSystemAdminStore } from "../store/use-system-admin-store"
 import { useCreateInstitute } from "../api/queries"
 import { Trash2, Plus, ArrowLeft, ArrowRight, Check } from "lucide-react"
@@ -51,7 +60,7 @@ export function CreateInstituteForm() {
     }
 
     const nextStep = async () => {
-        const fieldsToValidate = createInstituteStep === 1
+        const fieldsToValidate: (keyof Institute)[] = createInstituteStep === 1
             ? ["name", "code", "domain", "contactEmail"]
             : ["admins"]
 
@@ -159,13 +168,21 @@ export function CreateInstituteForm() {
                                     />
                                     <FormField
                                         control={form.control}
-                                        name={`admins.${index}.email`}
+                                        name={`admins.${index}.role`}
                                         render={({ field }) => (
-                                            <FormItem className="flex-1">
-                                                <FormLabel>Email</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="john@doe.com" {...field} />
-                                                </FormControl>
+                                            <FormItem>
+                                                <FormLabel>Role</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select role" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="owner">Owner</SelectItem>
+                                                        <SelectItem value="admin">Administrator</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -211,13 +228,19 @@ export function CreateInstituteForm() {
                                     <div className="text-muted-foreground">{form.getValues("contactEmail")}</div>
                                 </div>
                             </div>
-                            <div className="border-t pt-4">
-                                <div className="font-semibold mb-2">Admins</div>
-                                <div className="space-y-1">
+                            <Separator className="my-4" />
+                            <div className="space-y-4">
+                                <div className="font-semibold text-sm">Admins</div>
+                                <div className="grid gap-4">
                                     {form.getValues("admins").map((admin, idx) => (
-                                        <div key={idx} className="text-sm text-muted-foreground flex justify-between">
-                                            <span>{admin.name} ({admin.email})</span>
-                                            <span className="capitalize">{admin.role}</span>
+                                        <div key={idx} className="flex items-center justify-between text-sm p-3 border rounded-md">
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{admin.name}</span>
+                                                <span className="text-muted-foreground text-xs">{admin.email}</span>
+                                            </div>
+                                            <Badge variant="secondary" className="capitalize">
+                                                {admin.role}
+                                            </Badge>
                                         </div>
                                     ))}
                                 </div>
