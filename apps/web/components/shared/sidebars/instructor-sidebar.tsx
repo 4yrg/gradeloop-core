@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import {
     LayoutDashboard,
     BookOpen,
+    User,
 } from "lucide-react"
 import {
     SidebarGroup,
@@ -29,31 +30,24 @@ export function InstructorSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={pathname === "/instructor"}
-                                tooltip="My Courses"
+                                isActive={pathname === "/instructor/courses"}
+                                tooltip="Your Courses"
                             >
-                                <Link href="/instructor">
+                                <Link href="/instructor/courses">
                                     <BookOpen />
-                                    <span>My Courses</span>
+                                    <span>Your Courses</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-                <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={pathname === "/dashboard"}
-                                tooltip="Overview"
+                                isActive={pathname === "/instructor/account"}
+                                tooltip="Account"
                             >
-                                <Link href="/dashboard">
-                                    <LayoutDashboard />
-                                    <span>Overview</span>
+                                <Link href="/instructor/account">
+                                    <User />
+                                    <span>Account</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
