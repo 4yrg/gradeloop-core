@@ -26,18 +26,7 @@ export function InstructorSidebar() {
                 <SidebarGroupLabel>Instructor</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={pathname === "/instructor"}
-                                tooltip="My Courses"
-                            >
-                                <Link href="/instructor">
-                                    <BookOpen />
-                                    <span>My Courses</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
