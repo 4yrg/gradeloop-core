@@ -50,7 +50,7 @@ export function EnrollmentDialog({ open, onOpenChange }: EnrollmentDialogProps) 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-2xl w-full">
                 <DialogHeader>
                     <DialogTitle>Enroll in course</DialogTitle>
                     <DialogDescription>
