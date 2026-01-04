@@ -31,26 +31,22 @@ export default function LoginPage() {
         setIsLoading(true);
         setServerError(null);
 
-        const formData = new FormData();
-        formData.append('email', data.email);
-        formData.append('password', data.password);
-
         try {
-            // Initial state can be just definition
-            const result = await login({} as any, formData);
+            const result = await login(data);
 
-            if ('errors' in result && result.errors && '_form' in result.errors && result.errors._form) {
-                setServerError(result.errors._form[0]);
+            if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setServerError(firstError || 'Login failed');
+                }
                 setIsLoading(false);
-            } else if ('success' in result && result.success) {
+            } else if (result.success) {
                 // Use the redirectTo path from the server action based on user role
-                const redirectPath = (result as any).redirectTo || '/dashboard';
+                const redirectPath = result.redirectTo || '/dashboard';
                 router.refresh();
                 router.push(redirectPath);
-            } else {
-                // Fallback error
-                setServerError('An unexpected error occurred.');
-                setIsLoading(false);
             }
         } catch (e) {
             setServerError("An error occurred during login.");

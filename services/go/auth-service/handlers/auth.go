@@ -15,6 +15,11 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	// Basic validation
+	if req.Email == "" || req.Password == "" || req.Role == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email, password, and role are required"})
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not hash password"})
@@ -28,20 +33,23 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	if result := database.DB.Create(&user); result.Error != nil {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "User already exists"})
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "User already exists or database error: " + result.Error.Error()})
 	}
 
 	// Don't return password hash
 	user.PasswordHash = ""
 
 	return c.Status(fiber.StatusCreated).JSON(user)
-
 }
 
 func Login(c *fiber.Ctx) error {
 	var req models.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if req.Email == "" || req.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email and password are required"})
 	}
 
 	var user models.User

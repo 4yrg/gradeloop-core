@@ -30,16 +30,18 @@ export default function ForgotPasswordPage() {
         setServerError(null);
         setSuccessMessage(null);
 
-        const formData = new FormData();
-        formData.append('email', data.email);
-
         try {
-            const result = await forgotPassword({} as any, formData);
+            const result = await forgotPassword(data);
 
             if (result.success && result.message) {
                 setSuccessMessage(result.message);
-            } else if (result.errors?._form) {
-                setServerError(result.errors._form[0]);
+            } else if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setServerError(firstError || 'An error occurred');
+                }
             }
         } catch (e) {
             setServerError("An error occurred. Please try again.");

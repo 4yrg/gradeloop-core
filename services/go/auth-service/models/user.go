@@ -17,10 +17,10 @@ const (
 
 type User struct {
 	ID                   uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	Email                string     `gorm:"uniqueIndex" json:"email"`
+	Email                string     `gorm:"uniqueIndex;not null" json:"email"`
 	Name                 string     `json:"name"`
 	PasswordHash         string     `gorm:"not null" json:"-"`
-	Role                 Role       `gorm:"type:varchar(20)" json:"role"`
+	Role                 Role       `gorm:"type:varchar(20);not null" json:"role"`
 	PasswordResetToken   *string    `json:"-"`
 	PasswordResetExpires *time.Time `json:"-"`
 	CreatedAt            time.Time  `json:"created_at"`

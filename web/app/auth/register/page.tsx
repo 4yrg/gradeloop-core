@@ -6,8 +6,8 @@ import * as z from 'zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
 import { Loader2 } from 'lucide-react';
+import { register as registerAction } from '@/actions/auth';
 
 const schema = z.object({
     email: z.string().email('Please enter a valid email'),
@@ -37,20 +37,20 @@ export default function RegisterPage() {
         setError(null);
 
         try {
-            // Call Go Backend directly or via a Next.js API proxy to avoid CORS if needed.
-            // Assuming Next.js runs on 3000 and Go on 8080, we might need proxy or CORS.
-            // Environment variable for public API URL would be best.
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/auth';
+            const result = await registerAction(data);
 
-            await axios.post(`${apiUrl}/register`, data);
-
-            router.push('/auth/login?registered=true');
-        } catch (err: any) {
-            if (axios.isAxiosError(err) && err.response) {
-                setError(err.response.data.error || 'Registration failed');
-            } else {
-                setError('Something went wrong. Please try again.');
+            if (result.success) {
+                router.push('/auth/login?registered=true');
+            } else if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setError(firstError || 'Registration failed');
+                }
             }
+        } catch (err: any) {
+            setError('Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }

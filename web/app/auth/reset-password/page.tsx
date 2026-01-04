@@ -50,13 +50,12 @@ export default function ResetPasswordPage() {
         setServerError(null);
         setSuccessMessage(null);
 
-        const formData = new FormData();
-        formData.append('token', token);
-        formData.append('password', data.password);
-        formData.append('confirmPassword', data.confirmPassword);
-
         try {
-            const result = await resetPassword({} as any, formData);
+            const result = await resetPassword({
+                token,
+                password: data.password,
+                confirmPassword: data.confirmPassword
+            });
 
             if (result.success && result.message) {
                 setSuccessMessage(result.message);
@@ -64,13 +63,12 @@ export default function ResetPasswordPage() {
                 setTimeout(() => {
                     router.push('/auth/login');
                 }, 2000);
-            } else if (result.errors?._form) {
-                setServerError(result.errors._form[0]);
             } else if (result.errors) {
-                // Handle field-specific errors
-                const firstError = Object.values(result.errors).flat()[0];
-                if (firstError) {
-                    setServerError(firstError);
+                if ('_form' in result.errors && result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setServerError(firstError || 'Password reset failed');
                 }
             }
         } catch (e) {
