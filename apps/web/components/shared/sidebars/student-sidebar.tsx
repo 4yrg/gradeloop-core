@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation"
 import {
     LayoutDashboard,
     GraduationCap,
+    Bell,
+    LifeBuoy,
 } from "lucide-react"
 import {
     SidebarGroup,
@@ -56,12 +58,24 @@ export function StudentSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={pathname === "/dashboard"}
-                                tooltip="Overview"
+                                isActive={pathname === "/student/notifications"}
+                                tooltip="Notifications"
                             >
-                                <Link href="/dashboard">
-                                    <LayoutDashboard />
-                                    <span>Overview</span>
+                                <Link href="/student/notifications">
+                                    <Bell />
+                                    <span>Notifications</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={pathname === "/student/support"}
+                                tooltip="Help & Support"
+                            >
+                                <Link href="/student/support">
+                                    <LifeBuoy />
+                                    <span>Help & Support</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

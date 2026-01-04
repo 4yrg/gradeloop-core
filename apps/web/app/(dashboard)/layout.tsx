@@ -19,9 +19,10 @@ export default function DashboardLayout({
     const getSidebar = () => {
         const segments = pathname.split('/');
         const isAssignmentWorkspace = segments.includes('assignments') && segments.length > segments.indexOf('assignments') + 1;
+        const isInstructor = pathname.startsWith("/instructor");
 
-        if (isAssignmentWorkspace) return <AssignmentSidebar />;
-        if (pathname.startsWith("/instructor/courses")) return <CourseSidebar />;
+        if (isAssignmentWorkspace && isInstructor) return <AssignmentSidebar />;
+        if (pathname.startsWith("/instructor/courses") || pathname.startsWith("/student/courses")) return <CourseSidebar />;
         if (pathname.startsWith("/instructor")) return <InstructorSidebar />;
         if (pathname.startsWith("/student")) return <StudentSidebar />;
         if (pathname.startsWith("/system-admin")) return <SystemAdminSidebar />;
