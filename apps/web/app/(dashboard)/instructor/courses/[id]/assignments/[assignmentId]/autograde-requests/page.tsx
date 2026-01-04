@@ -112,7 +112,7 @@ export default function AutogradeRequestsPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-xs text-muted-foreground flex items-center justify-between">
-                        <p>Approve if system latency > 5s during submission</p>
+                        <p>Approve if system latency {'>'} 5s during submission</p>
                         <Badge>Inactive</Badge>
                     </CardContent>
                 </Card>

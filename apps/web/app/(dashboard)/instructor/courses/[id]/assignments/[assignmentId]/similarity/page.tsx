@@ -37,8 +37,8 @@ export default function ReviewSimilarityPage() {
                             <SelectValue placeholder="Filter clusters" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="threshold-high">High Similarity (>90%)</SelectItem>
-                            <SelectItem value="threshold-med">Medium Similarity (>70%)</SelectItem>
+                            <SelectItem value="threshold-high">High Similarity ({">"}90%)</SelectItem>
+                            <SelectItem value="threshold-med">Medium Similarity ({">"}70%)</SelectItem>
                             <SelectItem value="all">All Clusters</SelectItem>
                         </SelectContent>
                     </Select>
@@ -121,13 +121,13 @@ export default function ReviewSimilarityPage() {
                     <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
                         <div className="flex-1 bg-zinc-950 font-mono text-[11px] overflow-auto p-4">
                             <div className="space-y-0.5 whitespace-pre">
-                                <div className="text-zinc-500"> 12 | function solveProblem(input) {</div>
-                                <div className="bg-red-500/10 text-red-400">- 13 |   const results = input.filter(x => x > 0);</div>
-                                <div className="bg-green-500/10 text-green-400">+ 13 |   const filtered = input.filter(val => val > 0);</div>
-                                <div className="text-zinc-500"> 14 |   return filtered.sort((a,b) => a - b);</div>
+                                <div className="text-zinc-500"> 12 | function solveProblem(input) {'{'}</div>
+                                <div className="bg-red-500/10 text-red-400">- 13 |   const results = input.filter(x {'=>'} x {'>'} 0);</div>
+                                <div className="bg-green-500/10 text-green-400">+ 13 |   const filtered = input.filter(val {'=>'} val {'>'} 0);</div>
+                                <div className="text-zinc-500"> 14 |   return filtered.sort((a,b) {'=>'} a - b);</div>
                                 <div className="bg-red-500/10 text-red-400">- 15 |   // Logic for sorting</div>
                                 <div className="bg-green-500/10 text-green-400">+ 15 |   // Sorting logic here</div>
-                                <div className="text-zinc-500"> 16 | }</div>
+                                <div className="text-zinc-500"> 16 | {'}'}</div>
                             </div>
                         </div>
                         <div className="p-4 border-t bg-muted/10 space-y-4">

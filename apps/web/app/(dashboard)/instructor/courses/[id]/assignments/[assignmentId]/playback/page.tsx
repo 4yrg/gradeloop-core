@@ -2,8 +2,6 @@
 
 import {
     PlayCircle,
-    Timeline,
-    Construction,
     Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

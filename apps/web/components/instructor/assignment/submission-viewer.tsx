@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SubmissionViewerProps {
     submissionId: string;
@@ -135,7 +136,7 @@ export function SubmissionViewer({ submissionId }: SubmissionViewerProps) {
                                     <p className="text-zinc-100">[12:04:03] Running test suite...</p>
                                     <p>[12:04:04] Test 1: Passed</p>
                                     <p>[12:04:05] Test 2: Passed</p>
-                                    <p className="text-red-400">[12:04:06] Test 3: TIMEOUT ( > 1.0s)</p>
+                                    <p className="text-red-400">[12:04:06] Test 3: TIMEOUT ( {'>'} 1.0s)</p>
                                     <p>[12:04:07] Suite finished.</p>
                                 </div>
                             </div>

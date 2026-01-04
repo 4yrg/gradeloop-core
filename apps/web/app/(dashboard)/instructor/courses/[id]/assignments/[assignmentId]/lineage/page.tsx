@@ -83,11 +83,11 @@ export default function CodeLineagePage() {
                             <div className="flex-1 bg-zinc-950 font-mono text-[11px] p-6 overflow-auto text-zinc-400">
                                 <p className="text-zinc-500 mb-4 decoration-dotted underline"> Analysis: Logic for 'filter' has changed significantly. </p>
                                 <div className="space-y-0.5 whitespace-pre">
-                                    <div className="text-zinc-500"> 45 | function processData(arr) {</div>
-                                    <div className="bg-red-500/10 text-red-400">- 46 |   return arr.map(x => x * 2);</div>
-                                    <div className="bg-green-500/10 text-green-400">+ 46 |   const filtered = arr.filter(x => x % 2 === 0);</div>
-                                    <div className="bg-green-500/10 text-green-400">+ 47 |   return filtered.map(x => x * 2);</div>
-                                    <div className="text-zinc-500"> 48 | }</div>
+                                    <div className="text-zinc-500"> 45 | function processData(arr) {'{'}</div>
+                                    <div className="bg-red-500/10 text-red-400">- 46 |   return arr.map(x {'=>'} x * 2);</div>
+                                    <div className="bg-green-500/10 text-green-400">+ 46 |   const filtered = arr.filter(x {'=>'} x % 2 === 0);</div>
+                                    <div className="bg-green-500/10 text-green-400">+ 47 |   return filtered.map(x {'=>'} x * 2);</div>
+                                    <div className="text-zinc-500"> 48 | {'}'}</div>
                                 </div>
                             </div>
                             <div className="p-6 border-t bg-muted/10">
