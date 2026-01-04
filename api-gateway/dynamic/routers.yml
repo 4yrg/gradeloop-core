@@ -1,0 +1,120 @@
+# ============================================================================
+# Traefik Dynamic Configuration - Routers
+# ============================================================================
+# Defines HTTP routers that match incoming requests and route them to services
+# All routers enforce HTTPS and apply authentication middleware
+# ============================================================================
+
+http:
+  routers:
+    # ========================================================================
+    # Auth Service Router
+    # ========================================================================
+    auth-router:
+      rule: "PathPrefix(`/api/auth`)"
+      entryPoints:
+        - websecure
+      service: auth-service
+      middlewares:
+        - cors-headers
+        - security-headers
+        - rate-limit-auth
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    
+    # ========================================================================
+    # System Admin Router
+    # ========================================================================
+    system-admin-router:
+      rule: "PathPrefix(`/api/system`)"
+      entryPoints:
+        - websecure
+      service: system-admin-service
+      middlewares:
+        - cors-headers
+        - security-headers
+        - forward-auth
+        - role-system-admin
+        - rate-limit-admin
+      tls:
+        certResolver: letsencrypt
+      priority: 90
+    
+    # ========================================================================
+    # Institute Admin Router
+    # ========================================================================
+    institute-admin-router:
+      rule: "PathPrefix(`/api/institute`)"
+      entryPoints:
+        - websecure
+      service: institute-admin-service
+      middlewares:
+        - cors-headers
+        - security-headers
+        - forward-auth
+        - role-institute-admin
+        - rate-limit-admin
+      tls:
+        certResolver: letsencrypt
+      priority: 80
+    
+    # ========================================================================
+    # Instructor Router
+    # ========================================================================
+    instructor-router:
+      rule: "PathPrefix(`/api/instructor`)"
+      entryPoints:
+        - websecure
+      service: instructor-service
+      middlewares:
+        - cors-headers
+        - security-headers
+        - forward-auth
+        - role-instructor
+        - rate-limit-instructor
+      tls:
+        certResolver: letsencrypt
+      priority: 70
+    
+    # ========================================================================
+    # Student Router
+    # ========================================================================
+    student-router:
+      rule: "PathPrefix(`/api/student`)"
+      entryPoints:
+        - websecure
+      service: student-service
+      middlewares:
+        - cors-headers
+        - security-headers
+        - forward-auth
+        - role-student
+        - rate-limit-student
+      tls:
+        certResolver: letsencrypt
+      priority: 60
+    
+    # ========================================================================
+    # Health Check Router (No Auth Required)
+    # ========================================================================
+    health-router:
+      rule: "Path(`/health`) || Path(`/api/health`)"
+      entryPoints:
+        - websecure
+      service: health-service
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+      priority: 110
+    
+    # ========================================================================
+    # Metrics Router (Internal Only)
+    # ========================================================================
+    metrics-router:
+      rule: "Path(`/metrics`)"
+      entryPoints:
+        - metrics
+      service: prometheus@internal
+      priority: 120
