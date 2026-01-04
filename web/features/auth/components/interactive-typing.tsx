@@ -128,7 +128,7 @@ export function InteractiveTyping({
         className += ' text-foreground bg-primary/20 animate-pulse';
       } else {
         // Not yet typed
-        className += ' text-muted-foreground/80';
+        className += ' text-black/80';
       }
 
       // Handle newlines
