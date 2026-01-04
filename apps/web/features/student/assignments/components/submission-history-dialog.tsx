@@ -28,6 +28,7 @@ import { MOCK_SUBMISSIONS, SubmissionStatus } from "../data/mock-submissions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 interface SubmissionHistoryDialogProps {
     assignment: Assignment;
@@ -143,8 +144,10 @@ export function SubmissionHistoryDialog({ assignment, children, open, onOpenChan
                                                     {new Date(sub.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </TableCell>
                                                 <TableCell className="pr-6">
-                                                    <Button variant="ghost" size="icon" className="group-hover:text-primary transition-colors">
-                                                        <ArrowUpRight className="h-4 w-4" />
+                                                    <Button variant="ghost" size="icon" className="group-hover:text-primary transition-colors" asChild>
+                                                        <Link href={`/student/courses/${assignment.courseId}/assignments/${assignment.id}/workspace?submissionId=${sub.id}`}>
+                                                            <ArrowUpRight className="h-4 w-4" />
+                                                        </Link>
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>

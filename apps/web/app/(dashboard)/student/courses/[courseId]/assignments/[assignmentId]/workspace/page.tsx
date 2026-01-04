@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
     BookOpen,
     Play,
@@ -19,6 +20,7 @@ import Link from "next/link";
 import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
+import { MOCK_SUBMISSIONS } from "@/features/student/assignments/data/mock-submissions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,10 +46,14 @@ export default function WorkspacePage({
     params: Promise<{ courseId: string; assignmentId: string }>
 }) {
     const { courseId, assignmentId } = use(params);
-    const assignment = MOCK_ASSIGNMENTS.find(a => a.id === assignmentId);
+    const searchParams = useSearchParams();
+    const submissionId = searchParams.get('submissionId');
 
-    const [code, setCode] = useState("// Start coding here...");
-    const [language, setLanguage] = useState(assignment?.allowedLanguages[0]?.toLowerCase() || "python");
+    const assignment = MOCK_ASSIGNMENTS.find(a => a.id === assignmentId);
+    const submission = submissionId ? MOCK_SUBMISSIONS.find(s => s.id === submissionId) : null;
+
+    const [code, setCode] = useState(submission?.codeSnippet || "// Start coding here...");
+    const [language, setLanguage] = useState(submission?.language.toLowerCase() || assignment?.allowedLanguages[0]?.toLowerCase() || "python");
     const [output, setOutput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -87,6 +93,11 @@ export default function WorkspacePage({
                     <div className="flex items-center gap-2">
                         <LayoutPanelLeft className="h-4 w-4 text-primary" />
                         <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-none">{assignment.title}</span>
+                        {submission && (
+                            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-none text-[10px] font-black uppercase tracking-wider ml-2 px-2 py-0">
+                                Viewing Submission
+                            </Badge>
+                        )}
                     </div>
                 </div>
 
@@ -212,7 +223,14 @@ export default function WorkspacePage({
                                         )}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => { if (confirm("Reset code?")) setCode("// Start coding here...") }} title="Reset Code">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                            onClick={() => { if (confirm("Reset code?")) setCode("// Start coding here...") }}
+                                            title="Reset Code"
+                                            disabled={!!submission}
+                                        >
                                             <RotateCcw className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
@@ -238,7 +256,9 @@ export default function WorkspacePage({
                                                 vertical: "visible",
                                                 verticalScrollbarSize: 8,
                                                 horizontalScrollbarSize: 8
-                                            }
+                                            },
+                                            readOnly: !!submission,
+                                            domReadOnly: !!submission,
                                         }}
                                     />
                                 </div>
@@ -263,18 +283,23 @@ export default function WorkspacePage({
                                             size="sm"
                                             className="h-7 px-4 text-xs font-extrabold bg-muted hover:bg-muted-foreground/10 text-foreground border-none"
                                             onClick={handleRun}
-                                            disabled={isRunning}
+                                            disabled={isRunning || !!submission}
                                         >
                                             {isRunning ? "Running..." : "Run"}
                                         </Button>
                                         <Button
                                             size="sm"
                                             className="h-7 px-4 text-xs font-black shadow-lg shadow-primary/20"
-                                            asChild
+                                            asChild={!submission}
+                                            disabled={!!submission}
                                         >
-                                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/submit`}>
-                                                Submit
-                                            </Link>
+                                            {submission ? (
+                                                <span>View Only</span>
+                                            ) : (
+                                                <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/submit`}>
+                                                    Submit
+                                                </Link>
+                                            )}
                                         </Button>
                                     </div>
                                 </div>
