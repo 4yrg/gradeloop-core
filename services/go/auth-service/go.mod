@@ -4,7 +4,7 @@ replace github.com/gradeloop/core/services/go/shared => ../shared
 
 require github.com/gradeloop/core/services/go/shared v0.0.0-00010101000000-000000000000
 
-go 1.24.0
+go 1.25.5
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.10

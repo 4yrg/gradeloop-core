@@ -2,7 +2,7 @@ module github.com/gradeloop/api-gateway
 
 replace github.com/gradeloop/core/services/go/shared => ../shared
 
-go 1.23.0
+go 1.25.5
 
 require (
 	github.com/ansrivas/fiberprometheus/v2 v2.14.0
