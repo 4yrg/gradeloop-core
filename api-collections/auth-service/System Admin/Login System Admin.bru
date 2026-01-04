@@ -1,0 +1,22 @@
+meta {
+  name: Login System Admin
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "sysadmin01",
+    "password": "password123"
+  }
+}
+
+vars:post-response {
+  token: res.body.token
+}
