@@ -14,10 +14,8 @@ import {
     FileText,
     Users,
     Clock,
-    Settings,
     UserCircle,
     ArrowLeft,
-    Menu
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,25 +26,21 @@ const courseData = {
     instructor: "John Doe"
 };
 
-export function CourseSidebar() {
+interface NavItem {
+    title: string;
+    icon: any;
+    href: string;
+}
+
+interface BaseCourseSidebarProps {
+    navItems: NavItem[];
+    roleBase: string;
+    courseId: string;
+    isInstructor?: boolean;
+}
+
+function BaseCourseSidebar({ navItems, roleBase, courseId, isInstructor }: BaseCourseSidebarProps) {
     const pathname = usePathname();
-    const isInstructor = pathname.startsWith("/instructor");
-    const roleBase = isInstructor ? "/instructor" : "/student";
-
-    // Extract course ID from pathname
-    const segments = pathname.split('/');
-    const courseId = segments[3];
-
-    const navItems = isInstructor ? [
-        { title: "Dashboard", icon: LayoutDashboard, href: "" },
-        { title: "Assignments", icon: FileText, href: "/assignments" },
-        { title: "Roster", icon: Users, href: "/roster" },
-        { title: "Extension", icon: Clock, href: "/extension" },
-    ] : [
-        { title: "Overview", icon: LayoutDashboard, href: "" },
-        { title: "Assignments", icon: FileText, href: "/assignments" },
-        { title: "My Grades", icon: UserCircle, href: "/grades" }, // Placeholder
-    ];
 
     const getHref = (href: string) => {
         return `${roleBase}/courses/${courseId || 'IT1010'}${href}`;
@@ -121,4 +115,35 @@ export function CourseSidebar() {
             </SidebarGroup>
         </BaseSidebar>
     );
+}
+
+export function InstructorCourseSidebar() {
+    const pathname = usePathname();
+    const segments = pathname.split('/');
+    // Format: /instructor/courses/[id]/...
+    const courseId = segments[3];
+
+    const navItems = [
+        { title: "Dashboard", icon: LayoutDashboard, href: "" },
+        { title: "Assignments", icon: FileText, href: "/assignments" },
+        { title: "Roster", icon: Users, href: "/roster" },
+        { title: "Extension", icon: Clock, href: "/extension" },
+    ];
+
+    return <BaseCourseSidebar navItems={navItems} roleBase="/instructor" courseId={courseId} isInstructor />;
+}
+
+export function StudentCourseSidebar() {
+    const pathname = usePathname();
+    const segments = pathname.split('/');
+    // Format: /student/courses/[courseId]/...
+    const courseId = segments[3];
+
+    const navItems = [
+        { title: "Overview", icon: LayoutDashboard, href: "" },
+        { title: "Assignments", icon: FileText, href: "/assignments" },
+        { title: "My Grades", icon: UserCircle, href: "/grades" },
+    ];
+
+    return <BaseCourseSidebar navItems={navItems} roleBase="/student" courseId={courseId} />;
 }
