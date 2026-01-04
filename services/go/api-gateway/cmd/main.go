@@ -41,6 +41,7 @@ func main() {
 
 	// Initialize gRPC Clients
 	services.InitAuthClient(cfg)
+	services.InitInstituteClient()
 
 	// Routes
 	routes.SetupRoutes(app, cfg)

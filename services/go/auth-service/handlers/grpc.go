@@ -6,9 +6,11 @@ import (
 	"log"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/gradeloop/auth-service/database"
 	"github.com/gradeloop/auth-service/middleware"
 	"github.com/gradeloop/auth-service/models"
+	"github.com/gradeloop/auth-service/services"
 	pb "github.com/gradeloop/core/services/go/shared/proto/auth"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -111,5 +113,44 @@ func (s *AuthGrpcServer) ValidateToken(ctx context.Context, req *pb.ValidateToke
 		Valid:  true,
 		UserId: userID,
 		Role:   role,
+	}, nil
+}
+
+func (s *AuthGrpcServer) InviteUser(ctx context.Context, req *pb.InviteUserRequest) (*pb.InviteUserResponse, error) {
+	// 1. Check if user exists
+	var user models.User
+	if result := database.DB.Where("email = ?", req.Email).First(&user); result.Error == nil {
+		return nil, status.Error(codes.AlreadyExists, "User already exists")
+	}
+
+	// 2. Create User with random password (they must reset it)
+	// Using a random long string for password so it can't be guessed
+	randomPwd := uuid.New().String() + uuid.New().String()
+	hash, err := bcrypt.GenerateFromPassword([]byte(randomPwd), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Could not hash password")
+	}
+
+	user = models.User{
+		Email:        req.Email,
+		Name:         req.Name,
+		PasswordHash: string(hash),
+		Role:         models.Role(req.Role),
+	}
+
+	if result := database.DB.Create(&user); result.Error != nil {
+		return nil, status.Error(codes.Internal, "Failed to create user: "+result.Error.Error())
+	}
+
+	// 3. Generate Reset Token
+	token, err := services.CreatePasswordResetToken(req.Email) // This saves token to DB
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to generate reset token: "+err.Error())
+	}
+
+	// 4. Return response
+	return &pb.InviteUserResponse{
+		UserId:     user.ID.String(),
+		ResetToken: token,
 	}, nil
 }

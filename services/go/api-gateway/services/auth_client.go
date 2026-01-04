@@ -74,3 +74,13 @@ func ResetPasswordGrpc(token, password string) (*pb.ResetPasswordResponse, error
 		Password: password,
 	})
 }
+
+func InviteUserGrpc(email, role, name string) (*pb.InviteUserResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	return AuthClient.InviteUser(ctx, &pb.InviteUserRequest{
+		Email: email,
+		Role:  role,
+		Name:  name,
+	})
+}

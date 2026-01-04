@@ -39,7 +39,15 @@ func SetupRoutes(app *fiber.App, cfg *config.Config) {
 	institute := api.Group("/institute")
 	institute.Use(middlewares.JWTMiddleware(cfg))
 	institute.Use(middlewares.RBACMiddleware("institute-admin"))
-	institute.All("/*", services.ProxyService(cfg.InstructorServiceURL)) // Assuming placeholder URL
+	// institute.All("/*", services.ProxyService(cfg.InstructorServiceURL)) // Removed proxy
+
+	// System Admin Routes - Institute Management
+	// Note: The prompt asked for "system admin functionalities... creating institutes"
+	// So these should be under /system or accessible to system-admin.
+	// The previous block `system := api.Group("/system")` exists.
+
+	system.Post("/institutes", handlers.CreateInstitute)
+	system.Post("/institutes/:id/admins", handlers.AddInstituteAdmin)
 
 	// Instructor Routes
 	instructor := api.Group("/instructor")

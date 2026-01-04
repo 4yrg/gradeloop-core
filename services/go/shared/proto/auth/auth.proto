@@ -10,6 +10,18 @@ service AuthService {
   rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc ForgotPassword (ForgotPasswordRequest) returns (ForgotPasswordResponse);
   rpc ResetPassword (ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc InviteUser (InviteUserRequest) returns (InviteUserResponse);
+}
+
+message InviteUserRequest {
+  string email = 1;
+  string role = 2;
+  string name = 3; // Optional
+}
+
+message InviteUserResponse {
+  string user_id = 1;
+  string reset_token = 2;
 }
 
 message RegisterRequest {

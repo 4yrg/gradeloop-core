@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package institute;
+
+option go_package = "github.com/gradeloop/core/services/go/shared/proto/institute";
+
+service InstituteService {
+  rpc CreateInstitute (CreateInstituteRequest) returns (CreateInstituteResponse);
+  rpc AddInstituteAdmin (AddInstituteAdminRequest) returns (AddInstituteAdminResponse);
+  rpc GetInstitute (GetInstituteRequest) returns (GetInstituteResponse);
+}
+
+message Institute {
+  string id = 1;
+  string name = 2;
+  string code = 3;
+  string created_at = 4;
+}
+
+message CreateInstituteRequest {
+  string name = 1;
+  string code = 2;
+}
+
+message CreateInstituteResponse {
+  Institute institute = 1;
+}
+
+message AddInstituteAdminRequest {
+  string institute_id = 1;
+  string user_id = 2;
+}
+
+message AddInstituteAdminResponse {
+  bool success = 1;
+}
+
+message GetInstituteRequest {
+  string id = 1;
+}
+
+message GetInstituteResponse {
+  Institute institute = 1;
+}
