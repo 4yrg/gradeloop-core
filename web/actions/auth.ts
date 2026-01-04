@@ -49,7 +49,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
     let user: any
     try {
         // Use service name if in docker, or host port if outside
-        const authUrl = process.env.AUTH_SERVICE_URL || "http://auth-service:5000/auth";
+        // Use API Gateway URL
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
         console.log(`Attempting login at: ${authUrl}/login for ${email}`);
 
         const response = await axios.post(`${authUrl}/login`, {
@@ -124,7 +125,7 @@ export async function register(data: z.infer<typeof registerSchema>): Promise<Re
     const { email, name, password, role } = validatedFields.data
 
     try {
-        const authUrl = process.env.AUTH_SERVICE_URL || "http://auth-service:5000/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
         await axios.post(`${authUrl}/register`, {
             email,
             name,
@@ -180,7 +181,7 @@ export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>)
     const { email } = validatedFields.data
 
     try {
-        const authUrl = process.env.AUTH_SERVICE_URL || "http://auth-service:5000/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
         const response = await axios.post(`${authUrl}/forgot-password`, {
             email,
         });
@@ -235,7 +236,7 @@ export async function resetPassword(data: { token: string } & z.infer<typeof res
     const token = data.token
 
     try {
-        const authUrl = process.env.AUTH_SERVICE_URL || "http://auth-service:5000/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
         const response = await axios.post(`${authUrl}/reset-password`, {
             token,
             password,

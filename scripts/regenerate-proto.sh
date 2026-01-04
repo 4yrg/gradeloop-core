@@ -13,7 +13,7 @@ cd "$(dirname "$0")/../services/go/shared/proto/auth"
 docker run --rm \
   -v "$(pwd):/workspace" \
   -w /workspace \
-  golang:1.21 \
+  golang:1.24 \
   sh -c "
     echo 'Installing protoc and Go plugins...'
     apt-get update -qq && apt-get install -y -qq protobuf-compiler > /dev/null 2>&1

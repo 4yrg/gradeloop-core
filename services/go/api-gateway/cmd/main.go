@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gradeloop/api-gateway/config"
 	"github.com/gradeloop/api-gateway/routes"
+	"github.com/gradeloop/api-gateway/services"
 )
 
 func main() {
@@ -37,6 +38,9 @@ func main() {
 	prometheus := fiberprometheus.New("api_gateway")
 	prometheus.RegisterAt(app, "/metrics")
 	app.Use(prometheus.Middleware)
+
+	// Initialize gRPC Clients
+	services.InitAuthClient(cfg)
 
 	// Routes
 	routes.SetupRoutes(app, cfg)
