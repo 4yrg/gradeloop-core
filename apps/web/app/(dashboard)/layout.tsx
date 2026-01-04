@@ -6,6 +6,7 @@ import { StudentSidebar } from "@/components/shared/sidebars/student-sidebar";
 import { SystemAdminSidebar } from "@/components/shared/sidebars/system-admin-sidebar";
 import { InstituteAdminSidebar } from "@/components/shared/sidebars/institute-admin-sidebar";
 import { CourseSidebar } from "@/components/shared/sidebars/course-sidebar";
+import { AssignmentManageSidebar } from "@/components/shared/sidebars/assignment-manage-sidebar";
 import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
@@ -16,6 +17,9 @@ export default function DashboardLayout({
     const pathname = usePathname();
 
     const getSidebar = () => {
+        if (pathname.includes("/assignments/") && pathname.includes("/manage")) {
+            return <AssignmentManageSidebar />;
+        }
         if (pathname.startsWith("/instructor/courses")) return <CourseSidebar />;
         if (pathname.startsWith("/instructor")) return <InstructorSidebar />;
         if (pathname.startsWith("/student")) return <StudentSidebar />;
