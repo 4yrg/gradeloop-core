@@ -101,13 +101,13 @@ export async function login(data: z.infer<typeof loginSchema>) {
 function getRedirectPath(role: string): string {
     switch (role) {
         case 'system-admin':
-            return '/admin/system'
+            return '/system-admin'
         case 'institute-admin':
-            return '/admin/institute'
+            return '/institute-admin/dashboard'
         case 'instructor':
-            return '/instructor/courses'
+            return '/instructor'
         case 'student':
-            return '/student/courses'
+            return '/student'
         default:
             return '/dashboard'
     }
