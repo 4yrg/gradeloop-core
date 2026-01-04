@@ -345,7 +345,7 @@ function QuickActionsMenu({ courseId, assignmentId }: { courseId: string; assign
             description: "Set up assessment parameters",
             icon: Settings,
             href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/configure`,
-            available: false
+            available: true
         },
         {
             title: "Edit Rubric",
