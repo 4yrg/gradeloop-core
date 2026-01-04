@@ -14,8 +14,15 @@ export const instituteService = {
     },
 
     createInstitute: async (data: Partial<Institute>): Promise<Institute> => {
-        const response = await apiClient.post("/system/institutes", data);
-        return response.data;
+        const response = await apiClient.post("/system/institutes", {
+            name: data.name,
+            code: data.code,
+            domain: data.domain,
+            contactEmail: data.contactEmail,
+            status: data.status || "pending",
+            admins: data.admins || []
+        });
+        return response.data.institute || response.data;
     },
 
     updateInstitute: async (id: string, data: Partial<Institute>): Promise<Institute> => {
