@@ -1,20 +1,58 @@
 services:
+  # ============================================================================
+  # API Gateway - Traefik v3.6
+  # ============================================================================
+  # Production-grade API Gateway with ForwardAuth, RBAC, rate limiting, and observability
+  # Configuration files located in api-gateway/ folder
+  # ============================================================================
   traefik:
-    image: traefik:v3.2
-    environment:
-      - DOCKER_API_VERSION=1.44
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--accesslog=true"
-      - "--log.level=INFO"
+    image: traefik:v3.6
+    container_name: gradeloop-api-gateway
+    restart: unless-stopped
+
+    # Security: Run as non-root user
+    user: "1000:1000"
+
     ports:
+      # HTTP - Redirects to HTTPS
       - "80:80"
+      # HTTPS - Main entry point
+      - "443:443"
+      # Traefik Dashboard (disable in production)
       - "8080:8080"
+      # Prometheus metrics
+      - "8082:8082"
+
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Static configuration from api-gateway/
+      - ./api-gateway/traefik.yml:/etc/traefik/traefik.yml:ro
+
+      # Dynamic configuration from api-gateway/dynamic/
+      - ./api-gateway/dynamic:/etc/traefik/dynamic:ro
+
+      # TLS certificates
+      - ./api-gateway/certs:/etc/traefik/certs:ro
+
+      # Access logs
+      - ./api-gateway/logs:/var/log/traefik
+
+      # Docker socket for service discovery (read-only for security)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    environment:
+      - TZ=UTC
+      - DOCKER_API_VERSION=1.44
+
+    labels:
+      - "traefik.enable=true"
+
+    healthcheck:
+      test: [ "CMD", "traefik", "healthcheck", "--ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
     networks:
       - gradeloop-net
 
@@ -78,7 +116,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -93,7 +131,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -106,6 +144,7 @@ services:
 volumes:
   db-data:
   redis-data:
+
 
 networks:
   gradeloop-net:
