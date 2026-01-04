@@ -10,7 +10,8 @@ import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 
 const schema = z.object({
-    username: z.string().min(3, 'Username must be at least 3 characters'),
+    email: z.string().email('Please enter a valid email'),
+    name: z.string().min(2, 'Name must be at least 2 characters'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     role: z.enum(['student', 'instructor', 'institute-admin']), // Simplified for UI
 });
@@ -76,16 +77,31 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Username
+                            Email
                         </label>
                         <input
-                            {...register('username')}
+                            {...register('email')}
+                            type="email"
+                            className="mt-1 block w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:text-gray-100"
+                            disabled={isLoading}
+                        />
+                        {errors.email && (
+                            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Name
+                        </label>
+                        <input
+                            {...register('name')}
                             type="text"
                             className="mt-1 block w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:text-gray-100"
                             disabled={isLoading}
                         />
-                        {errors.username && (
-                            <p className="mt-1 text-xs text-red-500">{errors.username.message}</p>
+                        {errors.name && (
+                            <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
                         )}
                     </div>
 

@@ -8,18 +8,23 @@ service AuthService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
   rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ForgotPassword (ForgotPasswordRequest) returns (ForgotPasswordResponse);
+  rpc ResetPassword (ResetPasswordRequest) returns (ResetPasswordResponse);
 }
 
 message RegisterRequest {
   string email = 1;
-  string password = 2;
-  string role = 3;
-  string name = 4;
+  string name = 2;
+  string password = 3;
+  string role = 4;
 }
 
 message RegisterResponse {
   string id = 1;
   string token = 2;
+  string name = 3;
+  string email = 4;
+  string role = 5;
 }
 
 message LoginRequest {
@@ -29,6 +34,10 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
+  string user_id = 2;
+  string email = 3;
+  string name = 4;
+  string role = 5;
 }
 
 message ValidateTokenRequest {
@@ -37,6 +46,25 @@ message ValidateTokenRequest {
 
 message ValidateTokenResponse {
   string user_id = 1;
-  string role = 2;
-  bool valid = 3;
+  string email = 2;
+  string name = 3;
+  string role = 4;
+  bool valid = 5;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  string message = 1;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string password = 2;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
 }

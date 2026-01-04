@@ -27,9 +27,10 @@ func (s *AuthGrpcServer) Register(ctx context.Context, req *pb.RegisterRequest) 
 	}
 
 	user := models.User{
-		Username:     req.Email, // Using Email as Username
+		Email:        req.Email,
+		Name:         req.Name,
 		PasswordHash: string(hash),
-		Role:         models.Role(req.Role), // Cast string to Role type
+		Role:         models.Role(req.Role),
 	}
 
 	if result := database.DB.Create(&user); result.Error != nil {
@@ -49,7 +50,7 @@ func (s *AuthGrpcServer) Register(ctx context.Context, req *pb.RegisterRequest) 
 
 func (s *AuthGrpcServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 	var user models.User
-	if result := database.DB.Where("username = ?", req.Email).First(&user); result.Error != nil {
+	if result := database.DB.Where("email = ?", req.Email).First(&user); result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 		}

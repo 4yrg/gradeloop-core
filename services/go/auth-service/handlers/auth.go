@@ -5,6 +5,7 @@ import (
 	"github.com/gradeloop/auth-service/database"
 	"github.com/gradeloop/auth-service/middleware"
 	"github.com/gradeloop/auth-service/models"
+	"github.com/gradeloop/auth-service/services"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,7 +21,8 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	user := models.User{
-		Username:     req.Username,
+		Email:        req.Email,
+		Name:         req.Name,
 		PasswordHash: string(hash),
 		Role:         req.Role,
 	}
@@ -33,6 +35,7 @@ func Register(c *fiber.Ctx) error {
 	user.PasswordHash = ""
 
 	return c.Status(fiber.StatusCreated).JSON(user)
+
 }
 
 func Login(c *fiber.Ctx) error {
@@ -42,7 +45,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if result := database.DB.Where("username = ?", req.Username).First(&user); result.Error != nil {
+	if result := database.DB.Where("email = ?", req.Email).First(&user); result.Error != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
 	}
 
@@ -71,4 +74,39 @@ func Me(c *fiber.Ctx) error {
 
 	user.PasswordHash = ""
 	return c.JSON(user)
+}
+
+func ForgotPassword(c *fiber.Ctx) error {
+	var req models.ForgotPasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Import and use the email service
+	if _, err := services.CreatePasswordResetToken(req.Email); err != nil {
+		// Log the error but don't expose it to the user for security
+		// Always return success to prevent email enumeration
+		return c.JSON(fiber.Map{
+			"message": "If the email exists, a password reset link has been sent",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "If the email exists, a password reset link has been sent",
+	})
+}
+
+func ResetPassword(c *fiber.Ctx) error {
+	var req models.ResetPasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if err := services.ResetPassword(req.Token, req.Password); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Password reset successful",
+	})
 }
