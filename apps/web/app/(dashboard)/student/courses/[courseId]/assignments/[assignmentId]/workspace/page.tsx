@@ -75,21 +75,17 @@ export default function WorkspacePage({
         <div className="flex flex-col h-screen overflow-hidden bg-background text-foreground selection:bg-primary/20">
             {/* Workspace Header */}
             <header className="h-[50px] border-b bg-card flex items-center justify-between px-4 shrink-0 z-50">
-                <div className="flex items-center gap-6">
-                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" asChild className="h-8 gap-2 px-2 text-muted-foreground hover:text-foreground">
+                        <Link href={`/student/courses/${courseId}/assignments`}>
+                            <RotateCcw className="h-4 w-4 rotate-180" />
+                            <span className="font-bold">Back</span>
+                        </Link>
+                    </Button>
+                    <Separator orientation="vertical" className="h-4" />
+                    <div className="flex items-center gap-2">
                         <LayoutPanelLeft className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-semibold truncate max-w-[200px] md:max-w-none">{assignment.title}</span>
-                    </Link>
-                    <Separator orientation="vertical" className="h-4 hidden sm:block" />
-                    <div className="hidden md:flex items-center gap-4">
-                        <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground px-3">
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Description
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground px-3">
-                            <Monitor className="h-4 w-4 mr-2" />
-                            Solutions
-                        </Button>
+                        <span className="text-sm font-bold truncate max-w-[200px] sm:max-w-none">{assignment.title}</span>
                     </div>
                 </div>
 
@@ -98,16 +94,13 @@ export default function WorkspacePage({
                         <Command className="h-3 w-3" />
                         <span className="text-[10px] font-bold uppercase tracking-tight">Auto-Save</span>
                     </div>
+                    <Separator orientation="vertical" className="h-4 mx-1" />
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Settings className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Maximize2 className="h-4 w-4" />
                     </Button>
-                    <Separator orientation="vertical" className="h-4 mx-1" />
-                    <Link href={`/student/courses/${courseId}/assignments`}>
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-semibold">Exit</Button>
-                    </Link>
                 </div>
             </header>
 
