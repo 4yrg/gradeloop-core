@@ -6,11 +6,12 @@ import * as z from 'zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
 import { Loader2 } from 'lucide-react';
+import { register as registerAction } from '@/actions/auth';
 
 const schema = z.object({
-    username: z.string().min(3, 'Username must be at least 3 characters'),
+    email: z.string().email('Please enter a valid email'),
+    name: z.string().min(2, 'Name must be at least 2 characters'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     role: z.enum(['student', 'instructor', 'institute-admin']), // Simplified for UI
 });
@@ -36,20 +37,20 @@ export default function RegisterPage() {
         setError(null);
 
         try {
-            // Call Go Backend directly or via a Next.js API proxy to avoid CORS if needed.
-            // Assuming Next.js runs on 3000 and Go on 8080, we might need proxy or CORS.
-            // Environment variable for public API URL would be best.
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/auth';
+            const result = await registerAction(data);
 
-            await axios.post(`${apiUrl}/register`, data);
-
-            router.push('/auth/login?registered=true');
-        } catch (err: any) {
-            if (axios.isAxiosError(err) && err.response) {
-                setError(err.response.data.error || 'Registration failed');
-            } else {
-                setError('Something went wrong. Please try again.');
+            if (result.success) {
+                router.push('/auth/login?registered=true');
+            } else if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setError(firstError || 'Registration failed');
+                }
             }
+        } catch (err: any) {
+            setError('Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -76,16 +77,31 @@ export default function RegisterPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Username
+                            Email
                         </label>
                         <input
-                            {...register('username')}
+                            {...register('email')}
+                            type="email"
+                            className="mt-1 block w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:text-gray-100"
+                            disabled={isLoading}
+                        />
+                        {errors.email && (
+                            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Name
+                        </label>
+                        <input
+                            {...register('name')}
                             type="text"
                             className="mt-1 block w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:text-gray-100"
                             disabled={isLoading}
                         />
-                        {errors.username && (
-                            <p className="mt-1 text-xs text-red-500">{errors.username.message}</p>
+                        {errors.name && (
+                            <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
                         )}
                     </div>
 

@@ -16,26 +16,39 @@ const (
 )
 
 type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	Username     string    `gorm:"uniqueIndex;not null" json:"username"`
-	PasswordHash string    `gorm:"not null" json:"-"`
-	Role         Role      `gorm:"type:varchar(20);not null" json:"role"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID                   uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	Email                string     `gorm:"uniqueIndex;not null" json:"email"`
+	Name                 string     `json:"name"`
+	PasswordHash         string     `gorm:"not null" json:"-"`
+	Role                 Role       `gorm:"type:varchar(20);not null" json:"role"`
+	PasswordResetToken   *string    `json:"-"`
+	PasswordResetExpires *time.Time `json:"-"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
 }
 
 type RegisterRequest struct {
-	Username string `json:"username" validate:"required,min=3"`
+	Email    string `json:"email" validate:"required,email"`
+	Name     string `json:"name" validate:"required,min=2"`
 	Password string `json:"password" validate:"required,min=6"`
 	Role     Role   `json:"role" validate:"required,oneof=system-admin institute-admin student instructor"`
 }
 
 type LoginRequest struct {
-	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
 type AuthResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
+}
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ResetPasswordRequest struct {
+	Token    string `json:"token" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
 }

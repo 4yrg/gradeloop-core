@@ -10,10 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { forgotPasswordSchema, ForgotPasswordValues } from "../schemas/auth"
 import Link from "next/link"
+import { forgotPassword } from "@/actions/auth"
 
 export function ForgotPasswordForm() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+
+    const [error, setError] = useState<string | null>(null)
 
     const {
         register,
@@ -28,12 +31,25 @@ export function ForgotPasswordForm() {
 
     async function onSubmit(data: ForgotPasswordValues) {
         setLoading(true)
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Forgot password for:", data.email)
-            setSuccess(true)
+        setError(null)
+
+        try {
+            const result = await forgotPassword(data)
+            if (result.success) {
+                setSuccess(true)
+            } else if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setError(result.errors._form[0])
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0]
+                    setError(firstError || 'An error occurred')
+                }
+            }
+        } catch (err) {
+            setError("Something went wrong. Please try again.")
+        } finally {
             setLoading(false)
-        }, 1000)
+        }
     }
 
     if (success) {
@@ -67,6 +83,8 @@ export function ForgotPasswordForm() {
                         <Input id="email" placeholder="m@example.com" {...register("email")} />
                         {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
                     </div>
+
+                    {error && <p className="text-sm text-red-500">{error}</p>}
 
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -10,6 +10,7 @@ type Config struct {
 	Port                 string
 	JWTSecret            string
 	AuthServiceURL       string
+	AuthServiceGRPCURL   string
 	InstructorServiceURL string
 	StudentServiceURL    string
 	SystemServiceURL     string
@@ -22,6 +23,7 @@ func LoadConfig() *Config {
 		Port:                 getEnv("PORT", "8080"),
 		JWTSecret:            getEnv("JWT_SECRET", "supersecretkey"),
 		AuthServiceURL:       getEnv("AUTH_SERVICE_URL", "http://auth-service:5000"),
+		AuthServiceGRPCURL:   getEnv("AUTH_SERVICE_GRPC_URL", "auth-service:50051"),
 		InstructorServiceURL: getEnv("INSTRUCTOR_SERVICE_URL", "http://instructor-service:8081"),
 		StudentServiceURL:    getEnv("STUDENT_SERVICE_URL", "http://student-service:8084"),
 		SystemServiceURL:     getEnv("SYSTEM_SERVICE_URL", "http://system-service:8081"),

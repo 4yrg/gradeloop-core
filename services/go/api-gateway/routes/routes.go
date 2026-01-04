@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gradeloop/api-gateway/config"
+	"github.com/gradeloop/api-gateway/handlers"
 	"github.com/gradeloop/api-gateway/middlewares"
 	"github.com/gradeloop/api-gateway/services"
 )
@@ -15,6 +16,14 @@ func SetupRoutes(app *fiber.App, cfg *config.Config) {
 	auth := api.Group("/auth")
 	// Use Rate Limiting for Auth
 	auth.Use(middlewares.RateLimitMiddleware())
+
+	auth.Post("/login", handlers.Login)
+	auth.Post("/register", handlers.Register)
+	auth.Get("/me", handlers.GetMe)
+	auth.Post("/forgot-password", handlers.ForgotPassword)
+	auth.Post("/reset-password", handlers.ResetPassword)
+
+	// Fallback for other auth routes to proxy if not implemented via gRPC yet
 	auth.All("/*", services.ProxyService(cfg.AuthServiceURL))
 
 	// Protected Routes
