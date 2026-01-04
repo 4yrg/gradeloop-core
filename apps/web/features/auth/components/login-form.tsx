@@ -12,11 +12,13 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { loginSchema, LoginValues } from "../schemas/auth"
 import Link from "next/link"
+import { useAuthLoading } from "../context/auth-loading-context"
 
 export function LoginForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { setIsLoading } = useAuthLoading()
 
     const {
         register,
@@ -32,6 +34,7 @@ export function LoginForm() {
 
     async function onSubmit(data: LoginValues) {
         setLoading(true)
+        setIsLoading(true)
         setError(null)
         try {
             const result = await signIn("credentials", {
@@ -51,6 +54,7 @@ export function LoginForm() {
             setError("Something went wrong")
         } finally {
             setLoading(false)
+            setIsLoading(false)
         }
     }
 
