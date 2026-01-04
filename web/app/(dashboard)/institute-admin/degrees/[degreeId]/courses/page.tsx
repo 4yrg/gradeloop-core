@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CoursesGrid } from "@/features/institute-admin/components/courses-grid";
+import { CourseModal } from "@/features/institute-admin/components/course-modal";
 import { coursesService } from "@/features/institute-admin/api/courses-service";
 import { Course } from "@/features/institute-admin/types";
 
@@ -13,6 +14,7 @@ export default function DegreeCoursesPage() {
 
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (degreeId) {
@@ -33,7 +35,16 @@ export default function DegreeCoursesPage() {
     };
 
     const handleCreate = () => {
-        alert("Create Course Modal would open here.");
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (data: Course) => {
+        try {
+            const created = await coursesService.createCourse(data);
+            setCourses((prev) => [...prev, created]);
+        } catch (error) {
+            console.error("Failed to create course", error);
+        }
     };
 
     const handleCourseClick = (course: Course) => {
@@ -57,6 +68,13 @@ export default function DegreeCoursesPage() {
                     onCreateClick={handleCreate}
                 />
             )}
+
+            <CourseModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSubmit={handleSubmit}
+                degreeId={degreeId}
+            />
         </div>
     );
 }

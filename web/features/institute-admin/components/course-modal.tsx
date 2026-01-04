@@ -20,28 +20,30 @@ interface CourseModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (data: Course) => void;
-    initialData?: Course | null;
+    degreeId: string;
 }
 
 export function CourseModal({
     open,
     onOpenChange,
     onSubmit,
-    initialData,
+    degreeId,
 }: CourseModalProps) {
-    const form = useForm<Course>({
+    const form = useForm({
         resolver: zodResolver(courseSchema),
-        defaultValues: initialData || {
+        defaultValues: {
             name: "",
             code: "",
+            credits: 3,
             description: "",
-            credits: 0,
             department: "",
+            degreeId: degreeId,
         },
     });
 
     const handleSubmit = (data: Course) => {
-        onSubmit(data);
+        onSubmit({ ...data, degreeId });
+        form.reset();
         onOpenChange(false);
     };
 
@@ -49,22 +51,18 @@ export function CourseModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>
-                        {initialData ? "Edit Course" : "Create Course"}
-                    </DialogTitle>
+                    <DialogTitle>Create Course</DialogTitle>
                     <DialogDescription>
-                        {initialData
-                            ? "Update course details."
-                            : "Add a new course to the institute catalog."}
+                        Add a new course to the curriculum.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Course Name</Label>
+                        <Label htmlFor="name">Name</Label>
                         <Input
                             id="name"
                             {...form.register("name")}
-                            placeholder="e.g. Introduction to Computer Science"
+                            placeholder="e.g. Introduction to Programming"
                         />
                         {form.formState.errors.name && (
                             <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
@@ -73,8 +71,12 @@ export function CourseModal({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="code">Course Code</Label>
-                            <Input id="code" {...form.register("code")} placeholder="e.g. CS101" />
+                            <Label htmlFor="code">Code</Label>
+                            <Input
+                                id="code"
+                                {...form.register("code")}
+                                placeholder="e.g. CS101"
+                            />
                             {form.formState.errors.code && (
                                 <p className="text-sm text-red-500">{form.formState.errors.code.message}</p>
                             )}
@@ -107,7 +109,7 @@ export function CourseModal({
                         <Textarea
                             id="description"
                             {...form.register("description")}
-                            placeholder="Optional description..."
+                            placeholder="Optional course description..."
                         />
                     </div>
 
@@ -115,7 +117,7 @@ export function CourseModal({
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit">Create Course</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

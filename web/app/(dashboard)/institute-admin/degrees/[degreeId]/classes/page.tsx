@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ClassesGrid } from "@/features/institute-admin/components/classes-grid";
+import { ClassModal } from "@/features/institute-admin/components/class-modal";
 import { classesService } from "@/features/institute-admin/api/classes-service";
-import { ClassGroup } from "@/features/institute-admin/types";
+import { ClassGroup, Person } from "@/features/institute-admin/types";
 import { Button } from "@/components/ui/button";
 
 export default function DegreeClassesPage() {
@@ -14,6 +15,7 @@ export default function DegreeClassesPage() {
 
     const [classes, setClasses] = useState<ClassGroup[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (degreeId) {
@@ -34,14 +36,33 @@ export default function DegreeClassesPage() {
     };
 
     const handleCreate = () => {
-        // For now, just a placeholder alert as per instruction strictness "Implement ONE logical section".
-        // The modal logic might be considered part of the "create" UX, but I'll stick to displaying the grid first.
-        // Or I can route to a "new" page if that's the pattern?
-        // User said "Create Class UX... triggered by clicking... placeholder card".
-        // I'll assume a modal is needed but I'll implement a simple stub for now or just log it.
-        // Actually, user said "Clicking a class card opens the Class page". 
-        // I will navigate.
-        alert("Create Class Modal would open here.");
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (data: ClassGroup, studentIds: string[], importedStudents: Partial<Person>[]) => {
+        try {
+            const created = await classesService.createClass(data);
+
+            const promises = [];
+
+            if (studentIds.length > 0 && created.id) {
+                promises.push(classesService.addStudentsToClass(created.id, studentIds));
+            }
+
+            if (importedStudents.length > 0 && created.id) {
+                promises.push(classesService.importStudents(created.id, importedStudents));
+            }
+
+            if (promises.length > 0) {
+                await Promise.all(promises);
+                // Update local count
+                created.studentCount = studentIds.length + importedStudents.length;
+            }
+
+            setClasses((prev) => [...prev, created]);
+        } catch (error) {
+            console.error("Failed to create class", error);
+        }
     };
 
     const handleClassClick = (classGroup: ClassGroup) => {
@@ -64,6 +85,13 @@ export default function DegreeClassesPage() {
                     onCreateClick={handleCreate}
                 />
             )}
+
+            <ClassModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSubmit={handleSubmit}
+                degreeId={degreeId}
+            />
         </div>
     );
 }
