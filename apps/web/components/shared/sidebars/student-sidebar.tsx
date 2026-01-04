@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation"
 import {
     LayoutDashboard,
     GraduationCap,
+    Bell,
+    LifeBuoy,
 } from "lucide-react"
 import {
     SidebarGroup,
@@ -15,13 +17,21 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SidebarShell } from "./sidebar-shell"
+import { BaseSidebar } from "./base-sidebar"
 
 export function StudentSidebar() {
     const pathname = usePathname()
 
     return (
-        <SidebarShell>
+        <BaseSidebar>
+            <SidebarGroup>
+                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Learning</SidebarGroupLabel>
+                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
+                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
+                        Access your courses, track your progress, and complete assignments.
+                    </p>
+                </SidebarGroupContent>
+            </SidebarGroup>
             <SidebarGroup>
                 <SidebarGroupLabel>Student</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -48,18 +58,30 @@ export function StudentSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={pathname === "/dashboard"}
-                                tooltip="Overview"
+                                isActive={pathname === "/student/notifications"}
+                                tooltip="Notifications"
                             >
-                                <Link href="/dashboard">
-                                    <LayoutDashboard />
-                                    <span>Overview</span>
+                                <Link href="/student/notifications">
+                                    <Bell />
+                                    <span>Notifications</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={pathname === "/student/support"}
+                                tooltip="Help & Support"
+                            >
+                                <Link href="/student/support">
+                                    <LifeBuoy />
+                                    <span>Help & Support</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-        </SidebarShell>
+        </BaseSidebar>
     )
 }

@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-    LayoutDashboard,
     Building2,
     GraduationCap,
     CalendarDays,
@@ -21,7 +20,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SidebarShell } from "./sidebar-shell"
+import { BaseSidebar } from "./base-sidebar"
 
 export function InstituteAdminSidebar() {
     const pathname = usePathname()
@@ -32,7 +31,7 @@ export function InstituteAdminSidebar() {
     // If we are inside a specific degree (and not just the list), show Context Menu
     if (degreeId && degreeId !== "new") {
         return (
-            <SidebarShell>
+            <BaseSidebar>
                 <SidebarGroup>
                     <SidebarGroupLabel>Degree Management</SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -95,13 +94,21 @@ export function InstituteAdminSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-            </SidebarShell>
+            </BaseSidebar>
         )
     }
 
     // Default Admin Sidebar
     return (
-        <SidebarShell>
+        <BaseSidebar>
+            <SidebarGroup>
+                <SidebarGroupLabel className="font-bold text-lg h-auto py-2 group-data-[collapsible=icon]:hidden">Institute Admin</SidebarGroupLabel>
+                <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
+                    <p className="px-2 py-4 text-sm text-muted-foreground leading-relaxed">
+                        Manage your institute&apos;s degrees, semesters and people efficiently.
+                    </p>
+                </SidebarGroupContent>
+            </SidebarGroup>
             <SidebarGroup>
                 <SidebarGroupLabel>Institute</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -165,6 +172,6 @@ export function InstituteAdminSidebar() {
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-        </SidebarShell>
+        </BaseSidebar>
     )
 }
