@@ -1,6 +1,6 @@
 module github.com/gradeloop/core/services/go/shared
 
-go 1.23
+go 1.25.5
 
 require (
 	google.golang.org/grpc v1.68.1
