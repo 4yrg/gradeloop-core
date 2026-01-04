@@ -25,16 +25,16 @@ services:
 
     volumes:
       # Static configuration from api-gateway/
-      - ./api-gateway/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../../api-gateway/traefik.yml:/etc/traefik/traefik.yml:ro
 
       # Dynamic configuration from api-gateway/dynamic/
-      - ./api-gateway/dynamic:/etc/traefik/dynamic:ro
+      - ../../api-gateway/dynamic:/etc/traefik/dynamic:ro
 
       # TLS certificates
-      - ./api-gateway/certs:/etc/traefik/certs:ro
+      - ../../api-gateway/certs:/etc/traefik/certs:ro
 
       # Access logs
-      - ./api-gateway/logs:/var/log/traefik
+      - ../../api-gateway/logs:/var/log/traefik
 
       # Docker socket for service discovery (read-only for security)
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -58,7 +58,7 @@ services:
 
   web:
     build:
-      context: apps/web
+      context: ../../web
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -82,7 +82,7 @@ services:
 
   auth-service:
     build:
-      context: apps/auth-service
+      context: ../../services/go/auth-service
       dockerfile: Dockerfile
     env_file:
       - .env
