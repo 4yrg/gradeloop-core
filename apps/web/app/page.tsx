@@ -10,36 +10,36 @@ const portals = [
     description: "Manage system-wide settings and configurations.",
     href: "/system-admin",
     icon: Shield,
-    color: "from-red-500/20 to-orange-500/20",
-    border: "group-hover:border-red-500/50",
-    text: "group-hover:text-red-500",
+    color: "from-zinc-500/10 to-zinc-500/5",
+    border: "group-hover:border-primary/50",
+    text: "group-hover:text-primary",
   },
   {
     title: "Institute Admin",
     description: "Oversee institute operations and staff management.",
     href: "/institute-admin",
     icon: Building2,
-    color: "from-blue-500/20 to-cyan-500/20",
-    border: "group-hover:border-blue-500/50",
-    text: "group-hover:text-blue-500",
+    color: "from-zinc-500/10 to-zinc-500/5",
+    border: "group-hover:border-primary/50",
+    text: "group-hover:text-primary",
   },
   {
     title: "Instructor",
     description: "Manage courses, assignments, and student grades.",
     href: "/instructor",
     icon: BookOpen,
-    color: "from-emerald-500/20 to-green-500/20",
-    border: "group-hover:border-emerald-500/50",
-    text: "group-hover:text-emerald-500",
+    color: "from-zinc-500/10 to-zinc-500/5",
+    border: "group-hover:border-primary/50",
+    text: "group-hover:text-primary",
   },
   {
     title: "Student",
     description: "Access course materials and track your progress.",
     href: "/student",
     icon: GraduationCap,
-    color: "from-violet-500/20 to-purple-500/20",
-    border: "group-hover:border-violet-500/50",
-    text: "group-hover:text-violet-500",
+    color: "from-zinc-500/10 to-zinc-500/5",
+    border: "group-hover:border-primary/50",
+    text: "group-hover:text-primary",
   },
 ];
 
@@ -68,7 +68,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl"
           >
-            Welcome to <span className="text-blue-600 dark:text-blue-400">Gradeloop</span>
+            Welcome to <span className="text-primary">Gradeloop</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
