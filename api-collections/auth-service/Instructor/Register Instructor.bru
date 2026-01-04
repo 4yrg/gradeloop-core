@@ -1,0 +1,19 @@
+meta {
+  name: Register Instructor
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "instructor01",
+    "password": "password123",
+    "role": "instructor"
+  }
+}

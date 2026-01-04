@@ -1,0 +1,22 @@
+meta {
+  name: Login Student
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "student01",
+    "password": "password123"
+  }
+}
+
+vars:post-response {
+  token: res.body.token
+}

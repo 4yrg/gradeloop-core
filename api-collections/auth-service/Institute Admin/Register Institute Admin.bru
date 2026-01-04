@@ -1,0 +1,19 @@
+meta {
+  name: Register Institute Admin
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "instadmin01",
+    "password": "password123",
+    "role": "institute-admin"
+  }
+}
