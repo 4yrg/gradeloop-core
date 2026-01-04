@@ -74,7 +74,7 @@ COPY . .
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-6. Add to docker-compose.yml
+6. Add to infra/docker/docker-compose.yml
 7. Update API Gateway routing
 
 ## Best Practices

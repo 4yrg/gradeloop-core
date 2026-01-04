@@ -43,8 +43,8 @@ gradeloop-core/
   - `api-gateway/CHECKLIST.md` → `docs/api-gateway-checklist.md`
   - `api-gateway/QUICKREF.md` → `docs/api-gateway-quickref.md`
 
-- ✅ `compose.yaml` copied to `infra/docker/docker-compose.yml`
-- ✅ Root `compose.yaml` kept for convenience
+- ✅ `compose.yaml` moved to `infra/docker/docker-compose.yml`
+- ✅ Root `compose.yaml` removed (only infra/docker version maintained)
 
 ### 3. Configuration Updated
 
@@ -151,9 +151,7 @@ gradeloop-core/
 
 - The `web/` folder already existed at root level and contains the Next.js application
 - The `apps/` directory has been removed after consolidation
-- Both root `compose.yaml` and `infra/docker/docker-compose.yml` are maintained:
-  - Root: For convenience during development
-  - Infra: For production deployments
+- Docker Compose file is maintained only in `infra/docker/docker-compose.yml`
 - API Gateway configuration remains in `api-gateway/` directory
 - All documentation has been centralized in `docs/`
 
@@ -195,7 +193,8 @@ cp .env.example .env
 # 3. Edit .env with your configuration
 nano .env
 
-# 4. Build and start services
+# 4. Navigate to infra/docker and start services
+cd infra/docker
 docker-compose up --build
 
 # 5. Access the application

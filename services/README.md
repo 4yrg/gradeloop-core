@@ -83,9 +83,6 @@ uvicorn app.main:app --reload
 
 ```bash
 # From project root
-docker-compose up <service-name>
-
-# Or from infra/docker
 cd infra/docker
 docker-compose up <service-name>
 ```
@@ -94,7 +91,7 @@ docker-compose up <service-name>
 
 1. Create the service directory under `go/` or `python/`
 2. Follow the structure template above
-3. Add the service to `compose.yaml` and `infra/docker/docker-compose.yml`
+3. Add the service to `infra/docker/docker-compose.yml`
 4. Configure routing in the API Gateway
 5. Update this README
 

@@ -162,6 +162,7 @@ gradeloop-core/
 
 2. **Run with Docker**
    ```bash
+   cd infra/docker
    docker-compose up --build
    ```
 

@@ -51,7 +51,7 @@ go get github.com/gofiber/fiber/v2
 ```
 
 6. Create Dockerfile
-7. Add to docker-compose.yml
+7. Add to infra/docker/docker-compose.yml
 8. Update API Gateway routing
 
 ## Best Practices
