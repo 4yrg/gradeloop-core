@@ -8,6 +8,7 @@ import { InstituteAdminSidebar } from "@/components/shared/sidebars/institute-ad
 import { CourseSidebar } from "@/components/shared/sidebars/course-sidebar";
 import { AssignmentSidebar } from "@/components/shared/sidebars/assignment-sidebar";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
     children,
@@ -16,12 +17,13 @@ export default function DashboardLayout({
 }) {
     const pathname = usePathname();
 
-    const getSidebar = () => {
-        const segments = pathname.split('/');
-        const isAssignmentWorkspace = segments.includes('assignments') && segments.length > segments.indexOf('assignments') + 1;
+    const segments = pathname.split('/');
+    const isAssignmentWorkspace = segments.includes('assignments') && segments.length > segments.indexOf('assignments') + 1;
+    const isInstructor = pathname.startsWith("/instructor");
 
-        if (isAssignmentWorkspace) return <AssignmentSidebar />;
-        if (pathname.startsWith("/instructor/courses")) return <CourseSidebar />;
+    const getSidebar = () => {
+        if (isAssignmentWorkspace && isInstructor) return <AssignmentSidebar />;
+        if (pathname.startsWith("/instructor/courses") || pathname.startsWith("/student/courses")) return <CourseSidebar />;
         if (pathname.startsWith("/instructor")) return <InstructorSidebar />;
         if (pathname.startsWith("/student")) return <StudentSidebar />;
         if (pathname.startsWith("/system-admin")) return <SystemAdminSidebar />;
@@ -29,12 +31,19 @@ export default function DashboardLayout({
         return <InstructorSidebar />; // Default to instructor for now
     };
 
+    const showSidebar = !isAssignmentWorkspace || isInstructor;
+
     return (
         <SidebarProvider>
-            {getSidebar()}
-            <SidebarInset>
-                <div className="relative flex flex-1 flex-col bg-background p-4 lg:p-8">
-                    <SidebarTrigger className="fixed left-4 top-4 z-50 rounded-none border bg-background shadow-md transition-all hover:bg-accent md:hidden group-data-[state=collapsed]:md:flex" />
+            {showSidebar && getSidebar()}
+            <SidebarInset className="overflow-hidden">
+                <div className={cn(
+                    "relative flex flex-1 flex-col bg-background overflow-hidden",
+                    showSidebar ? "p-4 lg:p-8" : "p-0"
+                )}>
+                    {showSidebar && (
+                        <SidebarTrigger className="fixed left-4 top-4 z-50 rounded-none border bg-background shadow-md transition-all hover:bg-accent md:hidden group-data-[state=collapsed]:md:flex" />
+                    )}
                     {children}
                 </div>
             </SidebarInset>

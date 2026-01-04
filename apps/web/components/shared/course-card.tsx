@@ -9,11 +9,13 @@ interface CourseCardProps {
     code: string;
     description: string;
     assignmentCount: number;
+    role?: "student" | "instructor";
 }
 
-export function CourseCard({ id, name, degree, specialization, code, description, assignmentCount }: CourseCardProps) {
+export function CourseCard({ id, name, degree, specialization, code, description, assignmentCount, role = "student" }: CourseCardProps) {
+    const basePath = role === "instructor" ? "/instructor" : "/student";
     return (
-        <Link href={`/instructor/courses/${code}`} className="block transition-transform hover:scale-[1.01] active:scale-[0.99]">
+        <Link href={`${basePath}/courses/${code}`} className="block transition-transform hover:scale-[1.01] active:scale-[0.99]">
             <Card className="overflow-hidden border shadow-sm h-full">
                 <CardHeader className="p-5 pb-2">
                     <CardTitle className="text-lg font-semibold">{name}</CardTitle>

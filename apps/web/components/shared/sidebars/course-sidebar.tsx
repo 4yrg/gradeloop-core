@@ -28,22 +28,28 @@ const courseData = {
     instructor: "John Doe"
 };
 
-const navItems = [
-    { title: "Dashboard", icon: LayoutDashboard, href: "" },
-    { title: "Assignments", icon: FileText, href: "/assignments" },
-    { title: "Roster", icon: Users, href: "/roster" },
-    { title: "Extension", icon: Clock, href: "/extension" },
-];
-
 export function CourseSidebar() {
     const pathname = usePathname();
+    const isInstructor = pathname.startsWith("/instructor");
+    const roleBase = isInstructor ? "/instructor" : "/student";
 
-    // Extract course ID from pathname if possible
+    // Extract course ID from pathname
     const segments = pathname.split('/');
-    const courseId = segments[3]; // instructor/courses/[id]
+    const courseId = segments[3];
+
+    const navItems = isInstructor ? [
+        { title: "Dashboard", icon: LayoutDashboard, href: "" },
+        { title: "Assignments", icon: FileText, href: "/assignments" },
+        { title: "Roster", icon: Users, href: "/roster" },
+        { title: "Extension", icon: Clock, href: "/extension" },
+    ] : [
+        { title: "Overview", icon: LayoutDashboard, href: "" },
+        { title: "Assignments", icon: FileText, href: "/assignments" },
+        { title: "My Grades", icon: UserCircle, href: "/grades" }, // Placeholder
+    ];
 
     const getHref = (href: string) => {
-        return `/instructor/courses/${courseId || 'IT1010'}${href}`;
+        return `${roleBase}/courses/${courseId || 'IT1010'}${href}`;
     };
 
     const isLinkActive = (href: string) => {
@@ -60,7 +66,7 @@ export function CourseSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild className="mb-4">
-                            <Link href="/instructor">
+                            <Link href={roleBase}>
                                 <ArrowLeft className="h-4 w-4" />
                                 <span>Back to your courses</span>
                             </Link>
@@ -101,7 +107,7 @@ export function CourseSidebar() {
             </SidebarGroup>
 
             <SidebarGroup className="mt-auto">
-                <SidebarGroupLabel className="font-bold text-foreground">Instructor</SidebarGroupLabel>
+                <SidebarGroupLabel className="font-bold text-foreground">{isInstructor ? "Instructor" : "Your Instructor"}</SidebarGroupLabel>
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem>
