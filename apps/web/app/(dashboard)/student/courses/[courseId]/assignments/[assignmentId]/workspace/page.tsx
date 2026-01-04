@@ -4,6 +4,7 @@ import { use, useState, useEffect } from "react";
 import {
     BookOpen,
     Play,
+    ArrowLeft,
     RotateCcw,
     Settings,
     ChevronUp,
@@ -78,7 +79,7 @@ export default function WorkspacePage({
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" asChild className="h-8 gap-2 px-2 text-muted-foreground hover:text-foreground">
                         <Link href={`/student/courses/${courseId}/assignments`}>
-                            <RotateCcw className="h-4 w-4 rotate-180" />
+                            <ArrowLeft className="h-4 w-4" />
                             <span className="font-bold">Back</span>
                         </Link>
                     </Button>
