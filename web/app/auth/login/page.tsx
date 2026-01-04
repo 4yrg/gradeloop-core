@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { login } from '@/actions/auth';
 
 const schema = z.object({
-    username: z.string().min(1, 'Username is required'),
+    email: z.string().email('Please enter a valid email'),
     password: z.string().min(1, 'Password is required'),
 });
 
@@ -31,27 +31,22 @@ export default function LoginPage() {
         setIsLoading(true);
         setServerError(null);
 
-        const formData = new FormData();
-        formData.append('username', data.username);
-        formData.append('password', data.password);
-
         try {
-            // Initial state can be just definition
-            const result = await login({} as any, formData);
+            const result = await login(data);
 
-            if ('errors' in result && result.errors && '_form' in result.errors && result.errors._form) {
-                setServerError(result.errors._form[0]);
+            if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setServerError(firstError || 'Login failed');
+                }
                 setIsLoading(false);
-            } else if ('success' in result && result.success) {
-                // Force hard reload or router refresh to ensure middleware sees the cookie
-                // router.push('/dashboard') is usually enough if middleware doesn't cache heavily
-                // But router.refresh() + push is safer for RSC
+            } else if (result.success) {
+                // Use the redirectTo path from the server action based on user role
+                const redirectPath = result.redirectTo || '/dashboard';
                 router.refresh();
-                router.push('/dashboard');
-            } else {
-                // Fallback error
-                setServerError('An unexpected error occurred.');
-                setIsLoading(false);
+                router.push(redirectPath);
             }
         } catch (e) {
             setServerError("An error occurred during login.");
@@ -80,16 +75,16 @@ export default function LoginPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Username
+                            Email
                         </label>
                         <input
-                            {...register('username')}
-                            type="text"
+                            {...register('email')}
+                            type="email"
                             className="mt-1 block w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:text-gray-100"
                             disabled={isLoading}
                         />
-                        {errors.username && (
-                            <p className="mt-1 text-xs text-red-500">{errors.username.message}</p>
+                        {errors.email && (
+                            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
                         )}
                     </div>
 
@@ -106,6 +101,15 @@ export default function LoginPage() {
                         {errors.password && (
                             <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
                         )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <Link
+                            href="/auth/forgot-password"
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                        >
+                            Forgot password?
+                        </Link>
                     </div>
 
                     <button

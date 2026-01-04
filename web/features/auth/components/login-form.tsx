@@ -38,25 +38,21 @@ export function LoginForm() {
         setIsLoading(true)
         setError(null)
 
-        const formData = new FormData();
-        formData.append('username', data.email); // Assuming email is username
-        formData.append('password', data.password);
-
         try {
-            const result = await login({} as any, formData);
+            const result = await login(data);
 
-            if ('errors' in result && result.errors && '_form' in result.errors && result.errors._form) {
-                setError(result.errors._form[0]);
+            if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setError(firstError || 'Login failed');
+                }
                 setLoading(false);
                 setIsLoading(false);
-                return;
-            } else if ('success' in result && result.success) {
+            } else if (result.success) {
                 router.refresh();
-                router.push("/dashboard"); // Assuming dashboard is the default protected route
-            } else {
-                setError('An unexpected error occurred.');
-                setLoading(false);
-                setIsLoading(false);
+                router.push(result.redirectTo || "/dashboard");
             }
         } catch (err) {
             setError("Something went wrong")

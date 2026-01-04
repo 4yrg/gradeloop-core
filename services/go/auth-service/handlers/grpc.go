@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gradeloop/auth-service/database"
@@ -26,15 +27,21 @@ func (s *AuthGrpcServer) Register(ctx context.Context, req *pb.RegisterRequest) 
 		return nil, status.Error(codes.Internal, "Could not hash password")
 	}
 
+	log.Printf("gRPC Register request received for email: %s", req.Email)
+
 	user := models.User{
-		Username:     req.Email, // Using Email as Username
+		Email:        req.Email,
+		Name:         req.Name,
 		PasswordHash: string(hash),
-		Role:         models.Role(req.Role), // Cast string to Role type
+		Role:         models.Role(req.Role),
 	}
 
 	if result := database.DB.Create(&user); result.Error != nil {
-		return nil, status.Error(codes.AlreadyExists, "User already exists")
+		log.Printf("gRPC Register error (Create User): %v", result.Error)
+		return nil, status.Error(codes.AlreadyExists, "Registration failed: "+result.Error.Error())
 	}
+
+	log.Printf("gRPC User registered successfully: %s", user.ID)
 
 	token, err := middleware.GenerateToken(user.ID.String(), string(user.Role))
 	if err != nil {
@@ -44,12 +51,18 @@ func (s *AuthGrpcServer) Register(ctx context.Context, req *pb.RegisterRequest) 
 	return &pb.RegisterResponse{
 		Id:    user.ID.String(),
 		Token: token,
+		Name:  user.Name,
+		Email: user.Email,
+		Role:  string(user.Role),
 	}, nil
 }
 
 func (s *AuthGrpcServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+	log.Printf("gRPC Login request received for email: %s", req.Email)
+
 	var user models.User
-	if result := database.DB.Where("username = ?", req.Email).First(&user); result.Error != nil {
+	if result := database.DB.Where("email = ?", req.Email).First(&user); result.Error != nil {
+		log.Printf("gRPC Login error (User not found): %v", result.Error)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 		}
@@ -57,8 +70,11 @@ func (s *AuthGrpcServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.L
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		log.Printf("gRPC Login error (Password mismatch) for user: %s", req.Email)
 		return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 	}
+
+	log.Printf("gRPC User logged in successfully: %s", user.ID)
 
 	token, err := middleware.GenerateToken(user.ID.String(), string(user.Role))
 	if err != nil {
@@ -66,7 +82,11 @@ func (s *AuthGrpcServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.L
 	}
 
 	return &pb.LoginResponse{
-		Token: token,
+		Token:  token,
+		UserId: user.ID.String(),
+		Email:  user.Email,
+		Name:   user.Name,
+		Role:   string(user.Role),
 	}, nil
 }
 

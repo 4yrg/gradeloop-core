@@ -28,6 +28,8 @@ func main() {
 	api.Post("/register", handlers.Register)
 	api.Post("/login", handlers.Login)
 	api.Get("/me", middleware.Protected(), handlers.Me)
+	api.Post("/forgot-password", handlers.ForgotPassword)
+	api.Post("/reset-password", handlers.ResetPassword)
 
 	port := os.Getenv("PORT")
 	if port == "" {
