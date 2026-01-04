@@ -1,15 +1,19 @@
 meta {
-  name: Me
+  name: Get Current User (Me)
   type: http
-  seq: 3
+  seq: 5
 }
 
 get {
-  url: http://localhost/api/auth/me
+  url: http://localhost:3000/auth/me
   body: none
   auth: bearer
 }
 
 auth:bearer {
   token: {{token}}
+}
+
+vars:post-response {
+  user: res.body
 }

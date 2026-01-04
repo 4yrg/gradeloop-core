@@ -1,4 +1,5 @@
-import { Controller, Post, Body, ValidationPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, HttpCode, HttpStatus, Get, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import {
   LoginDto,
@@ -31,5 +32,15 @@ export class AuthController {
     @Body(ValidationPipe) resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string }> {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getProfile(@Request() req: any) {
+    return {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+    };
   }
 }
