@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface CourseCardProps {
+interface BaseCourseCardProps {
     id?: string;
     name: string;
     degree: string;
@@ -9,13 +9,12 @@ interface CourseCardProps {
     code: string;
     description: string;
     assignmentCount: number;
-    role?: "student" | "instructor";
+    href: string;
 }
 
-export function CourseCard({ id, name, degree, specialization, code, description, assignmentCount, role = "student" }: CourseCardProps) {
-    const basePath = role === "instructor" ? "/instructor" : "/student";
+function BaseCourseCard({ name, degree, specialization, code, description, assignmentCount, href }: BaseCourseCardProps) {
     return (
-        <Link href={`${basePath}/courses/${code}`} className="block transition-transform hover:scale-[1.01] active:scale-[0.99]">
+        <Link href={href} className="block transition-transform hover:scale-[1.01] active:scale-[0.99]">
             <Card className="overflow-hidden border shadow-sm h-full">
                 <CardHeader className="p-5 pb-2">
                     <CardTitle className="text-lg font-semibold">{name}</CardTitle>
@@ -38,4 +37,18 @@ export function CourseCard({ id, name, degree, specialization, code, description
             </Card>
         </Link>
     );
+}
+
+export function InstructorCourseCard(props: Omit<BaseCourseCardProps, "href">) {
+    return <BaseCourseCard {...props} href={`/instructor/courses/${props.code}`} />;
+}
+
+export function StudentCourseCard(props: Omit<BaseCourseCardProps, "href">) {
+    return <BaseCourseCard {...props} href={`/student/courses/${props.code}`} />;
+}
+
+// Keep CourseCard for backward compatibility if needed, but it should be avoided
+export function CourseCard({ role = "student", ...props }: Omit<BaseCourseCardProps, "href"> & { role?: "student" | "instructor" }) {
+    if (role === "instructor") return <InstructorCourseCard {...props} />;
+    return <StudentCourseCard {...props} />;
 }

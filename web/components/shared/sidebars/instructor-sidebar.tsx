@@ -25,18 +25,10 @@ export function InstructorSidebar() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/instructor"} tooltip="Dashboard">
-                                <Link href="/instructor">
-                                    <LayoutDashboard />
-                                    <span>Dashboard</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === "/instructor/courses"} tooltip="Courses">
+                            <SidebarMenuButton asChild isActive={pathname === "/instructor" || pathname.startsWith("/instructor/courses")} tooltip="Courses">
                                 <Link href="/instructor">
                                     <BookOpen />
-                                    <span>Courses</span>
+                                    <span>Your Courses</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

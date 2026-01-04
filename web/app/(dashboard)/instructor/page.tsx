@@ -1,6 +1,6 @@
 import { Info, Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CourseCard } from "@/components/shared/course-card";
+import { CourseCard, InstructorCourseCard } from "@/components/shared/course-card";
 import { CreateCourseCard } from "@/components/instructor/create-course-card";
 
 const semesters = [
@@ -53,7 +53,7 @@ export default function InstructorPage() {
                     <h2 className="text-lg font-bold">{semester.title}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {semester.courses.map((course) => (
-                            <CourseCard key={course.id} {...course} />
+                            <InstructorCourseCard key={course.id} {...course} />
                         ))}
                         <CreateCourseCard />
                     </div>

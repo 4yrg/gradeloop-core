@@ -2,7 +2,7 @@
 
 import { GraduationCap, Info, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CourseCard } from "@/components/shared/course-card";
+import { CourseCard, StudentCourseCard } from "@/components/shared/course-card";
 import { useState } from "react";
 import { EnrollmentDialog } from "@/components/student/enrollment-dialog";
 
@@ -67,7 +67,7 @@ export default function StudentPage() {
                     <h2 className="text-lg font-bold">{semester.title}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {semester.courses.map((course) => (
-                            <CourseCard key={course.id} {...course} />
+                            <StudentCourseCard key={course.id} {...course} />
                         ))}
                     </div>
                 </div>

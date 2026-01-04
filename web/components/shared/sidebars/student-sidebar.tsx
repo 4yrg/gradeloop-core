@@ -39,7 +39,7 @@ export function StudentSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                isActive={pathname === "/student"}
+                                isActive={pathname === "/student" || pathname.startsWith("/student/courses")}
                                 tooltip="My Learning"
                             >
                                 <Link href="/student">
