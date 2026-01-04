@@ -44,6 +44,12 @@ func SetupRoutes(app *fiber.App, cfg *config.Config) {
 	student.Use(middlewares.RBACMiddleware("student"))
 	student.All("/*", services.ProxyService(cfg.StudentServiceURL))
 
+	// Keystroke Authentication Routes
+	// /api/keystroke/* -> http://keystroke-service:8080/api/keystroke/*
+	keystroke := api.Group("/keystroke")
+	keystroke.Use(middlewares.JWTMiddleware(cfg)) // Protected - requires authentication
+	keystroke.All("/*", services.ProxyService(cfg.KeystrokeServiceURL))
+
 	// Example: /api/me endpoint usually in auth service, needing protection
 	// If auth service has protected routes, we might need a dedicated group for them
 	// Or we rely on the Auth Service to handle its own protection if we proxy everything.

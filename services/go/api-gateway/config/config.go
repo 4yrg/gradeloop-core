@@ -13,6 +13,7 @@ type Config struct {
 	InstructorServiceURL string
 	StudentServiceURL    string
 	SystemServiceURL     string
+	KeystrokeServiceURL  string
 }
 
 func LoadConfig() *Config {
@@ -25,6 +26,7 @@ func LoadConfig() *Config {
 		InstructorServiceURL: getEnv("INSTRUCTOR_SERVICE_URL", "http://instructor-service:8081"),
 		StudentServiceURL:    getEnv("STUDENT_SERVICE_URL", "http://student-service:8084"),
 		SystemServiceURL:     getEnv("SYSTEM_SERVICE_URL", "http://system-service:8081"),
+		KeystrokeServiceURL:  getEnv("KEYSTROKE_SERVICE_URL", "http://keystroke-service:8003"),
 	}
 }
 

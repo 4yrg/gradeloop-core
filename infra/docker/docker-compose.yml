@@ -16,10 +16,12 @@ services:
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
       - AUTH_SERVICE_URL=http://auth-service:5000
       - AUTH_SERVICE_GRPC_URL=auth-service:50051
+      - KEYSTROKE_SERVICE_URL=http://keystroke-service:8003
     networks:
       - gradeloop-net
     depends_on:
       - auth-service
+      - keystroke-service
 
   # Go Services (5000+)
   auth-service:
@@ -82,9 +84,33 @@ services:
     networks:
       - gradeloop-net
 
+  # Python Services (8080+)
+  keystroke-service:
+    build:
+      context: ../../services/python/keystroke-service
+      dockerfile: Dockerfile
+    container_name: gradeloop-keystroke-service
+    restart: unless-stopped
+    environment:
+      - PORT=8003
+      - DEVICE=cpu
+    ports:
+      - "8002:8003"
+    volumes:
+      - keystroke-models:/app/models
+    networks:
+      - gradeloop-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 volumes:
   db-data:
   redis-data:
+  keystroke-models:
 
 
 networks:
