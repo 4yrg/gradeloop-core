@@ -1,20 +1,35 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { ChevronRight, FileCode, HelpCircle, History, Play } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CountdownTimer } from "@/features/student/assignments/components/countdown-timer";
 import { StatusBadge } from "@/features/student/assignments/components/status-badge";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
+import { MOCK_ASSIGNMENTS, Assignment } from "@/features/student/assignments/data/mock-assignments";
 import { Badge } from "@/components/ui/badge";
+import { AssignmentDetailsDialog } from "@/features/student/assignments/components/assignment-details-dialog";
+import { SubmissionHistoryDialog } from "@/features/student/assignments/components/submission-history-dialog";
 
 export default function StudentAssignmentsPage({ params }: { params: Promise<{ courseId: string }> }) {
     const { courseId } = use(params);
+    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
 
-    // Filter assignments for this course (in a real app, from an API)
-    const assignments = MOCK_ASSIGNMENTS.filter(a => a.courseId === courseId || true); // Defaulting to true for demo
+    // Filter assignments for this course
+    const assignments = MOCK_ASSIGNMENTS.filter(a => a.courseId === courseId || true);
+
+    const handleOpenDetails = (assignment: Assignment) => {
+        setSelectedAssignment(assignment);
+        setDetailsOpen(true);
+    };
+
+    const handleOpenHistory = (assignment: Assignment) => {
+        setSelectedAssignment(assignment);
+        setHistoryOpen(true);
+    };
 
     return (
         <div className="flex flex-col gap-8 pb-20 max-w-6xl mx-auto w-full">
@@ -39,8 +54,13 @@ export default function StudentAssignmentsPage({ params }: { params: Promise<{ c
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <StatusBadge status={assignment.status} />
                                         <Badge variant="outline">{assignment.gradingMethod} Grading</Badge>
+                                        {assignment.difficulty && (
+                                            <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold uppercase">{assignment.difficulty}</Badge>
+                                        )}
                                     </div>
-                                    <CardTitle className="text-2xl mt-2">{assignment.title}</CardTitle>
+                                    <CardTitle className="text-2xl mt-2 cursor-pointer hover:text-primary transition-colors" onClick={() => handleOpenDetails(assignment)}>
+                                        {assignment.title}
+                                    </CardTitle>
                                     <CardDescription className="line-clamp-1">
                                         {assignment.latePolicy}
                                     </CardDescription>
@@ -77,17 +97,13 @@ export default function StudentAssignmentsPage({ params }: { params: Promise<{ c
                         </CardContent>
                         <CardFooter className="bg-muted/10 border-t flex flex-wrap gap-2 justify-between py-4">
                             <div className="flex flex-wrap gap-2">
-                                <Button asChild size="sm">
-                                    <Link href={`/student/courses/${courseId}/assignments/${assignment.id}`}>
-                                        <Play className="mr-2 h-4 w-4" />
-                                        {assignment.status === 'not_started' ? 'Start Assignment' : 'Continue Assignment'}
-                                    </Link>
+                                <Button size="sm" onClick={() => handleOpenDetails(assignment)}>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    {assignment.status === 'not_started' ? 'Start Assignment' : 'Continue Assignment'}
                                 </Button>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/student/courses/${courseId}/assignments/${assignment.id}/history`}>
-                                        <History className="mr-2 h-4 w-4" />
-                                        View Submissions
-                                    </Link>
+                                <Button variant="outline" size="sm" onClick={() => handleOpenHistory(assignment)}>
+                                    <History className="mr-2 h-4 w-4" />
+                                    View Submissions
                                 </Button>
                             </div>
                             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
@@ -98,6 +114,21 @@ export default function StudentAssignmentsPage({ params }: { params: Promise<{ c
                     </Card>
                 ))}
             </div>
+
+            {selectedAssignment && (
+                <>
+                    <AssignmentDetailsDialog
+                        assignment={selectedAssignment}
+                        open={detailsOpen}
+                        onOpenChange={setDetailsOpen}
+                    />
+                    <SubmissionHistoryDialog
+                        assignment={selectedAssignment}
+                        open={historyOpen}
+                        onOpenChange={setHistoryOpen}
+                    />
+                </>
+            )}
         </div>
     );
 }

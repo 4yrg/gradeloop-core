@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import {
     ArrowRight,
     BookOpen,
@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
+import { AssignmentDetailsDialog } from "@/features/student/assignments/components/assignment-details-dialog";
 
 export default function StudentCourseOverviewPage({
     params
@@ -24,6 +25,7 @@ export default function StudentCourseOverviewPage({
     params: Promise<{ courseId: string }>
 }) {
     const { courseId } = use(params);
+    const [detailsOpen, setDetailsOpen] = useState(false);
 
     // In a real app, fetch course details and assignments for this student
     const nextAssignment = MOCK_ASSIGNMENTS[0];
@@ -66,11 +68,9 @@ export default function StudentCourseOverviewPage({
                                     {nextAssignment.attemptsRemaining} attempts left
                                 </div>
                             </div>
-                            <Button asChild className="shadow-lg shadow-primary/20">
-                                <Link href={`/student/courses/${courseId}/assignments/${nextAssignment.id}`}>
-                                    Continue Work
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
+                            <Button className="shadow-lg shadow-primary/20" onClick={() => setDetailsOpen(true)}>
+                                Continue Work
+                                <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </CardContent>
                     </Card>
@@ -151,6 +151,12 @@ export default function StudentCourseOverviewPage({
                     </Card>
                 </div>
             </div>
+
+            <AssignmentDetailsDialog
+                assignment={nextAssignment}
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+            />
         </div>
     );
 }
