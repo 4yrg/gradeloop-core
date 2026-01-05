@@ -47,19 +47,22 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(
+            @RequestBody java.util.Map<String, String> payload) {
         String token = payload.get("token");
         String newPassword = payload.get("newPassword");
 
         if (token == null || newPassword == null) {
-            return ResponseEntity.badRequest().body("Token and newPassword are required");
+            return ResponseEntity.badRequest()
+                    .body(java.util.Collections.singletonMap("error", "Token and newPassword are required"));
         }
 
         try {
             authService.resetPassword(token, newPassword);
-            return ResponseEntity.ok("Password reset successfully. You can now login with your new password.");
+            return ResponseEntity.ok(java.util.Collections.singletonMap("message",
+                    "Password reset successfully. You can now login with your new password."));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("error", e.getMessage()));
         }
     }
 }
