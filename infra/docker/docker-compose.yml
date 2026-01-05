@@ -1,52 +1,53 @@
 services:
   # ============================================================================
-  # Custom API Gateway (Go-Fiber)
+  # Custom API Gateway (NestJS)
   # ============================================================================
   api-gateway:
     build:
-      context: ../../services/go
-      dockerfile: api-gateway/Dockerfile
+      context: ../../services/nest/api-gateway
+      dockerfile: Dockerfile
     container_name: gradeloop-api-gateway
     restart: unless-stopped
     ports:
-      - "80:8080" # Expose internal 8080 to host 80
-      - "443:443" # For future HTTPS
+      - "80:3000" # Expose internal 3000 to host 80
+      # - "443:443" # For future HTTPS
     environment:
-      - PORT=8080
+      - PORT=3000
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-      - AUTH_SERVICE_URL=http://auth-service:5000
-      - AUTH_SERVICE_GRPC_URL=auth-service:50051
+      - AUTH_SERVICE_URL=auth-service:50051
+      - USER_SERVICE_URL=user-service:50052
     networks:
       - gradeloop-net
     depends_on:
       - auth-service
+      - user-service
 
-  # Go Services (5000+)
+  # NestJS Services
   auth-service:
     build:
-      context: ../../services/go
-      dockerfile: auth-service/Dockerfile
+      context: ../../services/nest/auth-service
+      dockerfile: Dockerfile
     env_file:
       - ../../.env
     environment:
-      - DB_HOST=db
-      - DB_USER=${POSTGRES_USER:-postgres}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - DB_NAME=${POSTGRES_DB:-gradeloop}
-      - DB_PORT=5432
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-gradeloop}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gradeloop}?schema=public
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-      - PORT=5000
     ports:
-      - "5000:5000"
       - "50051:50051"
     networks:
       - gradeloop-net
     depends_on:
       db:
         condition: service_healthy
+
+  user-service:
+    build:
+      context: ../../services/nest/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "50052:50052"
+    networks:
+      - gradeloop-net
 
   db:
     image: postgres:15-alpine
