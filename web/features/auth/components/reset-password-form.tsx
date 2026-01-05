@@ -3,25 +3,16 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { z } from "zod"
 
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import Link from "next/link"
 import { resetPassword } from "../../../actions/auth"
+import { resetPasswordSchema, ResetPasswordValues } from "../schemas/auth"
 
-const resetPasswordSchema = z.object({
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-})
-
-type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
 
 export function ResetPasswordForm() {
     const searchParams = useSearchParams()
@@ -31,6 +22,8 @@ export function ResetPasswordForm() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const {
         register,
@@ -120,7 +113,27 @@ export function ResetPasswordForm() {
                         <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             New Password
                         </label>
-                        <Input id="password" type="password" {...register("password")} />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                {...register("password")}
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span className="sr-only">Toggle password visibility</span>
+                            </Button>
+                        </div>
                         {errors.password && <p className="text-sm font-medium text-destructive">{errors.password.message}</p>}
                     </div>
 
@@ -128,7 +141,27 @@ export function ResetPasswordForm() {
                         <label htmlFor="confirmPassword" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             Confirm Password
                         </label>
-                        <Input id="confirmPassword" type="password" {...register("confirmPassword")} />
+                        <div className="relative">
+                            <Input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? "text" : "password"}
+                                {...register("confirmPassword")}
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span className="sr-only">Toggle password visibility</span>
+                            </Button>
+                        </div>
                         {errors.confirmPassword && <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>}
                     </div>
 
