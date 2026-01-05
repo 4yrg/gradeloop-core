@@ -120,7 +120,7 @@ export default function SettingsPage() {
                                 <Input type="number" defaultValue="60" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Viva Voce (%)</Label>
+                                <Label>Viva (%)</Label>
                                 <Input type="number" defaultValue="30" />
                             </div>
                             <div className="space-y-2">
