@@ -26,4 +26,21 @@ public class InstructorController {
             @RequestBody List<CreateInstructorRequest> requests) {
         return ResponseEntity.ok(instructorService.createInstructorsBulk(requests));
     }
+
+    @GetMapping
+    public ResponseEntity<List<CreateUserResponse>> getAllInstructors() {
+        return ResponseEntity.ok(instructorService.getAllInstructors());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CreateUserResponse> updateInstructor(@PathVariable java.util.UUID id,
+            @RequestBody com.gradeloop.user.dto.UpdateInstructorRequest request) {
+        return ResponseEntity.ok(instructorService.updateInstructor(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteInstructor(@PathVariable java.util.UUID id) {
+        instructorService.deleteInstructor(id);
+        return ResponseEntity.noContent().build();
+    }
 }
