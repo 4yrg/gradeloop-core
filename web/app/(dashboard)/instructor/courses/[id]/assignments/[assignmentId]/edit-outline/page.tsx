@@ -14,26 +14,26 @@ import {
     ChevronRight,
     Search
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent } from "../../../../../../../../components/ui/card";
+import { Input } from "../../../../../../../../components/ui/input";
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger
-} from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "../../../../../../../../components/ui/tabs";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+} from "../../../../../../../../components/ui/dropdown-menu";
+import { Textarea } from "../../../../../../../../components/ui/textarea";
+import { Checkbox } from "../../../../../../../../components/ui/checkbox";
+import { Label } from "../../../../../../../../components/ui/label";
 
 interface Question {
     id: string;
@@ -73,8 +73,8 @@ export default function EditOutlinePage() {
                                 key={q.id}
                                 onClick={() => setSelectedId(q.id)}
                                 className={`group flex items-center gap-2 p-3 rounded-md cursor-pointer transition-colors ${selectedId === q.id
-                                        ? "bg-primary/10 text-primary border-primary/20"
-                                        : "hover:bg-muted"
+                                    ? "bg-primary/10 text-primary border-primary/20"
+                                    : "hover:bg-muted"
                                     } border border-transparent`}
                             >
                                 <GripVertical className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />

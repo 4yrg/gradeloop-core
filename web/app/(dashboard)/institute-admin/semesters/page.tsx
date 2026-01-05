@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SemestersList } from "@/features/institute-admin/components/semesters-list";
-import { SemesterModal } from "@/features/institute-admin/components/semester-modal";
-import { semestersService } from "@/features/institute-admin/api/semesters-service";
-import { Semester } from "@/features/institute-admin/types";
+import { Button } from "../../../../components/ui/button";
+import { SemestersList } from "../../../../features/institute-admin/components/semesters-list";
+import { SemesterModal } from "../../../../features/institute-admin/components/semester-modal";
+import { semestersService } from "../../../../features/institute-admin/api/semesters-service";
+import { Semester } from "../../../../features/institute-admin/types";
 
 export default function SemestersPage() {
     const [semesters, setSemesters] = useState<Semester[]>([]);

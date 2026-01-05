@@ -8,11 +8,11 @@ import {
     DialogTitle,
     DialogTrigger,
     DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "../../../../components/ui/dialog";
+import { Button } from "../../../../components/ui/button";
+import { Badge } from "../../../../components/ui/badge";
+import { ScrollArea } from "../../../../components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import {
     BookOpen,
     Code,
@@ -25,9 +25,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Assignment } from "../data/mock-assignments";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "../../../../components/ui/alert";
+import { cn } from "../../../../lib/utils";
 
 interface AssignmentDetailsDialogProps {
     assignment: Assignment;

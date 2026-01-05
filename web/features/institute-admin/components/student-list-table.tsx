@@ -1,6 +1,6 @@
 "use client";
 
-import { Person } from "@/features/institute-admin/types";
+import { Person } from "../types";
 import {
     Table,
     TableBody,
@@ -8,8 +8,8 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "../../../components/ui/table";
+import { Button } from "../../../components/ui/button";
 import { Trash2 } from "lucide-react";
 
 interface StudentListTableProps {

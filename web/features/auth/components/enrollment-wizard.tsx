@@ -8,11 +8,11 @@
 import { useState } from 'react';
 import { CheckCircle2, Keyboard, ArrowRight } from 'lucide-react';
 import { InteractiveTyping } from './interactive-typing';
-import { keystrokeAuthService } from '@/lib/keystroke-auth-service';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { keystrokeAuthService } from '../../../lib/keystroke-auth-service';
+import type { KeystrokeEvent } from '../../../hooks/use-keystroke-capture';
+import { Button } from '../../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Progress } from '../../../components/ui/progress';
 
 interface Exercise {
   id: number;
@@ -305,13 +305,12 @@ export function EnrollmentWizard({ userId, onEnrollmentComplete }: EnrollmentWiz
                 {ENROLLMENT_EXERCISES.map((ex, idx) => (
                   <div
                     key={ex.id}
-                    className={`h-2 w-16 rounded-full transition-all ${
-                      idx < currentStep
+                    className={`h-2 w-16 rounded-full transition-all ${idx < currentStep
                         ? 'bg-green-500'
                         : idx === currentStep
-                        ? 'bg-primary'
-                        : 'bg-muted'
-                    }`}
+                          ? 'bg-primary'
+                          : 'bg-muted'
+                      }`}
                   />
                 ))}
               </div>

@@ -3,7 +3,7 @@
 import { ClassGroup } from "../types";
 import { ClassCard } from "./class-card";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 
 interface ClassesGridProps {
     data: ClassGroup[];

@@ -1,4 +1,4 @@
-import { useInstituteLogs } from "../../api/queries"
+import { useInstituteLogs } from "../../../../hooks/institute/useInstituteDetails"
 import {
     Table,
     TableBody,
@@ -6,7 +6,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from "../../../../components/ui/table"
 
 interface ActivityLogsTabProps {
     instituteId: string

@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from './axios';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
+import type { KeystrokeEvent } from '../hooks/use-keystroke-capture';
 
 const KEYSTROKE_API_URL = process.env.NEXT_PUBLIC_KEYSTROKE_API_URL || 'http://localhost:8002';
 

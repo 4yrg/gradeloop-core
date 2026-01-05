@@ -1,7 +1,7 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Participant } from "@/types/roster";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Badge } from "../../ui/badge";
+import { Card, CardContent } from "../../ui/card";
+import { Participant } from "../../../types/roster";
 import { Star } from "lucide-react";
 
 interface ParticipantCardProps {

@@ -8,20 +8,20 @@ import {
     Terminal,
     Settings
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Input } from "../../../../../../../../components/ui/input";
+import { Label } from "../../../../../../../../components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Slider } from "@/components/ui/slider";
+} from "../../../../../../../../components/ui/select";
+import { Switch } from "../../../../../../../../components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../../../components/ui/alert";
+import { Slider } from "../../../../../../../../components/ui/slider";
 
 export default function AutograderPage() {
     return (

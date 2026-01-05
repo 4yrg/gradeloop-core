@@ -9,10 +9,10 @@ import {
     MessageSquare,
     ExternalLink
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
 import {
     Table,
     TableBody,
@@ -20,7 +20,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "../../../../../../../../components/ui/table";
 
 export default function AutogradeRequestsPage() {
     return (

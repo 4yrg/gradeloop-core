@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, AlertTriangle, UserPlus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { Input } from "../../../../../../../../components/ui/input";
+import { Label } from "../../../../../../../../components/ui/label";
+import { Badge } from "../../../../../../../../components/ui/badge";
 import {
     Card,
     CardContent,
@@ -15,7 +15,7 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from "../../../../../../../../components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -23,10 +23,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { coursesService } from "@/features/institute-admin/api/courses-service";
-import { peopleService } from "@/features/institute-admin/api/people-service";
-import { Course, Person } from "@/features/institute-admin/types";
+} from "../../../../../../../../components/ui/dialog";
+import { coursesService } from "../../../../../../../../features/institute-admin/api/courses-service";
+import { peopleService } from "../../../../../../../../features/institute-admin/api/people-service";
+import { Course, Person } from "../../../../../../../../features/institute-admin/types";
 
 export default function CourseSettingsPage() {
     const params = useParams();

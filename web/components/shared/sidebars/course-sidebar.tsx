@@ -8,7 +8,7 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton
-} from "@/components/ui/sidebar";
+} from "../../ui/sidebar";
 import {
     LayoutDashboard,
     FileText,

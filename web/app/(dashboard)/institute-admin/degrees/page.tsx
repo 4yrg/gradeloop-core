@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
-import { DegreesGrid } from "@/features/institute-admin/components/degrees-grid";
-import { DegreeModal } from "@/features/institute-admin/components/degree-modal";
-import { degreesService } from "@/features/institute-admin/api/degrees-service";
-import { Degree } from "@/features/institute-admin/types";
+import { DegreesGrid } from "../../../../features/institute-admin/components/degrees-grid";
+import { DegreeModal } from "../../../../features/institute-admin/components/degree-modal";
+import { degreesService } from "../../../../features/institute-admin/api/degrees-service";
+import { Degree } from "../../../../features/institute-admin/types";
 
 export default function DegreesPage() {
     const router = useRouter();

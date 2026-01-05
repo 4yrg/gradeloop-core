@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../../../components/ui/badge";
 import { AssignmentStatus } from "../data/mock-assignments";
 
 interface StatusBadgeProps {

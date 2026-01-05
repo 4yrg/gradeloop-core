@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
     Table,
     TableBody,
@@ -5,22 +6,27 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+} from "../../../../components/ui/table"
+import { Button } from "../../../../components/ui/button"
+import { Badge } from "../../../../components/ui/badge"
 import { InstituteAdmin } from "../../types"
 import { Mail, ShieldCheck, UserMinus } from "lucide-react"
+import { AddAdminDialog } from "./add-admin-dialog"
 
 interface AdminsTabProps {
     admins: InstituteAdmin[]
+    instituteId: string // Need this ID
+    onRefresh?: () => void
 }
 
-export function AdminsTab({ admins }: AdminsTabProps) {
+export function AdminsTab({ admins, instituteId, onRefresh }: AdminsTabProps) {
+    const [isAddAdminOpen, setIsAddAdminOpen] = useState(false)
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Institute Administrators</h3>
-                <Button size="sm">Add Admin</Button>
+                <Button size="sm" onClick={() => setIsAddAdminOpen(true)}>Add Admin</Button>
             </div>
             <div className="rounded-md border">
                 <Table>
@@ -55,6 +61,16 @@ export function AdminsTab({ admins }: AdminsTabProps) {
                     </TableBody>
                 </Table>
             </div>
+            <AddAdminDialog
+                open={isAddAdminOpen}
+                onOpenChange={setIsAddAdminOpen}
+                instituteId={instituteId}
+                onSuccess={() => {
+                    // Refresh or optimistic update
+                    if (onRefresh) onRefresh();
+                }}
+            />
         </div>
     )
 }
+

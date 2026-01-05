@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileUp, AlertCircle, CheckCircle2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import {
     Dialog,
     DialogContent,
@@ -11,7 +11,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "../../../components/ui/dialog";
 import {
     Table,
     TableBody,
@@ -19,8 +19,8 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from "../../../components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "../../../components/ui/alert";
 
 interface BulkImportModalProps<T> {
     open: boolean;

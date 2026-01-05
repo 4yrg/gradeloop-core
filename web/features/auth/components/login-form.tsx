@@ -7,11 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { loginSchema, LoginValues } from "../schemas/auth"
-import { login } from "@/actions/auth"
+import { useLogin } from "../../../hooks/auth/useLogin"
 import Link from "next/link"
 import { useAuthLoading } from "../context/auth-loading-context"
 
@@ -33,32 +33,34 @@ export function LoginForm() {
         },
     })
 
+    const { mutateAsync: loginMutation, isPending } = useLogin()
+
+    // Sync hook loading state with local loading state if needed, or just use isPending
+    // The existing component uses loading state for disable.
+
     async function onSubmit(data: LoginValues) {
         setLoading(true)
         setIsLoading(true)
         setError(null)
 
-        const formData = new FormData();
-        formData.append('username', data.email); // Assuming email is username
-        formData.append('password', data.password);
-
         try {
-            const result = await login({} as any, formData);
+            const result = await loginMutation(data);
+            console.log("Login result:", result);
 
-            if ('errors' in result && result.errors && '_form' in result.errors && result.errors._form) {
-                setError(result.errors._form[0]);
-                setLoading(false);
-                setIsLoading(false);
-                return;
-            } else if ('success' in result && result.success) {
-                router.refresh();
-                router.push("/dashboard"); // Assuming dashboard is the default protected route
-            } else {
-                setError('An unexpected error occurred.');
+            if (result.errors) {
+                if ('_form' in result.errors && result.errors._form) {
+                    setError(result.errors._form[0]);
+                } else {
+                    const firstError = Object.values(result.errors).flat()[0];
+                    setError(firstError || 'Login failed');
+                }
                 setLoading(false);
                 setIsLoading(false);
             }
+            // Success redirect is handled by hook, but we can also do it here if hook doesn't.
+            // My hook implementation does router.push.
         } catch (err) {
+            console.error("Login error wrapped:", err);
             setError("Something went wrong")
             setLoading(false)
             setIsLoading(false)
@@ -88,7 +90,7 @@ export function LoginForm() {
                             <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 Password
                             </label>
-                            <Link href="/forgot-password" className="text-sm underline">
+                            <Link href="/auth/forgot-password" className="text-sm underline">
                                 Forgot password?
                             </Link>
                         </div>

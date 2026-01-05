@@ -12,20 +12,20 @@ import {
     Lock,
     Globe
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Input } from "../../../../../../../../components/ui/input";
+import { Label } from "../../../../../../../../components/ui/label";
+import { Switch } from "../../../../../../../../components/ui/switch";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "../../../../../../../../components/ui/select";
+import { Separator } from "../../../../../../../../components/ui/separator";
 
 export default function SettingsPage() {
     return (
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                                 <Input type="number" defaultValue="60" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Viva Voce (%)</Label>
+                                <Label>Viva (%)</Label>
                                 <Input type="number" defaultValue="30" />
                             </div>
                             <div className="space-y-2">

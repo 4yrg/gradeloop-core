@@ -2,23 +2,23 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useRoster } from "@/hooks/use-roster";
-import { mockAssignments, mockCourse } from "@/lib/mock-data";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { useRoster } from "../../../../../../hooks/use-roster";
+import { mockAssignments, mockCourse } from "../../../../../../lib/mock-data";
+import { Button } from "../../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../../components/ui/card";
+import { Label } from "../../../../../../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../../../components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../components/ui/tabs";
+import { Input } from "../../../../../../components/ui/input";
 import { ArrowLeft, Calendar as CalendarIcon, Clock, Users, User, LayoutGrid, CheckCircle2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Separator } from "../../../../../../components/ui/separator";
+import { Badge } from "../../../../../../components/ui/badge";
+import { ScrollArea } from "../../../../../../components/ui/scroll-area";
+import { Checkbox } from "../../../../../../components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../../../components/ui/popover";
+import { Calendar } from "../../../../../../components/ui/calendar";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../../../../lib/utils";
 
 export default function ExtensionPage() {
     const params = useParams();

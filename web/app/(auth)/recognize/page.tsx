@@ -1,4 +1,4 @@
-import { RecognizeUserForm } from "@/features/auth/components/recognize-user-form"
+import { RecognizeUserForm } from "../../../features/auth/components/recognize-user-form"
 
 export default function RecognizePage() {
     return (

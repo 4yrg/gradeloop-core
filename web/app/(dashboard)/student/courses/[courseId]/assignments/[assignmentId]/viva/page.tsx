@@ -1,55 +1,41 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
-import {
-    ArrowLeft,
-    Calendar,
-    Camera,
-    Clock,
-    Mic,
-    MicOff,
-    Play,
-    Settings,
-    Video,
-    VideoOff,
-    AlertCircle,
-    HelpCircle,
-    Circle,
-    GraduationCap,
-    CheckCircle2
-} from "lucide-react";
+import { use } from "react";
 import Link from "next/link";
+import { ArrowLeft, PlayCircle, BarChart3, BookOpen, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { VivaStatusCard } from "@/components/student/viva/VivaStatusCard";
+import { SystemCheckWidget } from "@/components/student/viva/SystemCheckWidget";
+import { ConceptsTestedList } from "@/components/student/viva/ConceptsTestedList";
+import { StartVivaButton } from "@/components/student/viva/StartVivaButton";
+import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
 
-export default function VivaPage({
+export default function VivaLandingPage({
     params
 }: {
     params: Promise<{ courseId: string; assignmentId: string }>
 }) {
     const { courseId, assignmentId } = use(params);
-    const [isActive, setIsActive] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+    const assignment = MOCK_ASSIGNMENTS.find(a => a.id === assignmentId);
 
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (isActive && timeLeft > 0) {
-            timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        }
-        return () => clearInterval(timer);
-    }, [isActive, timeLeft]);
+    // Mock data - in a real app, this would come from an API
+    const mockConcepts = [
+        { id: '1', label: 'AVL Tree Rotations', description: 'Understanding of single and double rotations.', importance: 'high' as const },
+        { id: '2', label: 'Time Complexity', description: 'Big O notation for search and insert operations.', importance: 'medium' as const },
+        { id: '3', label: 'Memory Management', description: 'Heap vs Stack allocation for nodes.', importance: 'low' as const },
+    ];
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+    if (!assignment) {
+        return <div>Assignment not found</div>;
+    }
+
+    const vivaStatus = assignment.vivaStatus || 'not_started';
+    const vivaEnabled = assignment.vivaEnabled;
 
     return (
-        <div className="flex flex-col gap-8 pb-20 max-w-6xl mx-auto w-full px-4">
+        <div className="flex flex-col gap-8 pb-20 max-w-5xl mx-auto w-full px-4 pt-6">
+            {/* Header / Nav */}
             <div className="flex flex-col gap-4">
                 <Button variant="ghost" asChild className="w-fit -ml-2 text-muted-foreground hover:text-foreground">
                     <Link href={`/student/courses/${courseId}/assignments/${assignmentId}`}>
@@ -57,156 +43,101 @@ export default function VivaPage({
                         Back to Assignment
                     </Link>
                 </Button>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-4xl font-bold tracking-tight">Viva Evaluation</h1>
-                        <p className="text-muted-foreground">Oral examination for Balanced Binary Search Trees.</p>
-                    </div>
-                    <Badge variant="outline" className="h-fit px-4 py-1 text-sm border-primary/20 bg-primary/5 text-primary">
-                        <Circle className="h-2 w-2 fill-primary mr-2 animate-pulse" />
-                        Live Session
-                    </Badge>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Viva Evaluation</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Automated oral examination for "{assignment.title}".
+                    </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Video Interface Mock */}
-                    <Card className="aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center group border-2 border-primary/20">
-                        {!isActive ? (
-                            <div className="flex flex-col items-center gap-4 text-zinc-400">
-                                <div className="h-20 w-20 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
-                                    <VideoOff className="h-8 w-8" />
-                                </div>
-                                <p className="text-sm font-medium">Camera and Microphone are Off</p>
-                                <Button onClick={() => setIsActive(true)} size="lg" className="rounded-full px-8">
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Start Viva
-                                </Button>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center">
-                                            <Video className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <p className="text-white font-bold">John Student</p>
-                                            <p className="text-xs text-zinc-400 uppercase tracking-widest animate-pulse flex items-center gap-2">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                                                Recording
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Instructor Overlay Mock */}
-                                <div className="absolute top-6 right-6 w-48 aspect-video bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden shadow-2xl">
-                                    <div className="h-full w-full flex items-center justify-center bg-zinc-800">
-                                        <GraduationCap className="h-8 w-8 text-zinc-600" />
-                                    </div>
-                                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/50 rounded text-[10px] text-white">
-                                        Prof. Jane Doe
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Controls */}
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
-                            <Button variant="secondary" size="icon" className="rounded-full bg-zinc-900/80 border-zinc-700 text-white hover:bg-zinc-800">
-                                <Mic className="h-5 w-5" />
-                            </Button>
-                            <Button variant="destructive" size="icon" className="rounded-full h-12 w-12" onClick={() => setIsActive(false)}>
-                                <VideoOff className="h-6 w-6" />
-                            </Button>
-                            <Button variant="secondary" size="icon" className="rounded-full bg-zinc-900/80 border-zinc-700 text-white hover:bg-zinc-800">
-                                <Settings className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </Card>
-
+            {!vivaEnabled ? (
+                <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6 text-center">
+                    <div className="bg-gray-500/10 p-6 rounded-full">
+                        <Mic className="h-16 w-16 text-gray-500" />
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold">Viva Not Available</h2>
+                        <p className="text-muted-foreground">
+                            Viva assessment is not enabled for this assignment.
+                        </p>
+                    </div>
+                    <Button asChild>
+                        <Link href={`/student/courses/${courseId}/assignments/${assignmentId}`}>
+                            Back to Assignment
+                        </Link>
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {/* Navigation */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-lg">Instructions</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li className="flex items-start gap-2">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                    Explain your implementation of the AVL tree rotations.
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                    Justify your choice of data structures for the level-order traversal.
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                    Answer any follow-up questions from the instructor.
-                                </li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="space-y-6">
-                    <Card className="border-primary/20 bg-primary/5">
-                        <CardHeader className="text-center pb-2">
-                            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Remaining Time</CardTitle>
+                            <CardTitle className="text-lg">Viva Options</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-5xl font-black text-center tabular-nums text-primary mb-4 font-mono">
-                                {formatTime(timeLeft)}
-                            </div>
-                            <Separator className="mb-4" />
-                            <div className="space-y-4">
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground">Viva Scheduled</span>
-                                    <span className="font-bold font-mono">10:00 AM - 10:15 AM</span>
-                                </div>
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground">Status</span>
-                                    <Badge variant="secondary" className="px-2 py-0 text-[10px]">Ongoing</Badge>
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Button variant="outline" asChild className="justify-start h-auto p-4">
+                                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/practice`} className="flex items-center gap-3">
+                                        <PlayCircle className="h-5 w-5" />
+                                        <div className="text-left">
+                                            <p className="font-medium">Practice Mode</p>
+                                            <p className="text-xs text-muted-foreground">Test setup and practice questions</p>
+                                        </div>
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" asChild className="justify-start h-auto p-4">
+                                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`} className="flex items-center gap-3">
+                                        <BarChart3 className="h-5 w-5" />
+                                        <div className="text-left">
+                                            <p className="font-medium">View Results</p>
+                                            <p className="text-xs text-muted-foreground">See your viva performance</p>
+                                        </div>
+                                    </Link>
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Alert variant="default" className="bg-muted/50 border-dashed">
-                        <HelpCircle className="h-4 w-4" />
-                        <AlertTitle className="text-sm font-bold uppercase tracking-wider text-[10px]">Trouble connecting?</AlertTitle>
-                        <AlertDescription className="text-xs">
-                            Check your network settings or contact support via the help button if technical issues persist.
-                        </AlertDescription>
-                    </Alert>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Left Column: Status & Readiness */}
+                        <div className="md:col-span-2 space-y-6">
+                            <VivaStatusCard
+                                status={vivaStatus}
+                                scheduledDate="Today, 10:00 AM"
+                                duration="15 mins"
+                            />
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Pre-Viva Checklist</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className="h-4 w-4 rounded border border-primary flex items-center justify-center bg-primary/10">
-                                    <CheckCircle2 className="h-3 w-3 text-primary" />
-                                </div>
-                                <span className="text-xs">Quiet environment</span>
+                            <div className="prose dark:prose-invert max-w-none">
+                                <h3>Instructions</h3>
+                                <ul>
+                                    <li>Ensure you are in a quiet environment.</li>
+                                    <li>You will be asked 3-5 questions based on the rubric.</li>
+                                    <li>Speak clearly and look at the camera.</li>
+                                    <li>The session will be recorded for review.</li>
+                                </ul>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="h-4 w-4 rounded border border-primary flex items-center justify-center bg-primary/10">
-                                    <CheckCircle2 className="h-3 w-3 text-primary" />
-                                </div>
-                                <span className="text-xs">Functional Camera/Mic</span>
+
+                            <ConceptsTestedList concepts={mockConcepts} />
+                        </div>
+
+                        {/* Right Column: Actions & Widgets */}
+                        <div className="space-y-6">
+                            <SystemCheckWidget />
+
+                            <StartVivaButton
+                                courseId={courseId}
+                                assignmentId={assignmentId}
+                                isEnabled={vivaStatus === 'not_started'}
+                            />
+
+                            <div className="text-xs text-center text-muted-foreground">
+                                By starting, you agree to the academic integrity policy.
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="h-4 w-4 rounded border border-primary flex items-center justify-center bg-primary/10">
-                                    <CheckCircle2 className="h-3 w-3 text-primary" />
-                                </div>
-                                <span className="text-xs">Strong Internet (3mbps+)</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
