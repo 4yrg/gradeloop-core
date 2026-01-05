@@ -32,16 +32,18 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<java.util.Map<String, String>> forgotPassword(
+            @RequestBody java.util.Map<String, String> payload) {
         String email = payload.get("email");
         if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest().body("Email is required");
+            return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("error", "Email is required"));
         }
         String token = authService.forgotPassword(email);
         if (token == null) {
-            return ResponseEntity.ok("If an account exists for " + email + ", a password reset link has been sent.");
+            return ResponseEntity.ok(java.util.Collections.singletonMap("message",
+                    "If an account exists for " + email + ", a password reset link has been sent."));
         }
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(java.util.Collections.singletonMap("token", token));
     }
 
     @PostMapping("/reset-password")
