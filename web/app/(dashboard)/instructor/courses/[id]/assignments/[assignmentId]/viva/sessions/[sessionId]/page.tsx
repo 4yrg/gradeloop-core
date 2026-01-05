@@ -623,7 +623,7 @@ export default function SessionReviewPage({
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <Button variant="ghost" asChild className="w-fit -ml-2 text-muted-foreground hover:text-foreground">
-                    <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/sessions`}>
+                    <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva/sessions`}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Sessions
                     </Link>
