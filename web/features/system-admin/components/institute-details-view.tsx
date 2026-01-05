@@ -13,7 +13,7 @@ interface InstituteDetailsViewProps {
 }
 
 export function InstituteDetailsView({ instituteId }: InstituteDetailsViewProps) {
-    const { data: institute, isLoading } = useInstitute(instituteId)
+    const { data: institute, isLoading, refetch } = useInstitute(instituteId)
 
     if (isLoading) {
         return (
@@ -52,7 +52,11 @@ export function InstituteDetailsView({ instituteId }: InstituteDetailsViewProps)
                     <OverviewTab institute={institute} />
                 </TabsContent>
                 <TabsContent value="admins">
-                    <AdminsTab admins={institute.admins} />
+                    <AdminsTab
+                        admins={institute.admins}
+                        instituteId={institute.id!}
+                        onRefresh={refetch}
+                    />
                 </TabsContent>
                 <TabsContent value="setup">
                     <SetupProgressTab instituteId={institute.id!} progress={institute.setupProgress} />
