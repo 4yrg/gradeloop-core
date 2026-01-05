@@ -27,4 +27,9 @@ public class AuthServiceClient {
 
         return restTemplate.postForObject(url, request, CreateAuthUserResponse.class);
     }
+
+    public void deleteUser(Long userId) {
+        String url = authServiceUrl + "/auth/internal/users/" + userId;
+        restTemplate.delete(url);
+    }
 }

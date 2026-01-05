@@ -172,4 +172,8 @@ public class AuthService {
                 .tempPassword(tempPassword)
                 .build();
     }
+
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
+    }
 }

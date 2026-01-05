@@ -20,6 +20,7 @@ interface InstituteResponse {
     code: string;
     domain: string;
     contactEmail: string;
+    isActive: boolean;
     admins: Array<{
         id: string;
         userId: number;
@@ -35,7 +36,7 @@ const transformInstituteResponse = (response: InstituteResponse): Institute => {
         code: response.code,
         domain: response.domain,
         contactEmail: response.contactEmail,
-        status: 'active', // Default status, can be enhanced later
+        status: response.isActive ? 'active' : 'inactive',
         admins: response.admins.map(admin => ({
             id: admin.id,
             name: '', // Backend doesn't return name in current implementation
@@ -91,6 +92,16 @@ export const instituteApi = {
             domain: data.domain,
             contactEmail: data.contactEmail,
         });
+        return transformInstituteResponse(response.data);
+    },
+
+    deactivateInstitute: async (id: string): Promise<Institute> => {
+        const response = await apiClient.patch<InstituteResponse>(`/institutes/${id}/deactivate`);
+        return transformInstituteResponse(response.data);
+    },
+
+    activateInstitute: async (id: string): Promise<Institute> => {
+        const response = await apiClient.patch<InstituteResponse>(`/institutes/${id}/activate`);
         return transformInstituteResponse(response.data);
     },
 
