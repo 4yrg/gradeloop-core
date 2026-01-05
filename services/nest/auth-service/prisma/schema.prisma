@@ -15,16 +15,18 @@ enum Role {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String   @map("password_hash")
-  role          Role
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String   @map("password_hash")
+  role            Role
+  isActive        Boolean  @default(true) @map("is_active")
+  isEmailVerified Boolean  @default(false) @map("is_email_verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  lastLoginAt     DateTime? @map("last_login_at")
 
   passwordResets PasswordReset[]
-  instituteAdminMapping InstituteAdminMapping?
+  refreshTokens  RefreshToken[]
 
   @@map("users")
 }
@@ -32,21 +34,24 @@ model User {
 model PasswordReset {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  token     String   @unique
+  tokenHash String   @unique @map("token_hash")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
-  @@map("password_resets")
+  @@map("password_reset_tokens")
 }
 
-model InstituteAdminMapping {
-  id          String @id @default(uuid())
-  userId      String @unique @map("user_id")
-  instituteId String @map("institute_id")
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
-  @@map("institute_admin_mapping")
+  @@map("refresh_tokens")
 }
