@@ -98,15 +98,17 @@ export async function login(data: z.infer<typeof loginSchema>) {
     }
 }
 
+
+
 function getRedirectPath(role: string): string {
     switch (role) {
-        case 'system-admin':
+        case 'SYSTEM_ADMIN':
             return '/system-admin'
-        case 'institute-admin':
+        case 'INSTITUTE_ADMIN':
             return '/institute-admin/dashboard'
-        case 'instructor':
+        case 'INSTRUCTOR':
             return '/instructor'
-        case 'student':
+        case 'STUDENT':
             return '/student'
         default:
             return '/dashboard'
