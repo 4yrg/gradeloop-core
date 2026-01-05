@@ -33,6 +33,7 @@ public class Institute {
     @Column(nullable = false)
     private String contactEmail;
 
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     @OneToMany(mappedBy = "institute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InstituteAdmin> admins;
 }

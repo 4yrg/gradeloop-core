@@ -12,6 +12,8 @@ import com.gradeloop.institute.repository.InstituteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +30,10 @@ public class InstituteService {
     @Transactional
     public Institute createInstitute(CreateInstituteRequest request) {
         if (instituteRepository.existsByCode(request.getCode())) {
-            throw new RuntimeException("Institute with code " + request.getCode() + " already exists");
+            if (instituteRepository.existsByCode(request.getCode())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Institute with code " + request.getCode() + " already exists");
+            }
         }
 
         Institute institute = Institute.builder()
@@ -66,7 +71,8 @@ public class InstituteService {
 
     public Institute getInstitute(UUID id) {
         return instituteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Institute not found with id: " + id));
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Institute not found with id: " + id));
     }
 
     @Transactional
@@ -86,7 +92,7 @@ public class InstituteService {
     @Transactional
     public void deleteInstitute(UUID id) {
         if (!instituteRepository.existsById(id)) {
-            throw new RuntimeException("Institute not found with id: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Institute not found with id: " + id);
         }
         instituteRepository.deleteById(id);
     }
