@@ -1,0 +1,11 @@
+meta {
+  name: Delete Class
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{GRADELOOP_API_URL}}/classes/{{classId}}
+  body: none
+  auth: none
+}

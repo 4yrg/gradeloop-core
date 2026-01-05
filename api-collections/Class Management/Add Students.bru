@@ -1,0 +1,18 @@
+meta {
+  name: Add Students to Class
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/classes/{{classId}}/students
+  body: json
+  auth: none
+}
+
+body:json {
+  [
+    1, 
+    2
+  ]
+}

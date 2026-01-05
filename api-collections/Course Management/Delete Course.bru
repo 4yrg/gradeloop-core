@@ -1,0 +1,11 @@
+meta {
+  name: Delete Course
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{GRADELOOP_API_URL}}/courses/{{courseId}}
+  body: none
+  auth: none
+}

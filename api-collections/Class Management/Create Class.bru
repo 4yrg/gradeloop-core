@@ -1,0 +1,22 @@
+meta {
+  name: Create Class
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/institutes/{{instituteId}}/classes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Class 1A",
+    "studentIds": []
+  }
+}
+
+vars:pre-request {
+  instituteId: e121cf0e-7913-4f3d-b834-761cb93fcddf
+}
