@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { semesterSchema, Semester, SemesterTerm } from "../types";
+import { semesterSchema, Semester } from "../types";
 import {
     Dialog,
     DialogContent,
@@ -14,13 +14,7 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "../../../components/ui/select";
+
 
 
 // Simple checkbox if component doesn't exist yet, but let's check.
@@ -43,8 +37,8 @@ export function SemesterModal({
     const form = useForm({
         resolver: zodResolver(semesterSchema),
         defaultValues: initialData || {
-            term: "Spring",
-            year: new Date().getFullYear(),
+            name: "",
+            code: "",
             startDate: new Date().toISOString().split("T")[0] + "T00:00:00Z", // Zod expects datetime
             endDate: new Date().toISOString().split("T")[0] + "T00:00:00Z",
             isActive: false,
@@ -81,34 +75,25 @@ export function SemesterModal({
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="term">Term</Label>
-                            <Select
-                                defaultValue={form.getValues("term")}
-                                onValueChange={(value) => form.setValue("term", value as SemesterTerm)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select term" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Spring">Spring</SelectItem>
-                                    <SelectItem value="Summer">Summer</SelectItem>
-                                    <SelectItem value="Fall">Fall</SelectItem>
-                                    <SelectItem value="Winter">Winter</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {form.formState.errors.term && (
-                                <p className="text-sm text-red-500">{form.formState.errors.term.message}</p>
+                            <Label htmlFor="name">Semester Name</Label>
+                            <Input
+                                id="name"
+                                placeholder="e.g. Spring 2024"
+                                {...form.register("name")}
+                            />
+                            {form.formState.errors.name && (
+                                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
                             )}
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="year">Year</Label>
+                            <Label htmlFor="code">Semester Code</Label>
                             <Input
-                                id="year"
-                                type="number"
-                                {...form.register("year", { valueAsNumber: true })}
+                                id="code"
+                                placeholder="e.g. SPR24"
+                                {...form.register("code")}
                             />
-                            {form.formState.errors.year && (
-                                <p className="text-sm text-red-500">{form.formState.errors.year.message}</p>
+                            {form.formState.errors.code && (
+                                <p className="text-sm text-red-500">{form.formState.errors.code.message}</p>
                             )}
                         </div>
                     </div>

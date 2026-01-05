@@ -1,0 +1,11 @@
+meta {
+  name: Activate Semester
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}/activate
+  body: none
+  auth: none
+}
