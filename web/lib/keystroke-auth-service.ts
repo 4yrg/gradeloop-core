@@ -99,21 +99,30 @@ class KeystrokeAuthService {
     topK = 3
   ): Promise<IdentificationResult> {
     try {
-      const response = await this.api.post<IdentificationResult>(
+      const response = await this.api.post(
         `${KEYSTROKE_API_URL}/identify`,
         {
           keystrokeEvents,
           topK,
         }
       );
-      return response.data;
+      
+      // Map Python API response to expected format
+      const data = response.data;
+      return {
+        success: data.success,
+        candidates: data.matches || [],
+        topMatch: data.best_match,
+        confidence_level: data.confidence_level,
+        message: data.message
+      };
     } catch (error: any) {
       console.error('Error identifying user:', error);
       // Check if no users enrolled
       if (error.response?.status === 404) {
         throw new Error('No users enrolled yet. Please train at least one user first.');
       }
-      throw new Error(error.response?.data?.message || 'Identification failed');
+      throw new Error(error.response?.data?.message || error.response?.data?.detail || 'Identification failed');
     }
   }
 
