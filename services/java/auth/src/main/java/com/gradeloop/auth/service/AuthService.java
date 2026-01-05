@@ -74,8 +74,6 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-
-        // TODO: Send email with tempPassword
         System.out.println("Created Admin: " + email + ", Temp Password: " + tempPassword);
     }
 
@@ -102,8 +100,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
-            // Prevent user enumeration by returning successfully
-            return null;
+            throw new RuntimeException("User not found with email: " + email);
         }
 
         // Generate token

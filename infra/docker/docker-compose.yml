@@ -225,6 +225,37 @@ services:
         - action: rebuild
           path: ../../services/python/keystroke-service
 
+  # ============================================================================
+  # Node.js Services (Standalone)
+  # ============================================================================
+  email-service:
+    build:
+      context: ../../services/node/email-service
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3001
+      LOG_LEVEL: info
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: dasun.wickr@gmail.com
+      SMTP_PASS: "kwvb bdmg agtw nfvb"
+      SMTP_SECURE: "false"
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "3001:3001"
+    # No depends_on, no network links to internal services if strict isolation were needed at network level, 
+    # but for simplicity/standardization it joins the common network.
+    # It just won't be configured to talk to them.
+    networks:
+      - gradeloop-net
+    develop:
+      watch:
+        - action: sync
+          path: ../../services/node/email-service
+          target: /app
+        - action: rebuild
+          path: ../../services/node/email-service/package.json
+
 volumes:
   auth-db-data:
   institute-db-data:
