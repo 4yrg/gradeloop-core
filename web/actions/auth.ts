@@ -254,7 +254,7 @@ export async function resetPassword(data: { token: string } & z.infer<typeof res
         const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
         const response = await axios.post(`${authUrl}/reset-password`, {
             token,
-            password,
+            newPassword: password,
         });
 
         return {
