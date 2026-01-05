@@ -60,7 +60,7 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -135,6 +135,12 @@ services:
         condition: service_healthy
     networks:
       - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/java/auth/src
+        - action: rebuild
+          path: ../../services/java/auth/pom.xml
 
   institute-service:
     build:
@@ -153,6 +159,12 @@ services:
         condition: service_healthy
     networks:
       - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/java/institute/src
+        - action: rebuild
+          path: ../../services/java/institute/pom.xml
 
   user-service:
     build:
@@ -171,6 +183,12 @@ services:
         condition: service_healthy
     networks:
       - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/java/user/src
+        - action: rebuild
+          path: ../../services/java/user/pom.xml
 
 volumes:
   auth-db-data:
