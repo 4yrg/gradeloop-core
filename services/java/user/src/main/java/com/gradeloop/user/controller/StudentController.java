@@ -26,4 +26,21 @@ public class StudentController {
             @RequestBody List<CreateStudentRequest> requests) {
         return ResponseEntity.ok(studentService.createStudentsBulk(requests));
     }
+
+    @GetMapping
+    public ResponseEntity<List<CreateUserResponse>> getAllStudents() {
+        return ResponseEntity.ok(studentService.getAllStudents());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CreateUserResponse> updateStudent(@PathVariable java.util.UUID id,
+            @RequestBody com.gradeloop.user.dto.UpdateStudentRequest request) {
+        return ResponseEntity.ok(studentService.updateStudent(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable java.util.UUID id) {
+        studentService.deleteStudent(id);
+        return ResponseEntity.noContent().build();
+    }
 }

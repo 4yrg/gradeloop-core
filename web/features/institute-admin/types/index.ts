@@ -66,6 +66,7 @@ export const personSchema = z.object({
     email: z.string().email(),
     role: userRoleSchema,
     studentId: z.string().optional(), // For students
+    instituteId: z.string().optional(),
 });
 export type Person = z.infer<typeof personSchema>;
 

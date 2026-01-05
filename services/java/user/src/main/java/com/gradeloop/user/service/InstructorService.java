@@ -115,4 +115,44 @@ public class InstructorService {
 
         return responses;
     }
+
+    public List<CreateUserResponse> getAllInstructors() {
+        return instructorRepository.findAll().stream()
+                .map(instructor -> CreateUserResponse.builder()
+                        .id(instructor.getId())
+                        .userId(instructor.getAuthUserId())
+                        .email(instructor.getEmail())
+                        .firstName(instructor.getFirstName())
+                        .lastName(instructor.getLastName())
+                        .role("instructor")
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CreateUserResponse updateInstructor(java.util.UUID id,
+            com.gradeloop.user.dto.UpdateInstructorRequest request) {
+        Instructor instructor = instructorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+
+        if (request.getFirstName() != null)
+            instructor.setFirstName(request.getFirstName());
+        if (request.getLastName() != null)
+            instructor.setLastName(request.getLastName());
+
+        instructor = instructorRepository.save(instructor);
+
+        return CreateUserResponse.builder()
+                .id(instructor.getId())
+                .userId(instructor.getAuthUserId())
+                .email(instructor.getEmail())
+                .firstName(instructor.getFirstName())
+                .lastName(instructor.getLastName())
+                .build();
+    }
+
+    @Transactional
+    public void deleteInstructor(java.util.UUID id) {
+        instructorRepository.deleteById(id);
+    }
 }
