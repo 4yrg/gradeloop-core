@@ -2,9 +2,9 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ArrowLeft, PlayCircle } from "lucide-react";
-import { Button } from "../../../../../../../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../../components/ui/card";
+import { ArrowLeft, PlayCircle, BarChart3, Mic } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function VivaPracticePage({
     params
@@ -29,6 +29,35 @@ export default function VivaPracticePage({
                     </p>
                 </div>
             </div>
+
+            {/* Navigation */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Viva Options</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva`} className="flex items-center gap-3">
+                                <Mic className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">Start Viva</p>
+                                    <p className="text-xs text-muted-foreground">Begin the actual evaluation</p>
+                                </div>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`} className="flex items-center gap-3">
+                                <BarChart3 className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">View Results</p>
+                                    <p className="text-xs text-muted-foreground">See previous viva performance</p>
+                                </div>
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Card className="border-2 border-dashed">

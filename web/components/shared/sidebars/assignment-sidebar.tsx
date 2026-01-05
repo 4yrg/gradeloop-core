@@ -73,7 +73,7 @@ export function AssignmentSidebar() {
             items: [
                 { title: "Edit Outline", icon: FileEdit, href: "/edit-outline" },
                 { title: "Autograder", icon: Cpu, href: "/autograder" },
-                { title: "Viva Voce", icon: Mic, href: "/viva-voce" },
+                { title: "Viva", icon: Mic, href: "/viva" },
                 { title: "Clone Detector", icon: Copy, href: "/clone-detector" },
                 { title: "Integrity & AI Detection", icon: ShieldCheck, href: "/integrity" },
             ],

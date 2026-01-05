@@ -20,6 +20,10 @@ export interface Assignment {
     difficulty?: 'Easy' | 'Medium' | 'Hard';
     score?: number;
     totalScore?: number;
+    vivaEnabled?: boolean;
+    vivaRequired?: boolean;
+    vivaStatus?: 'not_started' | 'in_progress' | 'completed' | 'passed' | 'failed';
+    vivaWeight?: number; // percentage of total grade
 }
 
 export const MOCK_ASSIGNMENTS: Assignment[] = [
@@ -55,7 +59,11 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
             { criterion: 'Complexity efficiency', points: 20 }
         ],
         difficulty: 'Medium',
-        totalScore: 100
+        totalScore: 100,
+        vivaEnabled: true,
+        vivaRequired: true,
+        vivaStatus: 'not_started',
+        vivaWeight: 30 // 30% of total grade
     },
     {
         id: 'asgn-2',

@@ -344,35 +344,35 @@ function QuickActionsMenu({ courseId, assignmentId }: { courseId: string; assign
             title: "Configure Viva",
             description: "Set up assessment parameters",
             icon: Settings,
-            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/configure`,
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva/configure`,
             available: true
         },
         {
             title: "Edit Rubric",
             description: "Modify evaluation criteria",
             icon: BookOpen,
-            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/rubric`,
-            available: false
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva/rubric`,
+            available: true
         },
         {
             title: "View All Sessions",
             description: "Review student performances",
             icon: Users,
-            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/sessions`,
-            available: false
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva/sessions`,
+            available: true
         },
         {
             title: "Analytics Dashboard",
             description: "Detailed performance insights",
             icon: BarChart3,
-            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/analytics`,
-            available: false
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva/analytics`,
+            available: true
         },
         {
             title: "Live Monitoring",
             description: "Monitor active sessions",
             icon: Eye,
-            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce/monitoring`,
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/viva/monitoring`,
             available: false
         }
     ];

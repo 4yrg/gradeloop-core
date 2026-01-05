@@ -8,7 +8,9 @@ import {
     Clock,
     Code2,
     Info,
-    ShieldAlert
+    ShieldAlert,
+    Mic,
+    PlayCircle
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../../../../../../../../components/ui/button";
@@ -41,6 +43,10 @@ export default function SubmissionPage({
     };
 
     if (submitted) {
+        const hasViva = assignment.vivaEnabled;
+        const vivaRequired = assignment.vivaRequired;
+        const vivaWeight = assignment.vivaWeight || 0;
+
         return (
             <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center max-w-2xl mx-auto px-4">
                 <div className="bg-green-500/10 p-6 rounded-full">
@@ -52,13 +58,39 @@ export default function SubmissionPage({
                         Your work has been received and added to the grading queue.
                     </p>
                 </div>
+
+                {hasViva && (
+                    <div className="w-full max-w-md">
+                        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+                            <Mic className="h-4 w-4 text-blue-600" />
+                            <AlertTitle className="text-blue-800 dark:text-blue-200">
+                                Viva Assessment {vivaRequired ? 'Required' : 'Available'}
+                            </AlertTitle>
+                            <AlertDescription className="text-blue-700 dark:text-blue-300">
+                                {vivaRequired ? 
+                                    `Complete your viva assessment to finalize your grade. It contributes ${vivaWeight}% to your final score.` :
+                                    `Optional viva assessment available. It can contribute up to ${vivaWeight}% to your final score.`
+                                }
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                )}
+
                 <div className="flex flex-col md:flex-row gap-4 w-full mt-4">
                     <Button asChild variant="outline" className="flex-1">
                         <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/history`}>
                             View Submission History
                         </Link>
                     </Button>
-                    <Button asChild className="flex-1">
+                    {hasViva && (
+                        <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700">
+                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva`}>
+                                <Mic className="mr-2 h-4 w-4" />
+                                Start Viva Assessment
+                            </Link>
+                        </Button>
+                    )}
+                    <Button asChild variant="outline" className="flex-1">
                         <Link href={`/student/courses/${courseId}/assignments`}>
                             Back to Courses
                         </Link>
@@ -121,6 +153,26 @@ export default function SubmissionPage({
                                 <span className="text-muted-foreground">Grading Policy</span>
                                 <span className="font-medium">{assignment.gradingMethod}</span>
                             </div>
+                            {assignment.vivaEnabled && (
+                                <>
+                                    <Separator />
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Mic className="h-4 w-4 text-blue-600" />
+                                            <span className="text-muted-foreground">Viva Assessment</span>
+                                            <Badge variant={assignment.vivaRequired ? "default" : "secondary"} className="text-xs">
+                                                {assignment.vivaRequired ? "Required" : "Optional"}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            {assignment.vivaRequired ? 
+                                                `Oral examination required. Contributes ${assignment.vivaWeight}% to final grade.` :
+                                                `Optional oral assessment available. Can contribute up to ${assignment.vivaWeight}% to final grade.`
+                                            }
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </CardContent>
                     </Card>
 
