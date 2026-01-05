@@ -3,6 +3,7 @@
 import { createSession, deleteSession } from '../lib/session'
 import axios from 'axios'
 import { z } from 'zod'
+import { forgotPasswordSchema, resetPasswordSchema } from '../features/auth/schemas/auth'
 
 const loginSchema = z.object({
     email: z.string().email('Please enter a valid email'),
@@ -140,7 +141,7 @@ export async function register(data: z.infer<typeof registerSchema>): Promise<Re
     const { email, name, password, role } = validatedFields.data
 
     try {
-        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
         await axios.post(`${authUrl}/register`, {
             email,
             name,
@@ -171,9 +172,6 @@ export async function logout() {
     await deleteSession()
 }
 
-const forgotPasswordSchema = z.object({
-    email: z.string().email('Please enter a valid email'),
-})
 
 export type ForgotPasswordState = {
     errors?: {
@@ -196,7 +194,7 @@ export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>)
     const { email } = validatedFields.data
 
     try {
-        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
         const response = await axios.post(`${authUrl}/forgot-password`, {
             email,
         });
@@ -218,14 +216,6 @@ export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>)
     }
 }
 
-const resetPasswordSchema = z.object({
-    token: z.string().min(1, 'Token is required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-})
 
 export type ResetPasswordState = {
     errors?: {
@@ -239,7 +229,10 @@ export type ResetPasswordState = {
 }
 
 export async function resetPassword(data: { token: string } & z.infer<typeof resetPasswordSchema>): Promise<ResetPasswordState> {
-    const validatedFields = resetPasswordSchema.safeParse(data)
+    const validatedFields = resetPasswordSchema.safeParse({
+        password: data.password,
+        confirmPassword: data.confirmPassword
+    })
 
     if (!validatedFields.success) {
         return {
@@ -251,7 +244,7 @@ export async function resetPassword(data: { token: string } & z.infer<typeof res
     const token = data.token
 
     try {
-        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
         const response = await axios.post(`${authUrl}/reset-password`, {
             token,
             newPassword: password,
