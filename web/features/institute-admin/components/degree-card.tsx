@@ -1,5 +1,5 @@
 import { Degree } from "../types";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 
 interface DegreeCardProps {
     degree: Degree;

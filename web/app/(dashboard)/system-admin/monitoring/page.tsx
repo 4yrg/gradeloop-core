@@ -1,9 +1,9 @@
 "use client"
 
 import { useInstitutes } from "@/features/system-admin/api/queries"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card"
+import { Progress } from "../../../../components/ui/progress"
+import { Badge } from "../../../../components/ui/badge"
 import {
     Table,
     TableBody,
@@ -11,9 +11,9 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { useSystemAdminStore } from "@/features/system-admin/store/use-system-admin-store"
+} from "../../../../components/ui/table"
+import { Button } from "../../../../components/ui/button"
+import { useSystemAdminStore } from "../../../../features/system-admin/store/use-system-admin-store"
 
 export default function MonitoringPage() {
     const { data: institutes, isLoading } = useInstitutes()

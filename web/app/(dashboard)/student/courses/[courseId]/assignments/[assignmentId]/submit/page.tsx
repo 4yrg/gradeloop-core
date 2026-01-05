@@ -13,13 +13,13 @@ import {
     PlayCircle
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
+import { MOCK_ASSIGNMENTS } from "../../../../../../../../features/student/assignments/data/mock-assignments";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../../../components/ui/alert";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
 
 export default function SubmissionPage({
     params

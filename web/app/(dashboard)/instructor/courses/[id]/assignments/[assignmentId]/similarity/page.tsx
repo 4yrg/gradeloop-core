@@ -11,17 +11,17 @@ import {
     Search,
     ChevronRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
+} from "../../../../../../../../components/ui/select";
 
 export default function ReviewSimilarityPage() {
     return (

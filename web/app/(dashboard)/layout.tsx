@@ -1,14 +1,14 @@
 "use client";
 
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { InstructorSidebar } from "@/components/shared/sidebars/instructor-sidebar";
-import { StudentSidebar } from "@/components/shared/sidebars/student-sidebar";
-import { SystemAdminSidebar } from "@/components/shared/sidebars/system-admin-sidebar";
-import { InstituteAdminSidebar } from "@/components/shared/sidebars/institute-admin-sidebar";
-import { InstructorCourseSidebar, StudentCourseSidebar } from "@/components/shared/sidebars/course-sidebar";
-import { AssignmentSidebar } from "@/components/shared/sidebars/assignment-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "../../components/ui/sidebar";
+import { InstructorSidebar } from "../../components/shared/sidebars/instructor-sidebar";
+import { StudentSidebar } from "../../components/shared/sidebars/student-sidebar";
+import { SystemAdminSidebar } from "../../components/shared/sidebars/system-admin-sidebar";
+import { InstituteAdminSidebar } from "../../components/shared/sidebars/institute-admin-sidebar";
+import { InstructorCourseSidebar, StudentCourseSidebar } from "../../components/shared/sidebars/course-sidebar";
+import { AssignmentSidebar } from "../../components/shared/sidebars/assignment-sidebar";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 
 export default function DashboardLayout({
     children,

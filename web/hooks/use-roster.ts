@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { RosterData } from '@/types/roster';
+import { RosterData } from '../types/roster';
 
 const mockRosterData: RosterData = {
     instructors: [

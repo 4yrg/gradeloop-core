@@ -8,19 +8,19 @@ import {
     Settings,
     History
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Label } from "../../../../../../../../components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from "../../../../../../../../components/ui/select";
+import { Switch } from "../../../../../../../../components/ui/switch";
+import { Slider } from "../../../../../../../../components/ui/slider";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../../../components/ui/alert";
 
 export default function CloneDetectorPage() {
     return (

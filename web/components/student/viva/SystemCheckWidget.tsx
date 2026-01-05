@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Mic, Video, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../ui/button";
 
 export function SystemCheckWidget() {
     const [hasMic, setHasMic] = useState<boolean | null>(null);

@@ -1,7 +1,7 @@
-import { useInstituteSetup } from "../../api/queries"
-import { Progress } from "@/components/ui/progress"
+import { useInstituteSetup } from "../../../../hooks/institute/useInstituteDetails"
+import { Progress } from "../../../../components/ui/progress"
 import { CheckCircle2, Circle, Clock } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../../../lib/utils"
 
 interface SetupProgressTabProps {
     instituteId: string

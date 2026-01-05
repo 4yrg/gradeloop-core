@@ -22,13 +22,13 @@ import {
     Mic,
     PlayCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../../components/ui/badge";
+import { Separator } from "../../../../../../../../../components/ui/separator";
+import { Progress } from "../../../../../../../../../components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../../../../../../components/ui/collapsible";
+import { Input } from "../../../../../../../../../components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { useState } from "react";
 
@@ -271,9 +271,8 @@ function TranscriptViewer({ transcript }: { transcript: typeof mockResults.trans
                                         <span className="text-xs text-muted-foreground font-mono">{item.timestamp}</span>
                                     </div>
                                     <div className="flex items-start gap-2 flex-1">
-                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                            item.speaker === 'AI' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                        }`}>
+                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${item.speaker === 'AI' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                            }`}>
                                             {item.speaker === 'AI' ? 'AI' : 'S'}
                                         </div>
                                         <p className="text-sm leading-relaxed">{item.message}</p>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../../../../../../components/ui/button";
 import { AlertCircle, RotateCcw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
 
 export default function VivaError({
     error,

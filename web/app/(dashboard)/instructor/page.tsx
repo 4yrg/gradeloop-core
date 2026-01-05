@@ -1,7 +1,7 @@
 import { Info, Plus, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CourseCard, InstructorCourseCard } from "@/components/shared/course-card";
-import { CreateCourseCard } from "@/components/instructor/create-course-card";
+import { Button } from "../../../components/ui/button";
+import { CourseCard, InstructorCourseCard } from "../../../components/shared/course-card";
+import { CreateCourseCard } from "../../../components/instructor/create-course-card";
 
 const semesters = [
     {

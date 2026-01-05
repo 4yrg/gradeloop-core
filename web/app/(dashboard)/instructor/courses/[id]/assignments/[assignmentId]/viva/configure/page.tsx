@@ -19,19 +19,19 @@ import {
     BarChart3,
     Eye
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "../../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../components/ui/card";
+import { Label } from "../../../../../../../../../components/ui/label";
+import { Switch } from "../../../../../../../../../components/ui/switch";
+import { Slider } from "../../../../../../../../../components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../../../../../../components/ui/select";
+import { Input } from "../../../../../../../../../components/ui/input";
+import { RadioGroup, RadioGroupItem } from "../../../../../../../../../components/ui/radio-group";
+import { Checkbox } from "../../../../../../../../../components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../../../../../../components/ui/collapsible";
+import { Badge } from "../../../../../../../../../components/ui/badge";
+import { Separator } from "../../../../../../../../../components/ui/separator";
+import { Alert, AlertDescription } from "../../../../../../../../../components/ui/alert";
 
 // Mock current configuration
 const mockConfig = {
@@ -384,7 +384,7 @@ export default function VivaConfigurePage({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {[3,5,7,10,12,15].map(num => (
+                                    {[3, 5, 7, 10, 12, 15].map(num => (
                                         <SelectItem key={num} value={num.toString()}>{num} questions</SelectItem>
                                     ))}
                                 </SelectContent>

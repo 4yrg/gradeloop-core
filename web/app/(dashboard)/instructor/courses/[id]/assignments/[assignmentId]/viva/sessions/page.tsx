@@ -28,18 +28,18 @@ import {
     BookOpen,
     BarChart3
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "../../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../components/ui/card";
+import { Input } from "../../../../../../../../../components/ui/input";
+import { Badge } from "../../../../../../../../../components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../../../../../../components/ui/avatar";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
+} from "../../../../../../../../../components/ui/select";
 import {
     Table,
     TableBody,
@@ -47,7 +47,7 @@ import {
     TableHead,
     TableHeader,
     TableRow
-} from "@/components/ui/table";
+} from "../../../../../../../../../components/ui/table";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -55,10 +55,10 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "../../../../../../../../../components/ui/dropdown-menu";
+import { Checkbox } from "../../../../../../../../../components/ui/checkbox";
+import { Separator } from "../../../../../../../../../components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../../components/ui/tabs";
 
 // Mock data for sessions
 const mockSessions = [
@@ -283,14 +283,14 @@ function SessionFilters({
                                 type="number"
                                 placeholder="Min"
                                 value={scoreRange.min}
-                                onChange={(e) => setScoreRange({...scoreRange, min: e.target.value})}
+                                onChange={(e) => setScoreRange({ ...scoreRange, min: e.target.value })}
                                 className="w-20"
                             />
                             <Input
                                 type="number"
                                 placeholder="Max"
                                 value={scoreRange.max}
-                                onChange={(e) => setScoreRange({...scoreRange, max: e.target.value})}
+                                onChange={(e) => setScoreRange({ ...scoreRange, max: e.target.value })}
                                 className="w-20"
                             />
                         </div>

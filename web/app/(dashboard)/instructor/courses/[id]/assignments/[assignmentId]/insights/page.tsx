@@ -10,16 +10,16 @@ import {
     MessageSquare,
     ShieldAlert
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
+} from "../../../../../../../../components/ui/select";
+import { Progress } from "../../../../../../../../components/ui/progress";
 
 export default function InsightsPage() {
     return (

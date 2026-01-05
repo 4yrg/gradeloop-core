@@ -1,10 +1,10 @@
 "use client";
 
 import { GraduationCap, Info, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CourseCard, StudentCourseCard } from "@/components/shared/course-card";
+import { Button } from "../../../components/ui/button";
+import { CourseCard, StudentCourseCard } from "../../../components/shared/course-card";
 import { useState } from "react";
-import { EnrollmentDialog } from "@/components/student/enrollment-dialog";
+import { EnrollmentDialog } from "../../../components/student/enrollment-dialog";
 
 const semesters = [
     {

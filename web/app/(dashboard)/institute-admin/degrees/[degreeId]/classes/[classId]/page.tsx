@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Upload, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { classesService } from "@/features/institute-admin/api/classes-service";
-import { ClassGroup, Person } from "@/features/institute-admin/types";
-import { StudentListTable } from "@/features/institute-admin/components/student-list-table";
-import { AddStudentModal } from "@/features/institute-admin/components/add-student-modal";
-import { BulkImportModal } from "@/features/institute-admin/components/bulk-import-modal";
+import { Button } from "../../../../../../../components/ui/button";
+import { Separator } from "../../../../../../../components/ui/separator";
+import { classesService } from "../../../../../../../features/institute-admin/api/classes-service";
+import { ClassGroup, Person } from "../../../../../../../features/institute-admin/types";
+import { StudentListTable } from "../../../../../../../features/institute-admin/components/student-list-table";
+import { AddStudentModal } from "../../../../../../../features/institute-admin/components/add-student-modal";
+import { BulkImportModal } from "../../../../../../../features/institute-admin/components/bulk-import-modal";
 
 export default function ClassDetailPage() {
     const params = useParams();

@@ -1,5 +1,5 @@
 import { ClassGroup } from "../types";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import { Users } from "lucide-react";
 
 interface ClassCardProps {

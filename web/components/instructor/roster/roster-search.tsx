@@ -1,6 +1,6 @@
-import { Input } from "@/components/ui/input";
+import { Input } from "../../ui/input";
 import { Search } from "lucide-react";
-import { useRosterStore } from "@/store/use-roster-store";
+import { useRosterStore } from "../../../stores/use-roster-store";
 
 export function RosterSearch() {
     const { searchQuery, setSearchQuery } = useRosterStore();

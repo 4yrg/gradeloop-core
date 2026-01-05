@@ -7,11 +7,11 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "../../../components/ui/table";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import { Trash2, Star } from "lucide-react";
-import { Person } from "@/features/institute-admin/types";
+import { Person } from "../types";
 
 interface InstructorListTableProps {
     instructors: Person[];

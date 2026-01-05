@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Keyboard, User, Trophy, AlertTriangle, RefreshCw, UserCheck } from 'lucide-react';
 import { CodeEditorTyping } from './code-editor-typing';
-import { keystrokeAuthService } from '@/lib/keystroke-auth-service';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
-import type { IdentificationCandidate } from '@/lib/keystroke-auth-service';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { keystrokeAuthService } from '../../../lib/keystroke-auth-service';
+import type { KeystrokeEvent } from '../../../hooks/use-keystroke-capture';
+import type { IdentificationCandidate } from '../../../lib/keystroke-auth-service';
+import { Button } from '../../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import Link from 'next/link';
 
 export function RecognizeUserForm() {
@@ -57,7 +57,7 @@ export function RecognizeUserForm() {
 
     try {
       const result = await keystrokeAuthService.identifyUser(keystrokeData, 3);
-      
+
       if (result.candidates) {
         setResults({
           candidates: result.candidates,

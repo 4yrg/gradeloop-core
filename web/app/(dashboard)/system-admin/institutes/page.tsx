@@ -1,10 +1,10 @@
 "use client"
 
-import { useInstitutes } from "@/features/system-admin/api/queries"
-import { InstituteTable } from "@/features/system-admin/components/institute-table"
-import { Button } from "@/components/ui/button"
+import { useInstitutes } from "../../../../hooks/institute/useInstitutes"
+import { InstituteTable } from "../../../../features/system-admin/components/institute-table"
+import { Button } from "../../../../components/ui/button"
 import { Plus } from "lucide-react"
-import { useSystemAdminStore } from "@/features/system-admin/store/use-system-admin-store"
+import { useSystemAdminStore } from "../../../../features/system-admin/store/use-system-admin-store"
 
 export default function InstitutesPage() {
     const { data: institutes, isLoading } = useInstitutes()

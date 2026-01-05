@@ -12,19 +12,19 @@ import {
     History,
     Lightbulb
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../../components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Input } from "../../../../components/ui/input";
+import { ScrollArea } from "../../../../components/ui/scroll-area";
+import { Badge } from "../../../../components/ui/badge";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "../../../../components/ui/select";
+import { cn } from "../../../../lib/utils";
 
 interface Message {
     id: string;

@@ -19,12 +19,12 @@ import {
     TabsContent,
     TabsList,
     TabsTrigger
-} from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+} from "../../ui/tabs";
+import { ScrollArea } from "../../ui/scroll-area";
+import { Badge } from "../../ui/badge";
+import { Button } from "../../ui/button";
+import { Progress } from "../../ui/progress";
+import { Card, CardContent } from "../../ui/card";
 
 interface SubmissionViewerProps {
     submissionId: string;

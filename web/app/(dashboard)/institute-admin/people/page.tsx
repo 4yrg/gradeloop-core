@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Upload, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PeopleList } from "@/features/institute-admin/components/people-list";
-import { PersonModal } from "@/features/institute-admin/components/person-modal";
-import { BulkImportModal } from "@/features/institute-admin/components/bulk-import-modal";
-import { peopleService } from "@/features/institute-admin/api/people-service";
-import { Person, UserRole } from "@/features/institute-admin/types";
+import { Button } from "../../../../components/ui/button";
+import { PeopleList } from "../../../../features/institute-admin/components/people-list";
+import { PersonModal } from "../../../../features/institute-admin/components/person-modal";
+import { BulkImportModal } from "../../../../features/institute-admin/components/bulk-import-modal";
+import { peopleService } from "../../../../features/institute-admin/api/people-service";
+import { Person, UserRole } from "../../../../features/institute-admin/types";
 
 export default function PeoplePage() {
     const [people, setPeople] = useState<Person[]>([]);

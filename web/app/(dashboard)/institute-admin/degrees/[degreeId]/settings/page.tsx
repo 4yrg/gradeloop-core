@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Trash2, AlertTriangle, Save } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "../../../../../../components/ui/button";
+import { Input } from "../../../../../../components/ui/input";
+import { Textarea } from "../../../../../../components/ui/textarea";
 import {
     Form,
     FormControl,
@@ -18,7 +18,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form";
+} from "../../../../../../components/ui/form";
 import {
     Dialog,
     DialogContent,
@@ -26,12 +26,12 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+} from "../../../../../../components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../components/ui/alert";
+import { Separator } from "../../../../../../components/ui/separator";
 
-import { degreesService } from "@/features/institute-admin/api/degrees-service";
-import { degreeSchema } from "@/features/institute-admin/types";
+import { degreesService } from "../../../../../../features/institute-admin/api/degrees-service";
+import { degreeSchema } from "../../../../../../features/institute-admin/types";
 
 export default function DegreeSettingsPage() {
     const params = useParams();

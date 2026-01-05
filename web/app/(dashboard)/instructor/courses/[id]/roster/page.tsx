@@ -1,21 +1,21 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { useRoster } from "@/hooks/use-roster";
-import { useRosterStore } from "@/store/use-roster-store";
-import { RosterSearch } from "@/components/instructor/roster/roster-search";
-import { ParticipantCard } from "@/components/instructor/roster/participant-card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRoster } from "../../../../../../hooks/use-roster";
+import { useRosterStore } from "../../../../../../stores/use-roster-store";
+import { RosterSearch } from "../../../../../../components/instructor/roster/roster-search";
+import { ParticipantCard } from "../../../../../../components/instructor/roster/participant-card";
+import { ScrollArea } from "../../../../../../components/ui/scroll-area";
 import { Loader2, UserX, Users, GraduationCap, ArrowLeft } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockCourse } from "@/lib/mock-data";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../components/ui/tabs";
+import { mockCourse } from "../../../../../../lib/mock-data";
+import { Button } from "../../../../../../components/ui/button";
+import { Separator } from "../../../../../../components/ui/separator";
 import { useState } from "react";
-import { PersonProfileModal } from "@/features/institute-admin/components/person-profile-modal";
-import { Person, UserRole } from "@/features/institute-admin/types";
-import { Participant } from "@/types/roster";
+import { PersonProfileModal } from "../../../../../../features/institute-admin/components/person-profile-modal";
+import { Person, UserRole } from "../../../../../../features/institute-admin/types";
+import { Participant } from "../../../../../../types/roster";
 
 export default function RosterPage() {
     const params = useParams();

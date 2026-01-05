@@ -1,0 +1,39 @@
+_format_version: "3.0"
+services:
+  - name: auth-service
+    url: http://auth-service:5000
+    routes:
+      - name: auth-routes
+        strip_path: false
+        paths:
+          - /auth
+  - name: institute-service
+    url: http://institute-service:5000
+    routes:
+      - name: institute-routes
+        paths:
+          - /institutes
+  - name: user-service
+    url: http://user-service:5000
+    routes:
+      - name: user-routes
+        paths:
+          - /users
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - "*"
+      exposed_headers:
+        - "*"
+      credentials: true
+      max_age: 3600

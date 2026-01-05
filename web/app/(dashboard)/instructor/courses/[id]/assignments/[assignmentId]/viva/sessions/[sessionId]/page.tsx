@@ -32,20 +32,20 @@ import {
     SkipBack,
     SkipForward
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Button } from "../../../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../../../components/ui/badge";
+import { Input } from "../../../../../../../../../../components/ui/input";
+import { Textarea } from "../../../../../../../../../../components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../../../../../../../components/ui/avatar";
+import { Progress } from "../../../../../../../../../../components/ui/progress";
+import { Separator } from "../../../../../../../../../../components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../../../../../../../components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../../../../../../../../../components/ui/dialog";
+import { Label } from "../../../../../../../../../../components/ui/label";
+import { Slider } from "../../../../../../../../../../components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../../../components/ui/tabs";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../../../../../../../../components/ui/resizable";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 
 // Mock data for the session review
@@ -235,17 +235,15 @@ function TranscriptViewer({ transcript, searchTerm }: { transcript: typeof mockS
             <CardContent className="p-0">
                 <div className="max-h-96 overflow-y-auto space-y-3 p-6">
                     {filteredTranscript.map((item, index) => (
-                        <div key={index} className={`flex gap-3 p-3 rounded-lg ${
-                            item.speaker === 'AI' ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-green-50 border-l-4 border-green-500'
-                        }`}>
+                        <div key={index} className={`flex gap-3 p-3 rounded-lg ${item.speaker === 'AI' ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-green-50 border-l-4 border-green-500'
+                            }`}>
                             <div className="flex items-center gap-2 min-w-0">
                                 <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                 <span className="text-xs text-muted-foreground font-mono">{item.timestamp}</span>
                             </div>
                             <div className="flex items-start gap-2 flex-1">
-                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                    item.speaker === 'AI' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                }`}>
+                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${item.speaker === 'AI' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                    }`}>
                                     {item.speaker === 'AI' ? 'AI' : 'S'}
                                 </div>
                                 <div className="flex-1">
@@ -293,9 +291,8 @@ function AssessmentSummary({ assessment }: { assessment: typeof mockSessionData.
         <Card>
             <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                    <div className={`h-20 w-20 rounded-full mx-auto flex items-center justify-center ${
-                        isPass ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
+                    <div className={`h-20 w-20 rounded-full mx-auto flex items-center justify-center ${isPass ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
                         {isPass ? (
                             <CheckCircle className="h-10 w-10 text-green-600" />
                         ) : (

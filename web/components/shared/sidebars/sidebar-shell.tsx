@@ -10,7 +10,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
-} from "@/components/ui/sidebar"
+} from "../../ui/sidebar"
 import { LogOut } from "lucide-react"
 import { UserMenu } from "./user-menu"
 

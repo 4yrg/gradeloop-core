@@ -8,10 +8,10 @@ import {
     DialogTitle,
     DialogTrigger,
     DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "../../../../components/ui/dialog";
+import { Button } from "../../../../components/ui/button";
+import { Badge } from "../../../../components/ui/badge";
+import { ScrollArea } from "../../../../components/ui/scroll-area";
 import {
     History,
     CheckCircle2,
@@ -25,9 +25,9 @@ import {
 } from "lucide-react";
 import { Assignment } from "../data/mock-assignments";
 import { MOCK_SUBMISSIONS, SubmissionStatus } from "../data/mock-submissions";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
+import { cn } from "../../../../lib/utils";
+import { Input } from "../../../../components/ui/input";
 import Link from "next/link";
 
 interface SubmissionHistoryDialogProps {

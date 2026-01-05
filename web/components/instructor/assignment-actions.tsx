@@ -7,8 +7,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
 import { MoreHorizontal, FileText, Edit, Trash, Send, Archive, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 

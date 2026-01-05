@@ -1,7 +1,7 @@
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "../../../ui/scroll-area";
 import { CheckCircle2, MessageSquare } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "../../../ui/separator";
 
 interface HistoryItem {
     question: string;
