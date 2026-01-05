@@ -50,6 +50,7 @@ public class AuthService {
                     .role(user.getRole().name())
                     .token(session.getId())
                     .email(user.getEmail())
+                    .forceReset(user.isTemporaryPassword())
                     .build();
         } catch (Exception e) {
             System.out.println("Login info - Authentication failed: " + e.getMessage());
@@ -71,12 +72,18 @@ public class AuthService {
         User user = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(tempPassword))
+                .tempPassword(tempPassword)
                 .role(Role.SYSTEM_ADMIN)
                 .isTemporaryPassword(true)
                 .build();
 
         userRepository.save(user);
-        System.out.println("Created Admin: " + email + ", Temp Password: " + tempPassword);
+        userRepository.save(user);
+
+        String token = generateResetToken(user);
+        emailService.sendWelcomeLink(email, token);
+
+        System.out.println("Created Admin: " + email + ". Sent Welcome Link.");
     }
 
     public String debugVerify(String email, String rawPassword) {
@@ -142,6 +149,29 @@ public class AuthService {
         passwordResetTokenRepository.save(resetToken);
     }
 
+    private String generateResetToken(User user) {
+        // Generate token
+        String token = UUID.randomUUID().toString();
+        // Hash token
+        String tokenHash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(token);
+
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .tokenHash(tokenHash)
+                .user(user)
+                .expiryDate(java.time.LocalDateTime.now().plusHours(24)) // 24 hours for welcome/reset
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+        return token;
+    }
+
+    public void sendWelcomeReset(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        String token = generateResetToken(user);
+        emailService.sendWelcomeLink(email, token);
+    }
+
     public CreateUserResponse createInternalUser(CreateUserRequest request) {
         java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
@@ -158,15 +188,19 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(tempPassword))
                 .role(request.getRole())
+                .tempPassword(tempPassword)
                 .isTemporaryPassword(true)
                 .build();
 
         User savedUser = userRepository.save(user);
 
+        String token = generateResetToken(savedUser);
+        emailService.sendWelcomeLink(savedUser.getEmail(), token);
+
         return CreateUserResponse.builder()
                 .userId(savedUser.getId())
                 .email(savedUser.getEmail())
-                .tempPassword(tempPassword)
+                .tempPassword(null) // No longer needed
                 .build();
     }
 
@@ -174,6 +208,38 @@ public class AuthService {
         return requests.stream()
                 .map(this::createInternalUser)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public void changePassword(String currentPassword, String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        System.out.println("Change Password Request for: " + email);
+        System.out.println(
+                "Authentication Class: " + (authentication != null ? authentication.getClass().getName() : "null"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    System.out.println("User not found for email: " + email);
+                    return new RuntimeException("User not found");
+                });
+
+        // If user has a temporary password, we allow changing it without verifying the
+        // current one again
+        // (Assuming they are authenticated, which they are to reach here)
+        // If NOT temporary, we strictly require current password
+        if (!user.isTemporaryPassword()) {
+            if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword())) {
+                System.out.println("Password mismatch or missing for user: " + email);
+                throw new RuntimeException("Invalid current password");
+            }
+        }
+        // If isTemporaryPassword is true, we allow ignoring currentPassword
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setTemporaryPassword(false);
+        user.setTempPassword(null); // Clear plain temp password
+        userRepository.save(user);
+        System.out.println("Password changed successfully for: " + email);
     }
 
     public void deleteUser(Long userId) {

@@ -22,10 +22,7 @@ public class Student {
     private String email;
 
     @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
+    private String fullName;
 
     @Column(nullable = false)
     private String instituteId;

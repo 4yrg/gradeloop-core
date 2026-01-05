@@ -31,27 +31,31 @@ public class StudentService {
 
         // 2. Save Student Profile
         Student student = null;
-        if (studentRepository.findByEmail(request.getEmail()).isPresent()) {
-            student = studentRepository.findByEmail(request.getEmail()).get();
-            // Update existing? Or just return?
-            // For now, assuming idempotency, we just return existing
-        } else {
-            student = Student.builder()
-                    .email(request.getEmail())
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .instituteId(request.getInstituteId())
-                    .authUserId(authUser.getUserId())
-                    .build();
-            student = studentRepository.save(student);
+        try {
+            if (studentRepository.findByEmail(request.getEmail()).isPresent()) {
+                student = studentRepository.findByEmail(request.getEmail()).get();
+                // Update existing? Or just return?
+                // For now, assuming idempotency, we just return existing
+            } else {
+                student = Student.builder()
+                        .email(request.getEmail())
+                        .fullName(request.getFullName())
+                        .instituteId(request.getInstituteId())
+                        .authUserId(authUser.getUserId())
+                        .build();
+                student = studentRepository.save(student);
+            }
+        } catch (Exception e) {
+            // Rollback Auth User
+            authServiceClient.deleteUser(authUser.getUserId());
+            throw e;
         }
 
         return CreateUserResponse.builder()
                 .id(student.getId())
                 .userId(authUser.getUserId())
                 .email(student.getEmail())
-                .firstName(student.getFirstName())
-                .lastName(student.getLastName())
+                .fullName(student.getFullName())
                 .tempPassword(authUser.getTempPassword())
                 .instituteId(student.getInstituteId())
                 .build();
@@ -96,8 +100,7 @@ public class StudentService {
                 } else {
                     student = Student.builder()
                             .email(req.getEmail())
-                            .firstName(req.getFirstName())
-                            .lastName(req.getLastName())
+                            .fullName(req.getFullName())
                             .instituteId(req.getInstituteId())
                             .authUserId(authUser.getUserId())
                             .build();
@@ -108,8 +111,7 @@ public class StudentService {
                         .id(student.getId())
                         .userId(authUser.getUserId())
                         .email(student.getEmail())
-                        .firstName(student.getFirstName())
-                        .lastName(student.getLastName())
+                        .fullName(student.getFullName())
                         .tempPassword(authUser.getTempPassword())
                         .instituteId(student.getInstituteId())
                         .build());
@@ -131,8 +133,7 @@ public class StudentService {
                         .id(student.getId())
                         .userId(student.getAuthUserId())
                         .email(student.getEmail())
-                        .firstName(student.getFirstName())
-                        .lastName(student.getLastName())
+                        .fullName(student.getFullName())
                         .role("student")
                         .instituteId(student.getInstituteId())
                         .build())
@@ -144,10 +145,8 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        if (request.getFirstName() != null)
-            student.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)
-            student.setLastName(request.getLastName());
+        if (request.getFullName() != null)
+            student.setFullName(request.getFullName());
 
         student = studentRepository.save(student);
 
@@ -155,8 +154,7 @@ public class StudentService {
                 .id(student.getId())
                 .userId(student.getAuthUserId())
                 .email(student.getEmail())
-                .firstName(student.getFirstName())
-                .lastName(student.getLastName())
+                .fullName(student.getFullName())
                 .instituteId(student.getInstituteId())
                 .build();
     }
@@ -175,8 +173,7 @@ public class StudentService {
                 .id(student.getId())
                 .userId(student.getAuthUserId())
                 .email(student.getEmail())
-                .firstName(student.getFirstName())
-                .lastName(student.getLastName())
+                .fullName(student.getFullName())
                 .role("student")
                 .instituteId(student.getInstituteId())
                 .build();

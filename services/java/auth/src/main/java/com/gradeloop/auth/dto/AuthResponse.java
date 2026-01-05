@@ -14,4 +14,5 @@ public class AuthResponse {
     private String message;
     private String role;
     private String email;
+    private boolean forceReset;
 }

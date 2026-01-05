@@ -47,5 +47,11 @@ public class AuthServiceClient {
                 });
 
         return response.getBody();
+
+    }
+
+    public void deleteUser(Long userId) {
+        String url = authServiceUrl + "/auth/internal/users/" + userId;
+        restTemplate.delete(url);
     }
 }

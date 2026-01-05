@@ -49,6 +49,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
 
     let user: any
     let token: string | undefined
+    let forceReset: boolean = false
+
 
     try {
         // Use service name if in docker, or host port if outside
@@ -76,12 +78,41 @@ export async function login(data: z.infer<typeof loginSchema>) {
             }
         }
 
+        // Fetch User Profile
+        // Ensure USER_SERVICE_URL is defined/reachable
+        const userServiceUrl = process.env.API_GATEWAY_URL ? `${process.env.API_GATEWAY_URL}/users` : "http://localhost:8001/users";
+        let userProfile = null;
+        try {
+            const profileRes = await axios.get(`${userServiceUrl}?email=${email}`);
+            if (profileRes.data && profileRes.data.length > 0) {
+                userProfile = profileRes.data[0];
+            }
+        } catch (err) {
+            console.error('Failed to fetch user profile:', err);
+            // Non-blocking? User might not have detailed profile yet.
+        }
+
         // Construct the user object for session creation
-        // The session expects: user_role, user_email, user_name (we use email as name if missing)
+        // The session expects merged data
         user = {
             role: role,
             email: responseEmail,
-            name: responseEmail.split('@')[0] // Fallback name
+            authUserId: userProfile?.authUserId,
+            userId: userProfile?.id,
+            firstName: userProfile?.fullName ? userProfile.fullName.split(' ')[0] : '', // Fallback split
+            lastName: userProfile?.fullName ? userProfile.fullName.split(' ').slice(1).join(' ') : '',
+            fullName: userProfile?.fullName || responseEmail.split('@')[0],
+            name: userProfile?.fullName || responseEmail.split('@')[0]
+        }
+
+        // Handle forced reset scenario - do not create full session or mark as partial?
+        // Actually, we likely need a session to allow them to access /change-password endpoint.
+        // But maybe with a flag?
+        // For simplicity, we create the session, but middleware redirects to /force-reset if forceReset is set.
+        // We'll add forceReset to session state?
+        if (response.data.forceReset) {
+            user.forceReset = true;
+            forceReset = true;
         }
 
         await createSession(token, user)
@@ -108,7 +139,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
         success: true,
         token,
         user,
-        redirectTo: getRedirectPath(user.role)
+        forceReset: forceReset,
+        redirectTo: forceReset ? '/auth/force-reset' : getRedirectPath(user.role)
     }
 }
 
@@ -169,6 +201,24 @@ export async function register(data: z.infer<typeof registerSchema>): Promise<Re
 }
 
 export async function logout() {
+    try {
+        const { getSession } = await import('../lib/session');
+        const token = await getSession();
+        if (token) {
+            const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
+            // Call backend logout to invalidate session in Redis
+            // Spring Security default logout is usually POST /logout
+            await axios.post(`${authUrl}/logout`, {}, {
+                headers: {
+                    'Cookie': `JSESSIONID=${token}` // Assuming standard Spring Session
+                }
+            });
+        }
+    } catch (error) {
+        // console.error("Backend logout failed:", error);
+        // Continue to clear local session anyway
+    }
+
     await deleteSession()
 }
 
@@ -268,6 +318,68 @@ export async function resetPassword(data: { token: string } & z.infer<typeof res
             errors: {
                 _form: ['An unexpected error occurred. Please try again.'],
             },
+        }
+    }
+}
+
+
+export type ChangePasswordState = {
+    errors?: {
+        currentPassword?: string[]
+        newPassword?: string[]
+        _form?: string[]
+    }
+    success?: boolean
+    message?: string
+}
+
+export async function changePassword(data: { currentPassword: string, newPassword: string }): Promise<ChangePasswordState> {
+    // Basic validation
+    if (!data.currentPassword || !data.newPassword) {
+        return {
+            errors: {
+                _form: ['Current and new password are required']
+            }
+        }
+    }
+
+    try {
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
+        const { getSession } = await import('../lib/session');
+        const sessionToken = await getSession();
+        if (!sessionToken) {
+            return { errors: { _form: ['Unauthorized'] } }
+        }
+
+        const response = await axios.post(`${authUrl}/change-password`, {
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword,
+        }, {
+            headers: {
+                'Cookie': `JSESSIONID=${sessionToken}` // Assuming standard Spring Session
+            }
+        });
+
+        return {
+            success: true,
+            message: 'Password changed successfully'
+        }
+
+    } catch (error: any) {
+        console.error("Change Password Error:", error);
+        if (axios.isAxiosError(error)) {
+            console.error("Axios Status:", error.response?.status);
+            console.error("Axios Data:", error.response?.data);
+            return {
+                errors: {
+                    _form: [error.response?.data?.message || error.response?.data || 'Failed to change password']
+                }
+            }
+        }
+        return {
+            errors: {
+                _form: ['An unexpected error occurred.']
+            }
         }
     }
 }

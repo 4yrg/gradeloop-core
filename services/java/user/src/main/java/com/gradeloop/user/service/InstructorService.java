@@ -29,26 +29,29 @@ public class InstructorService {
         CreateAuthUserResponse authUser = authServiceClient.createUser(request.getEmail(), "INSTRUCTOR");
 
         Instructor instructor;
-        if (instructorRepository.findByEmail(request.getEmail()).isPresent()) {
-            instructor = instructorRepository.findByEmail(request.getEmail()).get();
-        } else {
-            instructor = Instructor.builder()
-                    .email(request.getEmail())
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .instituteId(request.getInstituteId())
-                    .department(request.getDepartment())
-                    .authUserId(authUser.getUserId())
-                    .build();
-            instructor = instructorRepository.save(instructor);
+        try {
+            if (instructorRepository.findByEmail(request.getEmail()).isPresent()) {
+                instructor = instructorRepository.findByEmail(request.getEmail()).get();
+            } else {
+                instructor = Instructor.builder()
+                        .email(request.getEmail())
+                        .fullName(request.getFullName())
+                        .instituteId(request.getInstituteId())
+                        .department(request.getDepartment())
+                        .authUserId(authUser.getUserId())
+                        .build();
+                instructor = instructorRepository.save(instructor);
+            }
+        } catch (Exception e) {
+            authServiceClient.deleteUser(authUser.getUserId());
+            throw e;
         }
 
         return CreateUserResponse.builder()
                 .id(instructor.getId())
                 .userId(authUser.getUserId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
+                .fullName(instructor.getFullName())
                 .tempPassword(authUser.getTempPassword())
                 .instituteId(instructor.getInstituteId())
                 .build();
@@ -88,8 +91,7 @@ public class InstructorService {
                 } else {
                     instructor = Instructor.builder()
                             .email(req.getEmail())
-                            .firstName(req.getFirstName())
-                            .lastName(req.getLastName())
+                            .fullName(req.getFullName())
                             .instituteId(req.getInstituteId())
                             .department(req.getDepartment())
                             .authUserId(authUser.getUserId())
@@ -101,8 +103,7 @@ public class InstructorService {
                         .id(instructor.getId())
                         .userId(authUser.getUserId())
                         .email(instructor.getEmail())
-                        .firstName(instructor.getFirstName())
-                        .lastName(instructor.getLastName())
+                        .fullName(instructor.getFullName())
                         .tempPassword(authUser.getTempPassword())
                         .instituteId(instructor.getInstituteId())
                         .build());
@@ -124,8 +125,7 @@ public class InstructorService {
                         .id(instructor.getId())
                         .userId(instructor.getAuthUserId())
                         .email(instructor.getEmail())
-                        .firstName(instructor.getFirstName())
-                        .lastName(instructor.getLastName())
+                        .fullName(instructor.getFullName())
                         .role("instructor")
                         .instituteId(instructor.getInstituteId())
                         .build())
@@ -138,10 +138,8 @@ public class InstructorService {
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
 
-        if (request.getFirstName() != null)
-            instructor.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)
-            instructor.setLastName(request.getLastName());
+        if (request.getFullName() != null)
+            instructor.setFullName(request.getFullName());
 
         instructor = instructorRepository.save(instructor);
 
@@ -149,8 +147,7 @@ public class InstructorService {
                 .id(instructor.getId())
                 .userId(instructor.getAuthUserId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
+                .fullName(instructor.getFullName())
                 .instituteId(instructor.getInstituteId())
                 .build();
     }
@@ -168,8 +165,7 @@ public class InstructorService {
                 .id(instructor.getId())
                 .userId(instructor.getAuthUserId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
+                .fullName(instructor.getFullName())
                 .role("instructor")
                 .instituteId(instructor.getInstituteId())
                 .build();

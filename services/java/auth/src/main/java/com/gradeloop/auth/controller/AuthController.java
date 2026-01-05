@@ -26,6 +26,25 @@ public class AuthController {
         return ResponseEntity.ok("System Admin created successfully. Email sent.");
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<java.util.Map<String, Object>> me(
+            org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        // Extract role from authorities (ROLE_ADMIN -> ADMIN)
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .orElse("UNKNOWN");
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("email", authentication.getName());
+        response.put("role", role);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/debug")
     public ResponseEntity<String> debug(@RequestParam String email, @RequestParam String rawPassword) {
         return ResponseEntity.ok(authService.debugVerify(email, rawPassword));
@@ -63,6 +82,23 @@ public class AuthController {
                     "Password reset successfully. You can now login with your new password."));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody java.util.Map<String, String> payload) {
+        String currentPassword = payload.get("currentPassword");
+        String newPassword = payload.get("newPassword");
+
+        if (newPassword == null) {
+            return ResponseEntity.badRequest().body("New password is required");
+        }
+
+        try {
+            authService.changePassword(currentPassword, newPassword);
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

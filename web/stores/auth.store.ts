@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 
-type Role = "SYSTEM_ADMIN" | "INSTITUTE_ADMIN" | "INSTRUCTOR" | "STUDENT";
+export type Role = "SYSTEM_ADMIN" | "INSTITUTE_ADMIN" | "INSTRUCTOR" | "STUDENT";
 
-interface User {
+export interface User {
     email: string;
     name?: string;
     role: Role;
+    image?: string;
 }
 
 interface AuthState {
