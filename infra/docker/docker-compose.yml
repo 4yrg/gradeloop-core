@@ -14,8 +14,8 @@ services:
     environment:
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-      - AUTH_SERVICE_URL=http://auth-service:3000
-      - USER_SERVICE_URL=http://user-service:3000
+      - AUTH_SERVICE_URL=auth-service:50051
+      - USER_SERVICE_URL=user-service:50052
     networks:
       - gradeloop-net
     depends_on:
@@ -32,9 +32,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gradeloop}?schema=public
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-      - PORT=3000
     ports:
-      - "5000:3000"
+      - "50051:50051"
     networks:
       - gradeloop-net
     depends_on:
@@ -45,10 +44,8 @@ services:
     build:
       context: ../../services/nest/user-service
       dockerfile: Dockerfile
-    environment:
-      - PORT=3000
     ports:
-      - "5001:3000"
+      - "50052:50052"
     networks:
       - gradeloop-net
 
