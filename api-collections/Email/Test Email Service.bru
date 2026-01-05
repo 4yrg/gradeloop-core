@@ -1,0 +1,20 @@
+meta {
+  name: Test Standalone Email Service
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3001/send-email
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "to": "test@gradeloop.com",
+    "subject": "Standalone Service Test",
+    "text": "This is a test from the isolated Node.js email service.",
+    "html": "<h3>Standalone Service Test</h3><p>This is a test from the isolated Node.js email service.</p>"
+  }
+}
