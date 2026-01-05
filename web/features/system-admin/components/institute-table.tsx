@@ -33,7 +33,7 @@ import {
 import { Institute } from "../types"
 import { MoreHorizontal, Search, Eye, Edit, Trash2, Ban, CheckCircle } from "lucide-react"
 import { useSystemAdminStore } from "../store/use-system-admin-store"
-import { useDeleteInstitute, useUpdateInstitute } from "../../../hooks/institute"
+import { useDeleteInstitute, useDeactivateInstitute, useActivateInstitute } from "../../../hooks/institute"
 import { toast } from "sonner"
 
 interface InstituteTableProps {
@@ -55,7 +55,8 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
     const setEditModalOpen = useSystemAdminStore((state) => state.setEditModalOpen)
 
     const deleteInstitute = useDeleteInstitute()
-    const updateInstitute = useUpdateInstitute()
+    const deactivateInstitute = useDeactivateInstitute()
+    const activateInstitute = useActivateInstitute()
 
     const handleDeleteClick = (institute: Institute) => {
         setInstituteToDelete(institute)
@@ -81,17 +82,15 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
     }
 
     const handleToggleStatus = async (institute: Institute) => {
-        const newStatus = institute.status === "active" ? "inactive" : "active"
-        const action = newStatus === "active" ? "activated" : "deactivated"
+        const isActive = institute.status === "active"
+        const action = isActive ? "deactivated" : "activated"
 
         try {
-            await updateInstitute.mutateAsync({
-                id: institute.id!,
-                data: {
-                    ...institute,
-                    status: newStatus,
-                },
-            })
+            if (isActive) {
+                await deactivateInstitute.mutateAsync(institute.id!)
+            } else {
+                await activateInstitute.mutateAsync(institute.id!)
+            }
             toast.success(`${institute.name} has been ${action} successfully`)
         } catch (error) {
             toast.error(`Failed to ${action.slice(0, -1)} institute. Please try again.`)
@@ -178,7 +177,7 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         onClick={() => handleToggleStatus(institute)}
-                                                        disabled={updateInstitute.isPending}
+                                                        disabled={deactivateInstitute.isPending || activateInstitute.isPending}
                                                     >
                                                         {institute.status === "active" ? (
                                                             <>
@@ -214,8 +213,11 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This action cannot be undone. This will permanently delete{" "}
-                            <span className="font-semibold">{instituteToDelete?.name}</span> and remove all
-                            associated data from the system.
+                            <span className="font-semibold">{instituteToDelete?.name}</span> and{" "}
+                            <span className="font-semibold text-destructive">
+                                all associated users
+                            </span>{" "}
+                            from the system.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

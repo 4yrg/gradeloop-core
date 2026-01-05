@@ -169,4 +169,14 @@ public class AuthService {
                 .tempPassword(tempPassword)
                 .build();
     }
+
+    public java.util.List<CreateUserResponse> createInternalUsersBulk(java.util.List<CreateUserRequest> requests) {
+        return requests.stream()
+                .map(this::createInternalUser)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
+    }
 }

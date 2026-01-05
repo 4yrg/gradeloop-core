@@ -88,10 +88,37 @@ public class InstituteService {
     }
 
     @Transactional
+    public Institute deactivateInstitute(UUID id) {
+        Institute institute = getInstitute(id);
+        institute.setIsActive(false);
+        return instituteRepository.save(institute);
+    }
+
+    @Transactional
+    public Institute activateInstitute(UUID id) {
+        Institute institute = getInstitute(id);
+        institute.setIsActive(true);
+        return instituteRepository.save(institute);
+    }
+
+    @Transactional
     public void deleteInstitute(UUID id) {
-        if (!instituteRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Institute not found with id: " + id);
+        Institute institute = getInstitute(id);
+
+        // Get all admins for this institute
+        List<InstituteAdmin> admins = instituteAdminRepository.findByInstituteId(id);
+
+        // Delete all users from auth service
+        for (InstituteAdmin admin : admins) {
+            try {
+                authServiceClient.deleteUser(admin.getUserId());
+            } catch (Exception e) {
+                // Log error but continue with deletion
+                System.err.println("Failed to delete user " + admin.getUserId() + ": " + e.getMessage());
+            }
         }
+
+        // Delete the institute (cascade will handle institute_admins)
         instituteRepository.deleteById(id);
     }
 }
