@@ -1,0 +1,11 @@
+meta {
+  name: Get Semester By ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}
+  body: none
+  auth: none
+}
