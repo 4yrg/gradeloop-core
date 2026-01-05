@@ -26,8 +26,8 @@ export function SemestersList({ data, onEdit, onDelete, onSetActive }: Semesters
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Term</TableHead>
-                        <TableHead>Year</TableHead>
+                        <TableHead>Semester Name</TableHead>
+                        <TableHead>Code</TableHead>
                         <TableHead>Dates</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -43,8 +43,8 @@ export function SemestersList({ data, onEdit, onDelete, onSetActive }: Semesters
                     ) : (
                         data.map((semester) => (
                             <TableRow key={semester.id}>
-                                <TableCell className="font-medium">{semester.term}</TableCell>
-                                <TableCell>{semester.year}</TableCell>
+                                <TableCell className="font-medium">{semester.name}</TableCell>
+                                <TableCell>{semester.code}</TableCell>
                                 <TableCell className="text-sm text-muted-foreground">
                                     {new Date(semester.startDate).toLocaleDateString()} - {new Date(semester.endDate).toLocaleDateString()}
                                 </TableCell>
