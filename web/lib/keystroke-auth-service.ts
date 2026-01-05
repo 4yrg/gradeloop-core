@@ -53,7 +53,7 @@ class KeystrokeAuthService {
   async enrollUser(userId: string, keystrokeEvents: KeystrokeEvent[]): Promise<EnrollmentResult> {
     try {
       const response = await this.api.post<EnrollmentResult>(
-        `${KEYSTROKE_API_URL}/api/auth/enroll`,
+        `${KEYSTROKE_API_URL}/enroll`,
         {
           userId,
           keystrokeEvents,
@@ -76,7 +76,7 @@ class KeystrokeAuthService {
   ): Promise<VerificationResult> {
     try {
       const response = await this.api.post<VerificationResult>(
-        `${KEYSTROKE_API_URL}/api/auth/verify`,
+        `${KEYSTROKE_API_URL}/verify`,
         {
           userId,
           keystrokeEvents,
@@ -100,7 +100,7 @@ class KeystrokeAuthService {
   ): Promise<IdentificationResult> {
     try {
       const response = await this.api.post<IdentificationResult>(
-        `${KEYSTROKE_API_URL}/api/auth/identify`,
+        `${KEYSTROKE_API_URL}/identify`,
         {
           keystrokeEvents,
           topK,
@@ -123,7 +123,7 @@ class KeystrokeAuthService {
   async getEnrolledUsers(): Promise<EnrolledUsersResponse> {
     try {
       const response = await this.api.get<EnrolledUsersResponse>(
-        `${KEYSTROKE_API_URL}/api/auth/users`
+        `${KEYSTROKE_API_URL}/users/enrolled`
       );
       return response.data;
     } catch (error: any) {
