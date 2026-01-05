@@ -72,10 +72,16 @@ public class AssignmentService {
     public QuestionResponse addQuestion(UUID assignmentId, CreateQuestionRequest request) {
         Assignment assignment = getAssignment(assignmentId);
 
+        // Calculate next order index
+        Integer maxOrderIndex = questionRepository.findByAssignment_Id(assignmentId).stream()
+                .mapToInt(q -> q.getOrderIndex() != null ? q.getOrderIndex() : 0)
+                .max().orElse(-1);
+
         Question question = Question.builder()
                 .assignment(assignment)
                 .description(request.getDescription())
                 .points(request.getPoints())
+                .orderIndex(maxOrderIndex + 1)
                 .build();
 
         Question savedQuestion = questionRepository.save(question);

@@ -32,6 +32,9 @@ public class Question {
     @Column(nullable = false)
     private Integer points;
 
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TestCase> testCases = new ArrayList<>();
