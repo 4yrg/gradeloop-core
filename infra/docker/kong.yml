@@ -1,31 +1,38 @@
 _format_version: "3.0"
 services:
   - name: auth-service
-    url: http://auth-service:8080
+    url: http://auth-service:5000
     routes:
       - name: auth-routes
         paths:
-          - /api/auth
-        strip_path: true
-
+          - /auth
   - name: institute-service
-    url: http://institute-service:8080
+    url: http://institute-service:5000
     routes:
       - name: institute-routes
         paths:
-          - /api/institutes
-        strip_path: true
-
+          - /institutes
   - name: user-service
-    url: http://user-service:8080
+    url: http://user-service:5000
     routes:
       - name: user-routes
         paths:
-          - /api/users
-        strip_path: true
-
+          - /users
 plugins:
-  - name: rate-limiting
+  - name: cors
     config:
-      minute: 60
-      policy: local
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - "*"
+      exposed_headers:
+        - "*"
+      credential: true
+      max_age: 3600
