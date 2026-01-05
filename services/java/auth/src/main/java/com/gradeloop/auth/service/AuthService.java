@@ -1,6 +1,8 @@
 package com.gradeloop.auth.service;
 
 import com.gradeloop.auth.dto.AuthResponse;
+import com.gradeloop.auth.dto.CreateUserRequest;
+import com.gradeloop.auth.dto.CreateUserResponse;
 import com.gradeloop.auth.dto.LoginRequest;
 import com.gradeloop.auth.model.PasswordResetToken;
 import com.gradeloop.auth.model.Role;
@@ -138,5 +140,33 @@ public class AuthService {
 
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
+    }
+
+    public CreateUserResponse createInternalUser(CreateUserRequest request) {
+        java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            return CreateUserResponse.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .tempPassword(null)
+                    .build();
+        }
+
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(tempPassword))
+                .role(request.getRole())
+                .isTemporaryPassword(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        return CreateUserResponse.builder()
+                .userId(savedUser.getId())
+                .email(savedUser.getEmail())
+                .tempPassword(tempPassword)
+                .build();
     }
 }

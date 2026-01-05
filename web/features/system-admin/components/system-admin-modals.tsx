@@ -7,6 +7,7 @@ import {
     DialogTitle
 } from "../../../components/ui/dialog"
 import { CreateInstituteForm } from "./create-institute-form"
+import { EditInstituteForm } from "./edit-institute-form"
 import { InstituteDetailsView } from "./institute-details-view"
 import { useSystemAdminStore } from "../store/use-system-admin-store"
 
@@ -14,6 +15,8 @@ export function SystemAdminModals() {
     const {
         isCreateModalOpen,
         setCreateModalOpen,
+        isEditModalOpen,
+        setEditModalOpen,
         isDetailsModalOpen,
         setDetailsModalOpen,
         selectedInstituteId,
@@ -29,6 +32,28 @@ export function SystemAdminModals() {
                         <DialogTitle>Create Institute</DialogTitle>
                     </DialogHeader>
                     <CreateInstituteForm />
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Institute Modal */}
+            <Dialog
+                open={isEditModalOpen}
+                onOpenChange={(open) => {
+                    setEditModalOpen(open)
+                    if (!open) setSelectedInstituteId(null)
+                }}
+            >
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Edit Institute</DialogTitle>
+                    </DialogHeader>
+                    {selectedInstituteId ? (
+                        <EditInstituteForm instituteId={selectedInstituteId} />
+                    ) : (
+                        <div className="p-8 text-center text-muted-foreground">
+                            No institute selected.
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
 

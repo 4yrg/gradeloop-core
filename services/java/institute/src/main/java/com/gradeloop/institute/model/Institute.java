@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -17,20 +18,22 @@ import java.util.List;
 public class Institute {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false, unique = true)
+    private String code;
+
+    @Column(nullable = false)
+    private String domain;
+
     @Column(nullable = false)
     private String contactEmail;
 
-    @Column(nullable = false)
-    private String ownerEmail;
-
-    @ElementCollection
-    @CollectionTable(name = "institute_admins", joinColumns = @JoinColumn(name = "institute_id"))
-    @Column(name = "email")
-    private List<String> adminEmails;
+    @com.fasterxml.jackson.annotation.JsonManagedReference
+    @OneToMany(mappedBy = "institute", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InstituteAdmin> admins;
 }
