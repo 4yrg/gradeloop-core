@@ -34,13 +34,20 @@ import { logout } from "../../../actions/auth"
 
 export function UserMenu() {
     const { isMobile } = useSidebar()
-    const { user, isLoading } = useUser()
+    const { user, isLoading, error } = useUser()
 
     if (isLoading) return <div className="p-4 text-center text-xs text-muted-foreground">Loading...</div>
-    if (!user) return null // Or rendering a skeletal/login button
+
+    // Fallback if user data fetch fails, so we can still show Logout
+    const safeUser = user || {
+        name: "Guest User",
+        email: "Session Error",
+        role: "UNKNOWN",
+        image: undefined
+    }
 
     // Normalize role string (remove ROLE_ prefix if exists for display)
-    const roleStr = user.role || 'UNKNOWN';
+    const roleStr = safeUser.role || 'UNKNOWN';
     const displayRole = roleStr.replace('ROLE_', '').replace('_', ' ');
 
     return (
@@ -53,13 +60,13 @@ export function UserMenu() {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarImage src={user.image} alt={user.name || user.email} />
+                                <AvatarImage src={safeUser.image} alt={safeUser.name || safeUser.email} />
                                 <AvatarFallback className="rounded-lg">
-                                    {(user.name || user.email).charAt(0).toUpperCase()}
+                                    {(safeUser.name || safeUser.email).charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">{user.name || user.email}</span>
+                                <span className="truncate font-semibold">{safeUser.name || safeUser.email}</span>
                                 <span className="truncate text-xs">{displayRole}</span>
                             </div>
                             <ChevronsUpDown className="ml-auto size-4" />
@@ -74,14 +81,14 @@ export function UserMenu() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={user.image} alt={user.name || user.email} />
+                                    <AvatarImage src={safeUser.image} alt={safeUser.name || safeUser.email} />
                                     <AvatarFallback className="rounded-lg">
-                                        {(user.name || user.email).charAt(0).toUpperCase()}
+                                        {(safeUser.name || safeUser.email).charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">{user.name || user.email}</span>
-                                    <span className="truncate text-xs">{user.email}</span>
+                                    <span className="truncate font-semibold">{safeUser.name || safeUser.email}</span>
+                                    <span className="truncate text-xs">{safeUser.email}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
