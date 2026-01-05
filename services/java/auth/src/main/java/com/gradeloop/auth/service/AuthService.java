@@ -98,12 +98,12 @@ public class AuthService {
         return sb.toString();
     }
 
-    public void forgotPassword(String email) {
+    public String forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             // Prevent user enumeration by returning successfully
-            return;
+            return null;
         }
 
         // Generate token
@@ -121,6 +121,7 @@ public class AuthService {
         passwordResetTokenRepository.save(resetToken);
 
         emailService.sendResetLink(email, token);
+        return token;
     }
 
     public void resetPassword(String token, String newPassword) {

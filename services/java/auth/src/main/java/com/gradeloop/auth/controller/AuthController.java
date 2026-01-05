@@ -37,8 +37,11 @@ public class AuthController {
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("Email is required");
         }
-        authService.forgotPassword(email);
-        return ResponseEntity.ok("If an account exists for " + email + ", a password reset link has been sent.");
+        String token = authService.forgotPassword(email);
+        if (token == null) {
+            return ResponseEntity.ok("If an account exists for " + email + ", a password reset link has been sent.");
+        }
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/reset-password")
