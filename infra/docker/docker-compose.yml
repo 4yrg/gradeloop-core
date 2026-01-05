@@ -235,11 +235,11 @@ services:
     environment:
       PORT: 3001
       LOG_LEVEL: info
-      # Default to Ethereal if not provided in .env
-      SMTP_HOST: smtp.ethereal.email
+      SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
-      SMTP_USER: ethereal_user
-      SMTP_PASS: ethereal_pass
+      SMTP_USER: dasun.wickr@gmail.com
+      SMTP_PASS: "kwvb bdmg agtw nfvb"
+      SMTP_SECURE: "false"
     ports:
       - "3001:3001"
     # No depends_on, no network links to internal services if strict isolation were needed at network level, 
