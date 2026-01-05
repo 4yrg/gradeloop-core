@@ -1,6 +1,8 @@
 package com.gradeloop.auth.service;
 
 import com.gradeloop.auth.dto.AuthResponse;
+import com.gradeloop.auth.dto.CreateUserRequest;
+import com.gradeloop.auth.dto.CreateUserResponse;
 import com.gradeloop.auth.dto.LoginRequest;
 import com.gradeloop.auth.model.PasswordResetToken;
 import com.gradeloop.auth.model.Role;
@@ -143,10 +145,15 @@ public class AuthService {
         passwordResetTokenRepository.save(resetToken);
     }
 
-    public com.gradeloop.auth.dto.CreateUserResponse createInternalUser(
-            com.gradeloop.auth.dto.CreateUserRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User already exists with email: " + request.getEmail());
+    public CreateUserResponse createInternalUser(CreateUserRequest request) {
+        java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            return CreateUserResponse.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .tempPassword(null)
+                    .build();
         }
 
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
@@ -159,10 +166,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // TODO: Send email with tempPassword (can likely reuse existing email service
-        // logic)
-
-        return com.gradeloop.auth.dto.CreateUserResponse.builder()
+        return CreateUserResponse.builder()
                 .userId(savedUser.getId())
                 .email(savedUser.getEmail())
                 .tempPassword(tempPassword)

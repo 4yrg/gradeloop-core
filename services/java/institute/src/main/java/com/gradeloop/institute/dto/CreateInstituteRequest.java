@@ -1,5 +1,6 @@
 package com.gradeloop.institute.dto;
 
+import com.gradeloop.institute.model.InstituteAdminRole;
 import lombok.Data;
 
 import java.util.List;
@@ -17,5 +18,6 @@ public class CreateInstituteRequest {
     public static class InstituteAdminRequest {
         private String name;
         private String email;
+        private InstituteAdminRole role;
     }
 }

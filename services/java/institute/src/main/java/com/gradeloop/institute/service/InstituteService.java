@@ -30,10 +30,8 @@ public class InstituteService {
     @Transactional
     public Institute createInstitute(CreateInstituteRequest request) {
         if (instituteRepository.existsByCode(request.getCode())) {
-            if (instituteRepository.existsByCode(request.getCode())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Institute with code " + request.getCode() + " already exists");
-            }
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Institute with code " + request.getCode() + " already exists");
         }
 
         Institute institute = Institute.builder()
@@ -54,7 +52,7 @@ public class InstituteService {
                 return InstituteAdmin.builder()
                         .institute(savedInstitute)
                         .userId(authUser.getUserId())
-                        .role(InstituteAdminRole.OWNER) // Defaulting to OWNER for initial creation
+                        .role(adminReq.getRole() != null ? adminReq.getRole() : InstituteAdminRole.OWNER)
                         .build();
             }).collect(Collectors.toList());
 
