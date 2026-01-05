@@ -17,5 +17,6 @@ public class CreateUserResponse {
     private String lastName;
     private String tempPassword;
     private String role;
+    private String instituteId;
     private String error; // For bulk error reporting
 }

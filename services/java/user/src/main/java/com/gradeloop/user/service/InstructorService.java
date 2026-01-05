@@ -50,6 +50,7 @@ public class InstructorService {
                 .firstName(instructor.getFirstName())
                 .lastName(instructor.getLastName())
                 .tempPassword(authUser.getTempPassword())
+                .instituteId(instructor.getInstituteId())
                 .build();
     }
 
@@ -103,6 +104,7 @@ public class InstructorService {
                         .firstName(instructor.getFirstName())
                         .lastName(instructor.getLastName())
                         .tempPassword(authUser.getTempPassword())
+                        .instituteId(instructor.getInstituteId())
                         .build());
 
             } catch (Exception e) {
@@ -125,12 +127,13 @@ public class InstructorService {
                         .firstName(instructor.getFirstName())
                         .lastName(instructor.getLastName())
                         .role("instructor")
+                        .instituteId(instructor.getInstituteId())
                         .build())
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public CreateUserResponse updateInstructor(java.util.UUID id,
+    public CreateUserResponse updateInstructor(Long id,
             com.gradeloop.user.dto.UpdateInstructorRequest request) {
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
@@ -148,11 +151,27 @@ public class InstructorService {
                 .email(instructor.getEmail())
                 .firstName(instructor.getFirstName())
                 .lastName(instructor.getLastName())
+                .instituteId(instructor.getInstituteId())
                 .build();
     }
 
     @Transactional
-    public void deleteInstructor(java.util.UUID id) {
+    public void deleteInstructor(Long id) {
         instructorRepository.deleteById(id);
+    }
+
+    public CreateUserResponse getInstructorById(Long id) {
+        Instructor instructor = instructorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+
+        return CreateUserResponse.builder()
+                .id(instructor.getId())
+                .userId(instructor.getAuthUserId())
+                .email(instructor.getEmail())
+                .firstName(instructor.getFirstName())
+                .lastName(instructor.getLastName())
+                .role("instructor")
+                .instituteId(instructor.getInstituteId())
+                .build();
     }
 }

@@ -1,0 +1,18 @@
+meta {
+  name: Update Degree
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{GRADELOOP_API_URL}}/degrees/{{degreeId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "BSCS Updated",
+    "credits": 130
+  }
+}

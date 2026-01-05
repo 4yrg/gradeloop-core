@@ -1,0 +1,21 @@
+meta {
+  name: Create Course
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/institutes/{{instituteId}}/courses
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Introduction to Computer Science",
+    "code": "CS101",
+    "credits": 3,
+    "department": "Computer Science",
+    "description": "Introductory course"
+  }
+}

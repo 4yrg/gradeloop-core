@@ -53,6 +53,7 @@ public class StudentService {
                 .firstName(student.getFirstName())
                 .lastName(student.getLastName())
                 .tempPassword(authUser.getTempPassword())
+                .instituteId(student.getInstituteId())
                 .build();
     }
 
@@ -110,6 +111,7 @@ public class StudentService {
                         .firstName(student.getFirstName())
                         .lastName(student.getLastName())
                         .tempPassword(authUser.getTempPassword())
+                        .instituteId(student.getInstituteId())
                         .build());
 
             } catch (Exception e) {
@@ -132,12 +134,13 @@ public class StudentService {
                         .firstName(student.getFirstName())
                         .lastName(student.getLastName())
                         .role("student")
+                        .instituteId(student.getInstituteId())
                         .build())
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public CreateUserResponse updateStudent(java.util.UUID id, com.gradeloop.user.dto.UpdateStudentRequest request) {
+    public CreateUserResponse updateStudent(Long id, com.gradeloop.user.dto.UpdateStudentRequest request) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
@@ -154,12 +157,28 @@ public class StudentService {
                 .email(student.getEmail())
                 .firstName(student.getFirstName())
                 .lastName(student.getLastName())
+                .instituteId(student.getInstituteId())
                 .build();
     }
 
     @Transactional
-    public void deleteStudent(java.util.UUID id) {
+    public void deleteStudent(Long id) {
         // ideally delete from auth service too
         studentRepository.deleteById(id);
+    }
+
+    public CreateUserResponse getStudentById(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return CreateUserResponse.builder()
+                .id(student.getId())
+                .userId(student.getAuthUserId())
+                .email(student.getEmail())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .role("student")
+                .instituteId(student.getInstituteId())
+                .build();
     }
 }

@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface InstructorRepository extends JpaRepository<Instructor, UUID> {
+public interface InstructorRepository extends JpaRepository<Instructor, Long> {
     Optional<Instructor> findByEmail(String email);
 
     boolean existsByEmail(String email);

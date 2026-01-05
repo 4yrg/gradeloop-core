@@ -33,14 +33,19 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CreateUserResponse> updateStudent(@PathVariable java.util.UUID id,
+    public ResponseEntity<CreateUserResponse> updateStudent(@PathVariable Long id,
             @RequestBody com.gradeloop.user.dto.UpdateStudentRequest request) {
         return ResponseEntity.ok(studentService.updateStudent(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable java.util.UUID id) {
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CreateUserResponse> getStudent(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getStudentById(id));
     }
 }
