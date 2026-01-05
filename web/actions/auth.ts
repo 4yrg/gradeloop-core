@@ -50,7 +50,7 @@ export async function login(data: z.infer<typeof loginSchema>) {
     try {
         // Use service name if in docker, or host port if outside
         // Use API Gateway URL
-        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
         console.log(`Attempting login at: ${authUrl}/login for ${email}`);
 
         const response = await axios.post(`${authUrl}/login`, {
@@ -60,16 +60,24 @@ export async function login(data: z.infer<typeof loginSchema>) {
             timeout: 5000 // 5 second timeout
         });
 
-        const { user: userData, token } = response.data;
-        user = userData
+        // Backend returns: { message, role, token, email }
+        const { token, role, email: responseEmail } = response.data;
 
-        if (!user || !token) {
+        if (!token || !role || !responseEmail) {
             console.error('Invalid response structure:', response.data);
             return {
                 errors: {
-                    _form: ['Invalid response from server'],
+                    _form: ['Invalid response from server: Missing fields'],
                 }
             }
+        }
+
+        // Construct the user object for session creation
+        // The session expects: user_role, user_email, user_name (we use email as name if missing)
+        user = {
+            role: role,
+            email: responseEmail,
+            name: responseEmail.split('@')[0] // Fallback name
         }
 
         await createSession(token, user)

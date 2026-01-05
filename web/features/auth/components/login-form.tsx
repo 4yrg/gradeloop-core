@@ -40,6 +40,7 @@ export function LoginForm() {
 
         try {
             const result = await login(data);
+            console.log("Login result:", result); // Debugging log
 
             if (result.errors) {
                 if ('_form' in result.errors && result.errors._form) {
@@ -84,7 +85,7 @@ export function LoginForm() {
                             <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 Password
                             </label>
-                            <Link href="/forgot-password" className="text-sm underline">
+                            <Link href="/auth/forgot-password" className="text-sm underline">
                                 Forgot password?
                             </Link>
                         </div>

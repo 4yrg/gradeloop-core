@@ -53,6 +53,14 @@ services:
     networks:
       - gradeloop-net
 
+  db-manager:
+    image: adminer
+    restart: always
+    ports:
+      - "9000:8080"
+    networks:
+      - gradeloop-net
+
   # ============================================================================
   # Shared Infrastructure
   # ============================================================================

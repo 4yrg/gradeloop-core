@@ -25,4 +25,9 @@ public class AuthController {
         authService.createSystemAdmin(email);
         return ResponseEntity.ok("System Admin created successfully. Email sent.");
     }
+
+    @GetMapping("/debug")
+    public ResponseEntity<String> debug(@RequestParam String email, @RequestParam String password) {
+        return ResponseEntity.ok(authService.debugVerify(email, password));
+    }
 }

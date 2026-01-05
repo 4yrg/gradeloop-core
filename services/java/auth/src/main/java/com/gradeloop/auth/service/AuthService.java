@@ -27,20 +27,34 @@ public class AuthService {
     // private final EmailService emailService; // To be implemented
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        System.out.println("Login info - Attempting login for: " + request.getEmail());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        HttpSession session = servletRequest.getSession(true);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            HttpSession session = servletRequest.getSession(true);
+            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
-        return AuthResponse.builder()
-                .message("Login successful")
-                .role(user.getRole().name())
-                .token(session.getId())
-                .build();
+            User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+            System.out.println("Login info - User found with role: " + user.getRole());
+
+            return AuthResponse.builder()
+                    .message("Login successful")
+                    .role(user.getRole().name())
+                    .token(session.getId())
+                    .email(user.getEmail())
+                    .build();
+        } catch (Exception e) {
+            System.out.println("Login info - Authentication failed: " + e.getMessage());
+            // Check manually for debugging
+            userRepository.findByEmail(request.getEmail()).ifPresentOrElse(
+                    u -> System.out.println("Login info - Debug: Password match result: "
+                            + passwordEncoder.matches(request.getPassword(), u.getPassword())),
+                    () -> System.out.println("Login info - Debug: User not found"));
+            throw e;
+        }
     }
 
     public void createSystemAdmin(String email) {
@@ -60,5 +74,24 @@ public class AuthService {
 
         // TODO: Send email with tempPassword
         System.out.println("Created Admin: " + email + ", Temp Password: " + tempPassword);
+    }
+
+    public String debugVerify(String email, String rawPassword) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Debug info for: ").append(email).append("\n");
+
+        var userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return sb.append("User NOT FOUND in database.").toString();
+        }
+
+        User user = userOpt.get();
+        sb.append("User FOUND. Role: ").append(user.getRole()).append("\n");
+        sb.append("Stored Password Hash: ").append(user.getPassword()).append("\n");
+
+        boolean match = passwordEncoder.matches(rawPassword, user.getPassword());
+        sb.append("Password Match (").append(rawPassword).append(" vs Hash): ").append(match).append("\n");
+
+        return sb.toString();
     }
 }
