@@ -24,7 +24,8 @@ import {
     CheckCircle,
     XCircle,
     HelpCircle,
-    Lightbulb
+    Lightbulb,
+    Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -441,7 +442,7 @@ export default function RubricEditorPage({
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <Button variant="ghost" asChild className="w-fit -ml-2 text-muted-foreground hover:text-foreground">
-                    <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva-voce`}>
+                    <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva`}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Viva Dashboard
                     </Link>
@@ -469,6 +470,44 @@ export default function RubricEditorPage({
                     </div>
                 </div>
             </div>
+
+            {/* Navigation */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Viva Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva/configure`} className="flex items-center gap-3">
+                                <Settings className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">Configure Viva</p>
+                                    <p className="text-xs text-muted-foreground">Set up assessment parameters</p>
+                                </div>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva/sessions`} className="flex items-center gap-3">
+                                <Users className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">View Sessions</p>
+                                    <p className="text-xs text-muted-foreground">Review student performances</p>
+                                </div>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/instructor/courses/${courseId}/assignments/${assignmentId}/viva/analytics`} className="flex items-center gap-3">
+                                <BarChart3 className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">Analytics</p>
+                                    <p className="text-xs text-muted-foreground">Performance insights</p>
+                                </div>
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Weight Summary */}
             <Card>
