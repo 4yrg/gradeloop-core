@@ -122,4 +122,44 @@ public class StudentService {
 
         return responses;
     }
+
+    public List<CreateUserResponse> getAllStudents() {
+        return studentRepository.findAll().stream()
+                .map(student -> CreateUserResponse.builder()
+                        .id(student.getId())
+                        .userId(student.getAuthUserId())
+                        .email(student.getEmail())
+                        .firstName(student.getFirstName())
+                        .lastName(student.getLastName())
+                        .role("student")
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CreateUserResponse updateStudent(java.util.UUID id, com.gradeloop.user.dto.UpdateStudentRequest request) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (request.getFirstName() != null)
+            student.setFirstName(request.getFirstName());
+        if (request.getLastName() != null)
+            student.setLastName(request.getLastName());
+
+        student = studentRepository.save(student);
+
+        return CreateUserResponse.builder()
+                .id(student.getId())
+                .userId(student.getAuthUserId())
+                .email(student.getEmail())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .build();
+    }
+
+    @Transactional
+    public void deleteStudent(java.util.UUID id) {
+        // ideally delete from auth service too
+        studentRepository.deleteById(id);
+    }
 }
