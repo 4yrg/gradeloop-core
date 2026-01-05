@@ -18,7 +18,9 @@ import {
     User,
     ChevronDown,
     ChevronUp,
-    Search
+    Search,
+    Mic,
+    PlayCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -373,6 +375,35 @@ export default function VivaResultsPage({
                     </div>
                 </div>
             </div>
+
+            {/* Navigation */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Viva Options</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva`} className="flex items-center gap-3">
+                                <Mic className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">Viva Overview</p>
+                                    <p className="text-xs text-muted-foreground">Return to viva dashboard</p>
+                                </div>
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild className="justify-start h-auto p-4">
+                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/practice`} className="flex items-center gap-3">
+                                <PlayCircle className="h-5 w-5" />
+                                <div className="text-left">
+                                    <p className="font-medium">Practice Mode</p>
+                                    <p className="text-xs text-muted-foreground">Practice more questions</p>
+                                </div>
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Results Header */}
             <ResultsHeader results={mockResults} />
