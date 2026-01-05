@@ -34,5 +34,5 @@ plugins:
         - "*"
       exposed_headers:
         - "*"
-      credential: true
+      credentials: true
       max_age: 3600
