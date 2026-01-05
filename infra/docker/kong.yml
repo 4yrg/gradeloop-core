@@ -11,12 +11,14 @@ services:
     url: http://institute-service:5000
     routes:
       - name: institute-routes
+        strip_path: false
         paths:
           - /institutes
   - name: user-service
     url: http://user-service:5000
     routes:
       - name: user-routes
+        strip_path: false
         paths:
           - /users
 plugins:

@@ -1,45 +1,93 @@
 package com.gradeloop.institute.service;
 
+import com.gradeloop.institute.client.AuthServiceClient;
+import com.gradeloop.institute.client.auth.CreateAuthUserResponse;
+import com.gradeloop.institute.dto.CreateInstituteRequest;
+import com.gradeloop.institute.dto.UpdateInstituteRequest;
 import com.gradeloop.institute.model.Institute;
+import com.gradeloop.institute.model.InstituteAdmin;
+import com.gradeloop.institute.model.InstituteAdminRole;
+import com.gradeloop.institute.repository.InstituteAdminRepository;
 import com.gradeloop.institute.repository.InstituteRepository;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class InstituteService {
 
     private final InstituteRepository instituteRepository;
+    private final InstituteAdminRepository instituteAdminRepository;
+    private final AuthServiceClient authServiceClient;
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CreateInstituteRequest {
-        private String name;
-        private String contactEmail;
-        private String ownerEmail;
-        private List<String> adminEmails;
-    }
-
+    @Transactional
     public Institute createInstitute(CreateInstituteRequest request) {
-        if (instituteRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Institute with name " + request.getName() + " already exists.");
+        if (instituteRepository.existsByCode(request.getCode())) {
+            throw new RuntimeException("Institute with code " + request.getCode() + " already exists");
         }
 
         Institute institute = Institute.builder()
                 .name(request.getName())
+                .code(request.getCode())
+                .domain(request.getDomain())
                 .contactEmail(request.getContactEmail())
-                .ownerEmail(request.getOwnerEmail())
-                .adminEmails(request.getAdminEmails())
                 .build();
 
+        Institute savedInstitute = instituteRepository.save(institute);
+
+        if (request.getAdmins() != null) {
+            List<InstituteAdmin> admins = request.getAdmins().stream().map(adminReq -> {
+                // Call Auth Service to create user
+                CreateAuthUserResponse authUser = authServiceClient.createInstituteAdmin(adminReq.getEmail(),
+                        adminReq.getName());
+
+                return InstituteAdmin.builder()
+                        .institute(savedInstitute)
+                        .userId(authUser.getUserId())
+                        .role(InstituteAdminRole.OWNER) // Defaulting to OWNER for initial creation
+                        .build();
+            }).collect(Collectors.toList());
+
+            instituteAdminRepository.saveAll(admins);
+            savedInstitute.setAdmins(admins);
+        }
+
+        return savedInstitute;
+    }
+
+    public List<Institute> getAllInstitutes() {
+        return instituteRepository.findAll();
+    }
+
+    public Institute getInstitute(UUID id) {
+        return instituteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Institute not found with id: " + id));
+    }
+
+    @Transactional
+    public Institute updateInstitute(UUID id, UpdateInstituteRequest request) {
+        Institute institute = getInstitute(id);
+
+        if (request.getName() != null)
+            institute.setName(request.getName());
+        if (request.getDomain() != null)
+            institute.setDomain(request.getDomain());
+        if (request.getContactEmail() != null)
+            institute.setContactEmail(request.getContactEmail());
+
         return instituteRepository.save(institute);
+    }
+
+    @Transactional
+    public void deleteInstitute(UUID id) {
+        if (!instituteRepository.existsById(id)) {
+            throw new RuntimeException("Institute not found with id: " + id);
+        }
+        instituteRepository.deleteById(id);
     }
 }

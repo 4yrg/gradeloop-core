@@ -142,4 +142,30 @@ public class AuthService {
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
     }
+
+    public com.gradeloop.auth.dto.CreateUserResponse createInternalUser(
+            com.gradeloop.auth.dto.CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("User already exists with email: " + request.getEmail());
+        }
+
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(tempPassword))
+                .role(request.getRole())
+                .isTemporaryPassword(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        // TODO: Send email with tempPassword (can likely reuse existing email service
+        // logic)
+
+        return com.gradeloop.auth.dto.CreateUserResponse.builder()
+                .userId(savedUser.getId())
+                .email(savedUser.getEmail())
+                .tempPassword(tempPassword)
+                .build();
+    }
 }

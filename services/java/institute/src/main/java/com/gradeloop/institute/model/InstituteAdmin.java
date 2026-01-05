@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,25 +13,21 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "institutes")
-public class Institute {
+@Table(name = "institute_admins")
+public class InstituteAdmin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
-
-    @Column(nullable = false, unique = true)
-    private String code;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "institute_id", nullable = false)
+    private Institute institute;
 
     @Column(nullable = false)
-    private String domain;
+    private Long userId; // Reference to Auth Service User ID
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String contactEmail;
-
-    @OneToMany(mappedBy = "institute", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<InstituteAdmin> admins;
+    private InstituteAdminRole role;
 }

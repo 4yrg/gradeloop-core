@@ -5,19 +5,22 @@ meta {
 }
 
 post {
-  url: http://localhost:8000/institutes
+  url: {{GRADELOOP_API_URL}}/institutes
   body: json
   auth: none
 }
 
 body:json {
   {
-    "name": "MIT",
+    "name": "Massachusetts Institute of Technology",
+    "code": "MIT",
+    "domain": "mit.edu",
     "contactEmail": "contact@mit.edu",
-    "ownerEmail": "owner@mit.edu",
-    "adminEmails": [
-      "admin1@mit.edu",
-      "admin2@mit.edu"
+    "admins": [
+      {
+        "name": "Admin User",
+        "email": "admin@mit.edu"
+      }
     ]
   }
 }
