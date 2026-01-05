@@ -1,0 +1,31 @@
+_format_version: "3.0"
+services:
+  - name: auth-service
+    url: http://auth-service:8080
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/auth
+        strip_path: true
+
+  - name: institute-service
+    url: http://institute-service:8080
+    routes:
+      - name: institute-routes
+        paths:
+          - /api/institutes
+        strip_path: true
+
+  - name: user-service
+    url: http://user-service:8080
+    routes:
+      - name: user-routes
+        paths:
+          - /api/users
+        strip_path: true
+
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 60
+      policy: local

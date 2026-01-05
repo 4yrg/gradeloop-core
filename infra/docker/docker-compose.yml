@@ -1,78 +1,37 @@
 services:
   # ============================================================================
-  # Custom API Gateway (NestJS)
+  # Infrastructure Services (Kong, Redis, RabbitMQ)
   # ============================================================================
-  api-gateway:
-    build:
-      context: ../../services/nest/api-gateway
-      dockerfile: Dockerfile
-    container_name: gradeloop-api-gateway
+
+  # KONG API GATEWAY (DB-less mode with declarative config)
+  kong:
+    image: kong:3.4
+    container_name: gradeloop-kong
     restart: unless-stopped
-    ports:
-      - "80:3000" # Expose internal 3000 to host 80
-      # - "443:443" # For future HTTPS
-    environment:
-      - PORT=3000
-      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-      - AUTH_SERVICE_URL=auth-service:50051
-      - USER_SERVICE_URL=user-service:50052
-    networks:
-      - gradeloop-net
-    depends_on:
-      - auth-service
-      - user-service
-
-  # NestJS Services
-  auth-service:
-    build:
-      context: ../../services/nest/auth-service
-      dockerfile: Dockerfile
-    env_file:
-      - ../../.env
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gradeloop}?schema=public
-      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
-    ports:
-      - "50051:50051"
-    networks:
-      - gradeloop-net
-    depends_on:
-      db:
-        condition: service_healthy
-
-  user-service:
-    build:
-      context: ../../services/nest/user-service
-      dockerfile: Dockerfile
-    ports:
-      - "50052:50052"
-    networks:
-      - gradeloop-net
-
-  db:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-gradeloop}
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - ./kong.yml:/usr/local/kong/declarative/kong.yml
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_PROXY_LISTEN=0.0.0.0:8000
     ports:
-      - "5433:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "8000:8000" # Proxy
+      - "8001:8001" # Admin API
     networks:
       - gradeloop-net
 
+  # REDIS (Session Management)
   redis:
     image: redis:7-alpine
+    container_name: gradeloop-redis
     restart: always
     ports:
-      - "6380:6379"
+      - "6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -83,9 +42,130 @@ services:
     networks:
       - gradeloop-net
 
+  # RABBITMQ (Inter-service Messaging)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gradeloop-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - gradeloop-net
+
+  # ============================================================================
+  # Application Services (Spring Boot)
+  # ============================================================================
+
+  # AUTH SERVICE
+  auth-service:
+    build:
+      context: ../../services/java/auth
+      dockerfile: Dockerfile
+    container_name: gradeloop-auth-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8081:8080" # Exposed for debugging, normally accessed via Kong
+    depends_on:
+      - auth-db
+      - redis
+      - rabbitmq
+    networks:
+      - gradeloop-net
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: gradeloop-auth-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=auth_db
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - gradeloop-net
+
+  # INSTITUTE SERVICE
+  institute-service:
+    build:
+      context: ../../services/java/institute
+      dockerfile: Dockerfile
+    container_name: gradeloop-institute-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://institute-db:5432/institute_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8082:8080"
+    depends_on:
+      - institute-db
+      - rabbitmq
+    networks:
+      - gradeloop-net
+
+  institute-db:
+    image: postgres:15-alpine
+    container_name: gradeloop-institute-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=institute_db
+    volumes:
+      - institute-db-data:/var/lib/postgresql/data
+    networks:
+      - gradeloop-net
+
+  # USER SERVICE (Implied)
+  user-service:
+    build:
+      context: ../../services/java/user
+      dockerfile: Dockerfile
+    container_name: gradeloop-user-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://user-db:5432/user_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8083:8080"
+    depends_on:
+      - user-db
+      - rabbitmq
+    networks:
+      - gradeloop-net
+
+  user-db:
+    image: postgres:15-alpine
+    container_name: gradeloop-user-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=user_db
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - gradeloop-net
+
 volumes:
-  db-data:
+  auth-db-data:
+  institute-db-data:
+  user-db-data:
   redis-data:
+  rabbitmq-data:
 
 
 networks:
