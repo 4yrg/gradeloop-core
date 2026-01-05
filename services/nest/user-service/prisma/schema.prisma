@@ -14,39 +14,65 @@ enum Role {
   INSTITUTE_ADMIN
 }
 
-model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String   @map("password_hash")
-  role          Role
-  isActive      Boolean  @default(true) @map("is_active")
+model Institute {
+  id              String   @id @default(uuid())
+  name            String
+  code            String   @unique
+  domain          String?
+  subscriptionPlan String? @map("subscription_plan")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  members InstituteMember[]
+
+  @@map("institutes")
+}
+
+model Profile {
+  userId        String   @id @map("user_id") // Matches Auth Service User ID
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  avatarUrl     String?  @map("avatar_url")
+  phoneNumber   String?  @map("phone_number")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  passwordResets PasswordReset[]
-  instituteAdminMapping InstituteAdminMapping?
+  memberDetails InstituteMember[]
+  student       Student?
+  instructor    Instructor?
 
-  @@map("users")
+  @@map("profiles")
 }
 
-model PasswordReset {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+model InstituteMember {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  instituteId String   @map("institute_id")
+  role        Role
 
-  user User @relation(fields: [userId], references: [id])
+  profile   Profile   @relation(fields: [userId], references: [userId])
+  institute Institute @relation(fields: [instituteId], references: [id])
 
-  @@map("password_resets")
+  @@map("institute_members")
+  @@unique([userId, instituteId])
 }
 
-model InstituteAdminMapping {
-  id          String @id @default(uuid())
-  userId      String @unique @map("user_id")
-  instituteId String @map("institute_id")
+model Student {
+  userId           String @id @map("user_id")
+  enrollmentNumber String @map("enrollment_number")
+  gradeLevel       String? @map("grade_level")
 
-  user User @relation(fields: [userId], references: [id])
+  profile Profile @relation(fields: [userId], references: [userId])
 
-  @@map("institute_admin_mapping")
+  @@map("students")
+}
+
+model Instructor {
+  userId         String @id @map("user_id")
+  specialization String?
+  designation    String?
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@map("instructors")
 }
