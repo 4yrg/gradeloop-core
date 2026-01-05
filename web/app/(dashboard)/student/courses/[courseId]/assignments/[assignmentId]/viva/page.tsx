@@ -2,13 +2,14 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ArrowLeft, PlayCircle, BarChart3, BookOpen } from "lucide-react";
+import { ArrowLeft, PlayCircle, BarChart3, BookOpen, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VivaStatusCard } from "@/components/student/viva/VivaStatusCard";
 import { SystemCheckWidget } from "@/components/student/viva/SystemCheckWidget";
 import { ConceptsTestedList } from "@/components/student/viva/ConceptsTestedList";
 import { StartVivaButton } from "@/components/student/viva/StartVivaButton";
+import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
 
 export default function VivaLandingPage({
     params
@@ -16,6 +17,7 @@ export default function VivaLandingPage({
     params: Promise<{ courseId: string; assignmentId: string }>
 }) {
     const { courseId, assignmentId } = use(params);
+    const assignment = MOCK_ASSIGNMENTS.find(a => a.id === assignmentId);
 
     // Mock data - in a real app, this would come from an API
     const mockConcepts = [
@@ -23,6 +25,13 @@ export default function VivaLandingPage({
         { id: '2', label: 'Time Complexity', description: 'Big O notation for search and insert operations.', importance: 'medium' as const },
         { id: '3', label: 'Memory Management', description: 'Heap vs Stack allocation for nodes.', importance: 'low' as const },
     ];
+
+    if (!assignment) {
+        return <div>Assignment not found</div>;
+    }
+
+    const vivaStatus = assignment.vivaStatus || 'not_started';
+    const vivaEnabled = assignment.vivaEnabled;
 
     return (
         <div className="flex flex-col gap-8 pb-20 max-w-5xl mx-auto w-full px-4 pt-6">
@@ -37,77 +46,98 @@ export default function VivaLandingPage({
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Viva Evaluation</h1>
                     <p className="text-muted-foreground mt-1">
-                        Automated oral examination for "Advanced Data Structures".
+                        Automated oral examination for "{assignment.title}".
                     </p>
                 </div>
             </div>
 
-            {/* Navigation */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Viva Options</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Button variant="outline" asChild className="justify-start h-auto p-4">
-                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/practice`} className="flex items-center gap-3">
-                                <PlayCircle className="h-5 w-5" />
-                                <div className="text-left">
-                                    <p className="font-medium">Practice Mode</p>
-                                    <p className="text-xs text-muted-foreground">Test setup and practice questions</p>
-                                </div>
-                            </Link>
-                        </Button>
-                        <Button variant="outline" asChild className="justify-start h-auto p-4">
-                            <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`} className="flex items-center gap-3">
-                                <BarChart3 className="h-5 w-5" />
-                                <div className="text-left">
-                                    <p className="font-medium">View Results</p>
-                                    <p className="text-xs text-muted-foreground">See your viva performance</p>
-                                </div>
-                            </Link>
-                        </Button>
+            {!vivaEnabled ? (
+                <div className="flex flex-col items-center justify-center min-h-[50vh] gap-6 text-center">
+                    <div className="bg-gray-500/10 p-6 rounded-full">
+                        <Mic className="h-16 w-16 text-gray-500" />
                     </div>
-                </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Left Column: Status & Readiness */}
-                <div className="md:col-span-2 space-y-6">
-                    <VivaStatusCard
-                        status="not_started"
-                        scheduledDate="Today, 10:00 AM"
-                        duration="15 mins"
-                    />
-
-                    <div className="prose dark:prose-invert max-w-none">
-                        <h3>Instructions</h3>
-                        <ul>
-                            <li>Ensure you are in a quiet environment.</li>
-                            <li>You will be asked 3-5 questions based on the rubric.</li>
-                            <li>Speak clearly and look at the camera.</li>
-                            <li>The session will be recorded for review.</li>
-                        </ul>
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold">Viva Not Available</h2>
+                        <p className="text-muted-foreground">
+                            Viva assessment is not enabled for this assignment.
+                        </p>
                     </div>
-
-                    <ConceptsTestedList concepts={mockConcepts} />
+                    <Button asChild>
+                        <Link href={`/student/courses/${courseId}/assignments/${assignmentId}`}>
+                            Back to Assignment
+                        </Link>
+                    </Button>
                 </div>
+            ) : (
+                <>
+                    {/* Navigation */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">Viva Options</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Button variant="outline" asChild className="justify-start h-auto p-4">
+                                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/practice`} className="flex items-center gap-3">
+                                        <PlayCircle className="h-5 w-5" />
+                                        <div className="text-left">
+                                            <p className="font-medium">Practice Mode</p>
+                                            <p className="text-xs text-muted-foreground">Test setup and practice questions</p>
+                                        </div>
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" asChild className="justify-start h-auto p-4">
+                                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`} className="flex items-center gap-3">
+                                        <BarChart3 className="h-5 w-5" />
+                                        <div className="text-left">
+                                            <p className="font-medium">View Results</p>
+                                            <p className="text-xs text-muted-foreground">See your viva performance</p>
+                                        </div>
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                {/* Right Column: Actions & Widgets */}
-                <div className="space-y-6">
-                    <SystemCheckWidget />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Left Column: Status & Readiness */}
+                        <div className="md:col-span-2 space-y-6">
+                            <VivaStatusCard
+                                status={vivaStatus}
+                                scheduledDate="Today, 10:00 AM"
+                                duration="15 mins"
+                            />
 
-                    <StartVivaButton
-                        courseId={courseId}
-                        assignmentId={assignmentId}
-                        isEnabled={true}
-                    />
+                            <div className="prose dark:prose-invert max-w-none">
+                                <h3>Instructions</h3>
+                                <ul>
+                                    <li>Ensure you are in a quiet environment.</li>
+                                    <li>You will be asked 3-5 questions based on the rubric.</li>
+                                    <li>Speak clearly and look at the camera.</li>
+                                    <li>The session will be recorded for review.</li>
+                                </ul>
+                            </div>
 
-                    <div className="text-xs text-center text-muted-foreground">
-                        By starting, you agree to the academic integrity policy.
+                            <ConceptsTestedList concepts={mockConcepts} />
+                        </div>
+
+                        {/* Right Column: Actions & Widgets */}
+                        <div className="space-y-6">
+                            <SystemCheckWidget />
+
+                            <StartVivaButton
+                                courseId={courseId}
+                                assignmentId={assignmentId}
+                                isEnabled={vivaStatus === 'not_started'}
+                            />
+
+                            <div className="text-xs text-center text-muted-foreground">
+                                By starting, you agree to the academic integrity policy.
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </>
+            )}
         </div>
     );
 }
