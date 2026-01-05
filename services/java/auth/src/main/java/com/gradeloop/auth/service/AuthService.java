@@ -99,8 +99,12 @@ public class AuthService {
     }
 
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            // Prevent user enumeration by returning successfully
+            return;
+        }
 
         // Generate token
         String token = UUID.randomUUID().toString();
