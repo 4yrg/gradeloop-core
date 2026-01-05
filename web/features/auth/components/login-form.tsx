@@ -7,11 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { loginSchema, LoginValues } from "../schemas/auth"
-import { login } from "@/actions/auth"
+import { useLogin } from "../../../hooks/auth/useLogin"
 import Link from "next/link"
 import { useAuthLoading } from "../context/auth-loading-context"
 
@@ -33,14 +33,19 @@ export function LoginForm() {
         },
     })
 
+    const { mutateAsync: loginMutation, isPending } = useLogin()
+
+    // Sync hook loading state with local loading state if needed, or just use isPending
+    // The existing component uses loading state for disable.
+
     async function onSubmit(data: LoginValues) {
         setLoading(true)
         setIsLoading(true)
         setError(null)
 
         try {
-            const result = await login(data);
-            console.log("Login result:", result); // Debugging log
+            const result = await loginMutation(data);
+            console.log("Login result:", result);
 
             if (result.errors) {
                 if ('_form' in result.errors && result.errors._form) {
@@ -51,11 +56,11 @@ export function LoginForm() {
                 }
                 setLoading(false);
                 setIsLoading(false);
-            } else if (result.success) {
-                router.refresh();
-                router.push(result.redirectTo || "/dashboard");
             }
+            // Success redirect is handled by hook, but we can also do it here if hook doesn't.
+            // My hook implementation does router.push.
         } catch (err) {
+            console.error("Login error wrapped:", err);
             setError("Something went wrong")
             setLoading(false)
             setIsLoading(false)

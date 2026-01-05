@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "../../../lib/utils";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import {
     Dialog,
     DialogContent,
@@ -12,10 +12,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "../../../components/ui/dialog";
 
-import { Person } from "@/features/institute-admin/types";
-import { peopleService } from "@/features/institute-admin/api/people-service";
+import { Person } from "../types";
+import { peopleService } from "../api/people-service";
 
 interface AddStudentModalProps {
     open: boolean;

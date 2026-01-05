@@ -1,12 +1,12 @@
 "use client"
 
-import { useInstitute } from "@/features/system-admin/api/queries"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useInstitute } from "../../../hooks/institute/useInstitutes"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { OverviewTab } from "./institute-details/overview-tab"
 import { AdminsTab } from "./institute-details/admins-tab"
 import { SetupProgressTab } from "./institute-details/setup-progress-tab"
 import { ActivityLogsTab } from "./institute-details/activity-logs-tab"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "../../../components/ui/skeleton"
 
 interface InstituteDetailsViewProps {
     instituteId: string

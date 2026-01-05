@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import {
     Dialog,
     DialogContent,
@@ -11,10 +11,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { peopleService } from "@/features/institute-admin/api/people-service";
-import { Person } from "@/features/institute-admin/types";
-import { cn } from "@/lib/utils";
+} from "../../../components/ui/dialog";
+import { peopleService } from "../api/people-service";
+import { Person } from "../types";
+import { cn } from "../../../lib/utils";
 
 interface AddInstructorModalProps {
     open: boolean;

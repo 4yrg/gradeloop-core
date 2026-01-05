@@ -8,11 +8,11 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+} from "../../../components/ui/table"
+import { Input } from "../../../components/ui/input"
+import { Button } from "../../../components/ui/button"
+import { Badge } from "../../../components/ui/badge"
+import { Progress } from "../../../components/ui/progress"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,7 +20,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "../../../components/ui/dropdown-menu"
 import { Institute } from "../types"
 import { MoreHorizontal, Search, Eye, Edit, Trash2 } from "lucide-react"
 import { useSystemAdminStore } from "../store/use-system-admin-store"

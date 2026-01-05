@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { AuthLoadingProvider } from "@/features/auth/context/auth-loading-context"
+import { AuthLoadingProvider } from "../../features/auth/context/auth-loading-context"
 
 export default function AuthLayout({
     children,

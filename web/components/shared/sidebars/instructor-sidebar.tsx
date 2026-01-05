@@ -1,10 +1,10 @@
 'use client';
 
 import { BaseSidebar } from "./base-sidebar";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "../../ui/sidebar";
 import { BookOpen, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "../../ui/sidebar";
 import { usePathname } from "next/navigation";
 
 export function InstructorSidebar() {

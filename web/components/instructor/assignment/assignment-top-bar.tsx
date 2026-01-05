@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../ui/badge";
 import {
     Eye,
     Send,
@@ -12,8 +12,8 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button as ShadcnButton } from "@/components/ui/button";
+} from "../../ui/dropdown-menu";
+import { Button as ShadcnButton } from "../../ui/button";
 
 interface AssignmentTopBarProps {
     assignmentName: string;

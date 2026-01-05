@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
 import { LogOut, Timer } from "lucide-react";
 import {
     AlertDialog,
@@ -13,7 +13,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "../../../ui/alert-dialog";
 
 interface TopBarProps {
     timeLeft: number; // in seconds

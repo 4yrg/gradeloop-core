@@ -8,10 +8,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
+import { Badge } from "../../../components/ui/badge";
 import { Mail, User, Fingerprint } from "lucide-react";
 
 interface PersonProfileModalProps {

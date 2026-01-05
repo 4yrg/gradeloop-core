@@ -6,9 +6,9 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+} from "../../../../components/ui/table"
+import { Button } from "../../../../components/ui/button"
+import { Badge } from "../../../../components/ui/badge"
 import { InstituteAdmin } from "../../types"
 import { Mail, ShieldCheck, UserMinus } from "lucide-react"
 import { AddAdminDialog } from "./add-admin-dialog"

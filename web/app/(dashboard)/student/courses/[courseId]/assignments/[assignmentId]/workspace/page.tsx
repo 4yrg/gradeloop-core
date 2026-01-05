@@ -18,27 +18,27 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Editor from "@monaco-editor/react";
-import { Button } from "@/components/ui/button";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
-import { MOCK_SUBMISSIONS } from "@/features/student/assignments/data/mock-submissions";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../../../../../../components/ui/button";
+import { MOCK_ASSIGNMENTS } from "../../../../../../../../features/student/assignments/data/mock-assignments";
+import { MOCK_SUBMISSIONS } from "../../../../../../../../features/student/assignments/data/mock-submissions";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
+import { Badge } from "../../../../../../../../components/ui/badge";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { SocraticChatbot } from "@/features/student/assignments/components/socratic-chatbot";
+} from "../../../../../../../../components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../components/ui/tabs";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { SocraticChatbot } from "../../../../../../../../features/student/assignments/components/socratic-chatbot";
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { cn } from "@/lib/utils";
+} from "../../../../../../../../components/ui/resizable";
+import { cn } from "../../../../../../../../lib/utils";
 
 export default function WorkspacePage({
     params

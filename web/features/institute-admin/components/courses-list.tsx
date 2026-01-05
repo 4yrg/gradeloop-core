@@ -7,8 +7,8 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "../../../components/ui/table";
+import { Button } from "../../../components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { Course } from "../types";
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Keyboard } from 'lucide-react';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
+import type { KeystrokeEvent } from '../../../hooks/use-keystroke-capture';
 
 interface InteractiveTypingProps {
   template: string;
@@ -76,29 +76,29 @@ export function InteractiveTyping({
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      
+
       const textarea = e.currentTarget;
       const start = textarea.selectionStart;
       const value = textarea.value;
-      
+
       // Get the current line
       const lineStart = value.lastIndexOf('\n', start - 1) + 1;
       const lineEnd = value.indexOf('\n', start);
       const currentLine = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
-      
+
       // Calculate indentation (spaces at the start of the line)
       const indentMatch = currentLine.match(/^(\s*)/);
       const indent = indentMatch ? indentMatch[1] : '';
-      
+
       // Check if current line ends with : (for Python-style indentation)
       const shouldAddExtraIndent = currentLine.trim().endsWith(':');
       const extraIndent = shouldAddExtraIndent ? '    ' : ''; // 4 spaces for Python
-      
+
       // Insert newline with indentation
       const newValue = value.substring(0, start) + '\n' + indent + extraIndent + value.substring(start);
       setTypedText(newValue);
       setCurrentIndex(start + 1 + indent.length + extraIndent.length);
-      
+
       // Set cursor position after state update
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 1 + indent.length + extraIndent.length;
@@ -115,7 +115,7 @@ export function InteractiveTyping({
   const renderCharacters = () => {
     return template.split('').map((char, index) => {
       let className = 'inline-block whitespace-pre';
-      
+
       if (index < typedText.length) {
         // Character has been typed
         if (typedText[index] === char) {
@@ -177,7 +177,7 @@ export function InteractiveTyping({
       </div>
 
       {/* Typing area */}
-      <div 
+      <div
         ref={containerRef}
         className="relative flex-1 border rounded-lg p-6 bg-card shadow-sm overflow-auto cursor-text font-mono text-sm leading-relaxed"
         onClick={() => inputRef.current?.focus()}
@@ -187,7 +187,7 @@ export function InteractiveTyping({
           <div className="select-none pointer-events-none">
             {renderCharacters()}
           </div>
-          
+
           {/* Hidden textarea for input capture */}
           <textarea
             ref={inputRef}

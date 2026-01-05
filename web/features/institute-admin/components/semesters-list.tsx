@@ -7,9 +7,9 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "../../../components/ui/table";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import { Edit, Trash2, CheckCircle2 } from "lucide-react";
 import { Semester } from "../types";
 

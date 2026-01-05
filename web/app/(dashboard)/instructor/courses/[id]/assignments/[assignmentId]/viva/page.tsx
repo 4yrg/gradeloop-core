@@ -21,14 +21,14 @@ import {
     ChevronRight,
     Activity
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Progress } from "../../../../../../../../components/ui/progress";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { Switch } from "../../../../../../../../components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../../../../../components/ui/avatar";
+import { Label } from "../../../../../../../../components/ui/label";
 
 // Mock data for the dashboard
 const mockDashboardData = {
@@ -278,7 +278,7 @@ function VivaConfigurationCard({ config }: { config: typeof mockDashboardData.co
                         </div>
                         <Badge variant="outline">
                             {config.triggerSettings === "manual" ? "Manual" :
-                             config.triggerSettings === "lab-based" ? "Lab-based" : "Deadline-based"}
+                                config.triggerSettings === "lab-based" ? "Lab-based" : "Deadline-based"}
                         </Badge>
                     </div>
                 </div>

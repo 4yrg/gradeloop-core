@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CreateAssignmentValues } from '@/lib/validations/assignment';
+import { CreateAssignmentValues } from '../lib/validations/assignment';
 
 interface AssignmentStore {
     isOpen: boolean;

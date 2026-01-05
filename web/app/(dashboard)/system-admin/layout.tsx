@@ -1,6 +1,6 @@
 "use client"
 
-import { SystemAdminModals } from "@/features/system-admin/components/system-admin-modals"
+import { SystemAdminModals } from "../../../features/system-admin/components/system-admin-modals"
 
 export default function SystemAdminLayout({
     children,

@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Settings, Library, Users, Plus, Trash2, Upload, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { coursesService } from "@/features/institute-admin/api/courses-service";
-import { peopleService } from "@/features/institute-admin/api/people-service";
-import { Course, ClassGroup, Person } from "@/features/institute-admin/types";
+import { Button } from "../../../../../../../components/ui/button";
+import { Separator } from "../../../../../../../components/ui/separator";
+import { coursesService } from "../../../../../../../features/institute-admin/api/courses-service";
+import { peopleService } from "../../../../../../../features/institute-admin/api/people-service";
+import { Course, ClassGroup, Person } from "../../../../../../../features/institute-admin/types";
 import {
     Card,
     CardContent,
@@ -15,13 +15,13 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { AddClassModal } from "@/features/institute-admin/components/add-class-modal";
-import { AddInstructorModal } from "@/features/institute-admin/components/add-instructor-modal";
-import { BulkImportModal } from "@/features/institute-admin/components/bulk-import-modal";
+} from "../../../../../../../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../../../../../components/ui/avatar";
+import { Badge } from "../../../../../../../components/ui/badge";
+import { AddClassModal } from "../../../../../../../features/institute-admin/components/add-class-modal";
+import { AddInstructorModal } from "../../../../../../../features/institute-admin/components/add-instructor-modal";
+import { BulkImportModal } from "../../../../../../../features/institute-admin/components/bulk-import-modal";
 
 export default function CourseDetailPage() {
     const params = useParams();

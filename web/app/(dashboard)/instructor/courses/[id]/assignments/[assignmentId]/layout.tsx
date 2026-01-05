@@ -1,8 +1,8 @@
 'use client';
 
-import { AssignmentTopBar } from "@/components/instructor/assignment/assignment-top-bar";
+import { AssignmentTopBar } from "../../../../../../../components/instructor/assignment/assignment-top-bar";
 import { useParams } from "next/navigation";
-import { mockAssignments } from "@/lib/mock-data";
+import { mockAssignments } from "../../../../../../../lib/mock-data";
 
 export default function AssignmentWorkspaceLayout({
     children,

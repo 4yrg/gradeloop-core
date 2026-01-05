@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ClassesGrid } from "@/features/institute-admin/components/classes-grid";
-import { ClassModal } from "@/features/institute-admin/components/class-modal";
-import { classesService } from "@/features/institute-admin/api/classes-service";
-import { ClassGroup, Person } from "@/features/institute-admin/types";
-import { Button } from "@/components/ui/button";
+import { ClassesGrid } from "../../../../../../features/institute-admin/components/classes-grid";
+import { ClassModal } from "../../../../../../features/institute-admin/components/class-modal";
+import { classesService } from "../../../../../../features/institute-admin/api/classes-service";
+import { ClassGroup, Person } from "../../../../../../features/institute-admin/types";
+import { Button } from "../../../../../../components/ui/button";
 
 export default function DegreeClassesPage() {
     const params = useParams();

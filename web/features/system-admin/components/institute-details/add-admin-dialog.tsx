@@ -7,13 +7,13 @@ import * as z from "zod"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "../../../../components/ui/button"
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
+} from "../../../../components/ui/dialog"
 import {
     Form,
     FormControl,
@@ -21,9 +21,9 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { instituteService } from "../../api/institute-service"
+} from "../../../../components/ui/form"
+import { Input } from "../../../../components/ui/input"
+import { useAddAdmin } from "../../../../hooks/institute/useAddAdmin"
 
 const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -43,7 +43,7 @@ export function AddAdminDialog({
     instituteId,
     onSuccess,
 }: AddAdminDialogProps) {
-    const [isLoading, setIsLoading] = useState(false)
+    const { mutateAsync: addAdmin, isPending } = useAddAdmin()
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -55,8 +55,7 @@ export function AddAdminDialog({
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            setIsLoading(true)
-            await instituteService.addAdmin(instituteId, values)
+            await addAdmin({ instituteId, data: values })
             toast.success("Admin invited successfully")
             form.reset()
             onSuccess()
@@ -64,8 +63,6 @@ export function AddAdminDialog({
         } catch (error) {
             console.error(error)
             toast.error("Failed to invite admin")
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -108,8 +105,8 @@ export function AddAdminDialog({
                             )}
                         />
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Button type="submit" disabled={isPending}>
+                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Send Invite
                             </Button>
                         </div>

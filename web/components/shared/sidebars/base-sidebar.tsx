@@ -10,10 +10,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
-} from "@/components/ui/sidebar";
+} from "../../ui/sidebar";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { UserMenu } from "./user-menu";
-import { useSidebar } from "@/components/ui/sidebar";
+import { useSidebar } from "../../ui/sidebar";
 
 interface BaseSidebarProps {
     children: React.ReactNode;

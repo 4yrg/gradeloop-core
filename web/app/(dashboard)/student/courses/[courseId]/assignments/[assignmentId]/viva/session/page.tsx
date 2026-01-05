@@ -2,12 +2,12 @@
 
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TopBar } from "@/components/student/viva/session/TopBar";
-import { QuestionDisplay } from "@/components/student/viva/session/QuestionDisplay";
-import { VoiceInterface } from "@/components/student/viva/session/VoiceInterface";
-import { ControlBar } from "@/components/student/viva/session/ControlBar";
-import { SessionSidebar } from "@/components/student/viva/session/SessionSidebar";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { TopBar } from "../../../../../../../../../components/student/viva/session/TopBar";
+import { QuestionDisplay } from "../../../../../../../../../components/student/viva/session/QuestionDisplay";
+import { VoiceInterface } from "../../../../../../../../../components/student/viva/session/VoiceInterface";
+import { ControlBar } from "../../../../../../../../../components/student/viva/session/ControlBar";
+import { SessionSidebar } from "../../../../../../../../../components/student/viva/session/SessionSidebar";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../../../../../../../components/ui/resizable";
 
 export default function VivaSessionPage({
     params

@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../ui/button";
 import { Mic, MicOff, Settings, Volume2 } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
+import { Toggle } from "../../../ui/toggle";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "../../../ui/tooltip";
 
 interface ControlBarProps {
     isMuted: boolean;

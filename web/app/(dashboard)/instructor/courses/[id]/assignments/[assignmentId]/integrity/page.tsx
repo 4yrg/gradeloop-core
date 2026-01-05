@@ -9,20 +9,20 @@ import {
     Settings2,
     Eye
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../../components/ui/card";
+import { Label } from "../../../../../../../../components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "../../../../../../../../components/ui/select";
+import { Switch } from "../../../../../../../../components/ui/switch";
+import { Slider } from "../../../../../../../../components/ui/slider";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Checkbox } from "../../../../../../../../components/ui/checkbox";
 
 export default function IntegrityPage() {
     return (

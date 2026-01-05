@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from "next/navigation";
-import { mockAssignments } from "@/lib/mock-data";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { mockAssignments } from "../../../../../../../lib/mock-data";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../components/ui/card";
 import {
     Clock,
     Users,
@@ -12,8 +12,8 @@ import {
     MessageSquare,
     ShieldAlert
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Badge } from "../../../../../../../components/ui/badge";
+import { Progress } from "../../../../../../../components/ui/progress";
 
 export default function AssignmentOverviewPage() {
     const params = useParams();

@@ -12,11 +12,11 @@ import {
     Trophy
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
+import { Textarea } from "../../../../../../../../components/ui/textarea";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Separator } from "../../../../../../../../components/ui/separator";
 
 export default function ReflectionPage({
     params

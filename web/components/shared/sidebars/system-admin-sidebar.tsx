@@ -18,7 +18,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "../../ui/sidebar"
 import { BaseSidebar } from "./base-sidebar"
 
 export function SystemAdminSidebar() {

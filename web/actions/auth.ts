@@ -1,6 +1,6 @@
 'use server'
 
-import { createSession, deleteSession } from '@/lib/session'
+import { createSession, deleteSession } from '../lib/session'
 import axios from 'axios'
 import { z } from 'zod'
 
@@ -47,6 +47,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
     const { email, password } = validatedFields.data
 
     let user: any
+    let token: string | undefined
+
     try {
         // Use service name if in docker, or host port if outside
         // Use API Gateway URL
@@ -61,7 +63,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
         });
 
         // Backend returns: { message, role, token, email }
-        const { token, role, email: responseEmail } = response.data;
+        const { role, email: responseEmail } = response.data;
+        token = response.data.token;
 
         if (!token || !role || !responseEmail) {
             console.error('Invalid response structure:', response.data);
@@ -99,9 +102,11 @@ export async function login(data: z.infer<typeof loginSchema>) {
         }
     }
 
-    // Return success with redirect path based on role
+    // Return success with token and user data
     return {
         success: true,
+        token,
+        user,
         redirectTo: getRedirectPath(user.role)
     }
 }

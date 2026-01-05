@@ -1,4 +1,4 @@
-import { TrainUserForm } from "@/features/auth/components/train-user-form"
+import { TrainUserForm } from "../../../features/auth/components/train-user-form"
 
 export default function EnrollPage() {
     return (

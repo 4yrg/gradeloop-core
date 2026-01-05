@@ -14,22 +14,22 @@ import {
     User,
     MoreHorizontal
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Input } from "../../../../../../../../components/ui/input";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { ScrollArea } from "../../../../../../../../components/ui/scroll-area";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { SubmissionViewer } from "@/components/instructor/assignment/submission-viewer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+} from "../../../../../../../../components/ui/select";
+import { SubmissionViewer } from "../../../../../../../../components/instructor/assignment/submission-viewer";
+import { Card, CardContent } from "../../../../../../../../components/ui/card";
+import { Textarea } from "../../../../../../../../components/ui/textarea";
+import { Label } from "../../../../../../../../components/ui/label";
+import { Separator } from "../../../../../../../../components/ui/separator";
 
 interface Submission {
     id: string;
@@ -85,8 +85,8 @@ export default function ManageSubmissionsPage() {
                                 key={s.id}
                                 onClick={() => setSelectedId(s.id)}
                                 className={`group flex flex-col gap-1 p-3 rounded-md cursor-pointer transition-colors ${selectedId === s.id
-                                        ? "bg-primary/10 text-primary border-primary/20"
-                                        : "hover:bg-muted"
+                                    ? "bg-primary/10 text-primary border-primary/20"
+                                    : "hover:bg-muted"
                                     } border border-transparent`}
                             >
                                 <div className="flex items-center justify-between">
@@ -98,7 +98,7 @@ export default function ManageSubmissionsPage() {
                                         <Badge
                                             variant="outline"
                                             className={`text-[9px] px-1 h-4 ${s.status === 'Flagged' ? 'border-red-500 text-red-500 bg-red-500/5' :
-                                                    s.status === 'Graded' ? 'border-green-500 text-green-500 bg-green-500/5' : ''
+                                                s.status === 'Graded' ? 'border-green-500 text-green-500 bg-green-500/5' : ''
                                                 }`}
                                         >
                                             {s.status}

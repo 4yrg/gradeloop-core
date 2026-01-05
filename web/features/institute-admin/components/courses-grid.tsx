@@ -3,7 +3,7 @@
 import { Course } from "../types";
 import { CourseCard } from "./course-card";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 
 interface CoursesGridProps {
     data: Course[];

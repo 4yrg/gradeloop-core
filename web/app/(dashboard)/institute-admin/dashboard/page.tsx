@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Users, GraduationCap, BookOpen, CalendarDays, Activity } from "lucide-react";
-import { StatsCard } from "@/features/institute-admin/components/stats-card";
-import { dashboardService, DashboardStats, ActivityItem } from "@/features/institute-admin/api/dashboard-service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatsCard } from "../../../../features/institute-admin/components/stats-card";
+import { dashboardService, DashboardStats, ActivityItem } from "../../../../features/institute-admin/api/dashboard-service";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null);

@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../../../../../../components/ui/badge";
+import { Button } from "../../../../../../components/ui/button";
 import {
     Table,
     TableBody,
@@ -10,10 +10,10 @@ import {
     TableHead,
     TableHeader,
     TableRow
-} from "@/components/ui/table";
+} from "../../../../../../components/ui/table";
 import { Plus, FileText, Calendar, Clock, Filter, Download } from "lucide-react";
-import { mockAssignments } from "@/lib/mock-data";
-import { AssignmentActions } from "@/components/instructor/assignment-actions";
+import { mockAssignments } from "../../../../../../lib/mock-data";
+import { AssignmentActions } from "../../../../../../components/instructor/assignment-actions";
 
 export default function InstructorAssignmentsPage() {
     const params = useParams();
