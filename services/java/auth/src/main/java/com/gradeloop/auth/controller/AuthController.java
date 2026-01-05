@@ -27,7 +27,34 @@ public class AuthController {
     }
 
     @GetMapping("/debug")
-    public ResponseEntity<String> debug(@RequestParam String email, @RequestParam String password) {
-        return ResponseEntity.ok(authService.debugVerify(email, password));
+    public ResponseEntity<String> debug(@RequestParam String email, @RequestParam String rawPassword) {
+        return ResponseEntity.ok(authService.debugVerify(email, rawPassword));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody java.util.Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        authService.forgotPassword(email);
+        return ResponseEntity.ok("If an account exists for " + email + ", a password reset link has been sent.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody java.util.Map<String, String> payload) {
+        String token = payload.get("token");
+        String newPassword = payload.get("newPassword");
+
+        if (token == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Token and newPassword are required");
+        }
+
+        try {
+            authService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password reset successfully. You can now login with your new password.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
