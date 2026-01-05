@@ -13,12 +13,12 @@ import {
     Users
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../components/ui/badge";
+import { Progress } from "../../../../../../../../components/ui/progress";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../../../components/ui/alert";
 
 export default function IntegrityPage({
     params

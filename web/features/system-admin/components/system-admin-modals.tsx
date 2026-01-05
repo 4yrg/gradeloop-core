@@ -5,7 +5,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle
-} from "@/components/ui/dialog"
+} from "../../../components/ui/dialog"
 import { CreateInstituteForm } from "./create-institute-form"
 import { InstituteDetailsView } from "./institute-details-view"
 import { useSystemAdminStore } from "../store/use-system-admin-store"

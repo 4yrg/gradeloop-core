@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { Keyboard } from 'lucide-react';
-import { useKeystrokeCapture } from '@/hooks/use-keystroke-capture';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
+import { useKeystrokeCapture } from '../../../hooks/use-keystroke-capture';
+import type { KeystrokeEvent } from '../../../hooks/use-keystroke-capture';
 import type { editor as MonacoEditor } from 'monaco-editor';
 
 interface TypingTestProps {

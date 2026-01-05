@@ -26,24 +26,24 @@ import {
     HelpCircle,
     Lightbulb
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "../../../../../../../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../components/ui/card";
+import { Badge } from "../../../../../../../../../components/ui/badge";
+import { Input } from "../../../../../../../../../components/ui/input";
+import { Label } from "../../../../../../../../../components/ui/label";
+import { Textarea } from "../../../../../../../../../components/ui/textarea";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+} from "../../../../../../../../../components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../../../components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../../../../../../../../components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../../../../../../components/ui/collapsible";
+import { Progress } from "../../../../../../../../../components/ui/progress";
+import { Separator } from "../../../../../../../../../components/ui/separator";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 // Mock data for the rubric
@@ -225,7 +225,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                             <Label>Concept Name</Label>
                             <Input
                                 value={formData.name}
-                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., AVL Tree Rotations"
                             />
                         </div>
@@ -234,7 +234,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                             <Input
                                 type="number"
                                 value={formData.weight}
-                                onChange={(e) => setFormData({...formData, weight: parseInt(e.target.value)})}
+                                onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
                                 min="1"
                                 max="100"
                             />
@@ -245,7 +245,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                         <Label>Description</Label>
                         <Textarea
                             value={formData.description}
-                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="What should students understand about this concept?"
                             rows={3}
                         />
@@ -255,7 +255,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                         <Label>Related Code Sections</Label>
                         <Input
                             value={formData.relatedCode}
-                            onChange={(e) => setFormData({...formData, relatedCode: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, relatedCode: e.target.value })}
                             placeholder="e.g., lines 45-67 in bst.py"
                         />
                     </div>
@@ -283,7 +283,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                                     value={formData.gradingCriteria.novice}
                                     onChange={(e) => setFormData({
                                         ...formData,
-                                        gradingCriteria: {...formData.gradingCriteria, novice: e.target.value}
+                                        gradingCriteria: { ...formData.gradingCriteria, novice: e.target.value }
                                     })}
                                     rows={2}
                                 />
@@ -294,7 +294,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                                     value={formData.gradingCriteria.intermediate}
                                     onChange={(e) => setFormData({
                                         ...formData,
-                                        gradingCriteria: {...formData.gradingCriteria, intermediate: e.target.value}
+                                        gradingCriteria: { ...formData.gradingCriteria, intermediate: e.target.value }
                                     })}
                                     rows={2}
                                 />
@@ -305,7 +305,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                                     value={formData.gradingCriteria.advanced}
                                     onChange={(e) => setFormData({
                                         ...formData,
-                                        gradingCriteria: {...formData.gradingCriteria, advanced: e.target.value}
+                                        gradingCriteria: { ...formData.gradingCriteria, advanced: e.target.value }
                                     })}
                                     rows={2}
                                 />
@@ -316,7 +316,7 @@ function ConceptEditModal({ concept, isOpen, onClose, onSave }: {
                                     value={formData.gradingCriteria.expert}
                                     onChange={(e) => setFormData({
                                         ...formData,
-                                        gradingCriteria: {...formData.gradingCriteria, expert: e.target.value}
+                                        gradingCriteria: { ...formData.gradingCriteria, expert: e.target.value }
                                     })}
                                     rows={2}
                                 />

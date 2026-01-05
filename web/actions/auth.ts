@@ -1,6 +1,6 @@
 'use server'
 
-import { createSession, deleteSession } from '@/lib/session'
+import { createSession, deleteSession } from '../lib/session'
 import axios from 'axios'
 import { z } from 'zod'
 
@@ -47,10 +47,12 @@ export async function login(data: z.infer<typeof loginSchema>) {
     const { email, password } = validatedFields.data
 
     let user: any
+    let token: string | undefined
+
     try {
         // Use service name if in docker, or host port if outside
         // Use API Gateway URL
-        const authUrl = process.env.API_GATEWAY_URL || "http://localhost/api/auth";
+        const authUrl = process.env.API_GATEWAY_URL || "http://localhost:8000/auth";
         console.log(`Attempting login at: ${authUrl}/login for ${email}`);
 
         const response = await axios.post(`${authUrl}/login`, {
@@ -60,16 +62,25 @@ export async function login(data: z.infer<typeof loginSchema>) {
             timeout: 5000 // 5 second timeout
         });
 
-        const { user: userData, token } = response.data;
-        user = userData
+        // Backend returns: { message, role, token, email }
+        const { role, email: responseEmail } = response.data;
+        token = response.data.token;
 
-        if (!user || !token) {
+        if (!token || !role || !responseEmail) {
             console.error('Invalid response structure:', response.data);
             return {
                 errors: {
-                    _form: ['Invalid response from server'],
+                    _form: ['Invalid response from server: Missing fields'],
                 }
             }
+        }
+
+        // Construct the user object for session creation
+        // The session expects: user_role, user_email, user_name (we use email as name if missing)
+        user = {
+            role: role,
+            email: responseEmail,
+            name: responseEmail.split('@')[0] // Fallback name
         }
 
         await createSession(token, user)
@@ -91,22 +102,26 @@ export async function login(data: z.infer<typeof loginSchema>) {
         }
     }
 
-    // Return success with redirect path based on role
+    // Return success with token and user data
     return {
         success: true,
+        token,
+        user,
         redirectTo: getRedirectPath(user.role)
     }
 }
 
+
+
 function getRedirectPath(role: string): string {
     switch (role) {
-        case 'system-admin':
+        case 'SYSTEM_ADMIN':
             return '/system-admin'
-        case 'institute-admin':
+        case 'INSTITUTE_ADMIN':
             return '/institute-admin/dashboard'
-        case 'instructor':
+        case 'INSTRUCTOR':
             return '/instructor'
-        case 'student':
+        case 'STUDENT':
             return '/student'
         default:
             return '/dashboard'

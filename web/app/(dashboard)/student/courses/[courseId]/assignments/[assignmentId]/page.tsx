@@ -13,14 +13,14 @@ import {
     Table as TableIcon
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "../../../../../../../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../../../../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../components/ui/card";
+import { MOCK_ASSIGNMENTS } from "../../../../../../../features/student/assignments/data/mock-assignments";
+import { ScrollArea } from "../../../../../../../components/ui/scroll-area";
+import { Badge } from "../../../../../../../components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../../../../../components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "../../../../../../../components/ui/alert";
 
 export default function AssignmentDetailsPage({
     params

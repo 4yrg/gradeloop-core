@@ -3,7 +3,7 @@
 import { Degree } from "../types";
 import { DegreeCard } from "./degree-card";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 
 interface DegreesGridProps {
     data: Degree[];

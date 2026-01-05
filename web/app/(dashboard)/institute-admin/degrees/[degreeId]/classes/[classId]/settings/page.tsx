@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, Save, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Separator } from "../../../../../../../../components/ui/separator";
+import { Input } from "../../../../../../../../components/ui/input";
+import { Label } from "../../../../../../../../components/ui/label";
 import {
     Card,
     CardContent,
@@ -14,7 +14,7 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
+} from "../../../../../../../../components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -22,9 +22,9 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { classesService } from "@/features/institute-admin/api/classes-service";
-import { ClassGroup } from "@/features/institute-admin/types";
+} from "../../../../../../../../components/ui/dialog";
+import { classesService } from "../../../../../../../../features/institute-admin/api/classes-service";
+import { ClassGroup } from "../../../../../../../../features/institute-admin/types";
 
 export default function ClassSettingsPage() {
     const params = useParams();

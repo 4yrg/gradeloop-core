@@ -1,9 +1,9 @@
 "use client";
 
 import { Bell, CheckCircle2, Clock, Info, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../../components/ui/button";
+import { Card, CardContent } from "../../../../components/ui/card";
+import { Badge } from "../../../../components/ui/badge";
 
 export default function NotificationsPage() {
     const notifications = [

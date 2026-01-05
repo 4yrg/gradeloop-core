@@ -5,12 +5,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { forgotPasswordSchema, ForgotPasswordValues } from "../schemas/auth"
 import Link from "next/link"
-import { forgotPassword } from "@/actions/auth"
+import { forgotPassword } from "../../../actions/auth"
 
 export function ForgotPasswordForm() {
     const [loading, setLoading] = useState(false)

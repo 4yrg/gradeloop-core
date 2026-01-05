@@ -3,11 +3,11 @@
 import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { VivaStatusCard } from "@/components/student/viva/VivaStatusCard";
-import { SystemCheckWidget } from "@/components/student/viva/SystemCheckWidget";
-import { ConceptsTestedList } from "@/components/student/viva/ConceptsTestedList";
-import { StartVivaButton } from "@/components/student/viva/StartVivaButton";
+import { Button } from "../../../../../../../../components/ui/button";
+import { VivaStatusCard } from "../../../../../../../../components/student/viva/VivaStatusCard";
+import { SystemCheckWidget } from "../../../../../../../../components/student/viva/SystemCheckWidget";
+import { ConceptsTestedList } from "../../../../../../../../components/student/viva/ConceptsTestedList";
+import { StartVivaButton } from "../../../../../../../../components/student/viva/StartVivaButton";
 
 export default function VivaLandingPage({
     params

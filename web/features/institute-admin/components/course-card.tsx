@@ -1,5 +1,5 @@
 import { Course } from "../types";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import { BookOpen } from "lucide-react";
 
 interface CourseCardProps {

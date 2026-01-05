@@ -12,12 +12,12 @@ import {
     Trophy
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
-import { AssignmentDetailsDialog } from "@/features/student/assignments/components/assignment-details-dialog";
+import { Button } from "../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
+import { Progress } from "../../../../../components/ui/progress";
+import { Badge } from "../../../../../components/ui/badge";
+import { MOCK_ASSIGNMENTS } from "../../../../../features/student/assignments/data/mock-assignments";
+import { AssignmentDetailsDialog } from "../../../../../features/student/assignments/components/assignment-details-dialog";
 
 export default function StudentCourseOverviewPage({
     params

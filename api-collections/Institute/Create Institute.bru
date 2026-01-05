@@ -1,0 +1,23 @@
+meta {
+  name: Create Institute
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8000/institutes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "MIT",
+    "contactEmail": "contact@mit.edu",
+    "ownerEmail": "owner@mit.edu",
+    "adminEmails": [
+      "admin1@mit.edu",
+      "admin2@mit.edu"
+    ]
+  }
+}

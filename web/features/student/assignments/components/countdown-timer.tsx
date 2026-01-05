@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../../../lib/utils";
 
 interface CountdownTimerProps {
     deadline: string;

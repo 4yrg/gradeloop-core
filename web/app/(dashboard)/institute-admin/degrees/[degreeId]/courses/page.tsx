@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CoursesGrid } from "@/features/institute-admin/components/courses-grid";
-import { CourseModal } from "@/features/institute-admin/components/course-modal";
-import { coursesService } from "@/features/institute-admin/api/courses-service";
-import { Course } from "@/features/institute-admin/types";
+import { CoursesGrid } from "../../../../../../features/institute-admin/components/courses-grid";
+import { CourseModal } from "../../../../../../features/institute-admin/components/course-modal";
+import { coursesService } from "../../../../../../features/institute-admin/api/courses-service";
+import { Course } from "../../../../../../features/institute-admin/types";
 
 export default function DegreeCoursesPage() {
     const params = useParams();

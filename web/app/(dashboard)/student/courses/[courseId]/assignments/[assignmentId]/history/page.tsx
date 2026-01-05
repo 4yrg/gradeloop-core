@@ -12,16 +12,16 @@ import {
     RefreshCcw
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MOCK_ASSIGNMENTS } from "@/features/student/assignments/data/mock-assignments";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../../../../../../../../components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../../../../../../components/ui/table";
+import { MOCK_ASSIGNMENTS } from "../../../../../../../../features/student/assignments/data/mock-assignments";
+import { Badge } from "../../../../../../../../components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+} from "../../../../../../../../components/ui/dropdown-menu";
 
 const MOCK_SUBMISSIONS = [
     { id: '1', number: 3, time: '2024-01-04 10:45 AM', language: 'Python', status: 'Graded', score: 85, total: 100 },

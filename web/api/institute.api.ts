@@ -1,15 +1,14 @@
-import { apiClient } from "@/lib/axios";
-import { MOCK_INSTITUTES, MOCK_ACTIVITY_LOGS, MOCK_SETUP_STEPS } from "../data/mock-institutes";
-import { Institute, ActivityLog, SetupStep, InstituteAdmin } from "../types";
+import { apiClient } from './client';
+import { Institute, ActivityLog, SetupStep } from '../features/system-admin/types';
+import { MOCK_INSTITUTES, MOCK_ACTIVITY_LOGS, MOCK_SETUP_STEPS } from '../features/system-admin/data/mock-institutes';
 
-export const instituteService = {
+export const instituteApi = {
     getInstitutes: async (): Promise<Institute[]> => {
-        // In a real app: return (await apiClient.get("/institutes")).data;
+        // Mock implementation to match current behavior
         return [...MOCK_INSTITUTES];
     },
 
     getInstituteById: async (id: string): Promise<Institute | undefined> => {
-        // return (await apiClient.get(`/institutes/${id}`)).data;
         return MOCK_INSTITUTES.find((i) => i.id === id);
     },
 
@@ -26,7 +25,6 @@ export const instituteService = {
     },
 
     updateInstitute: async (id: string, data: Partial<Institute>): Promise<Institute> => {
-        // Not implemented in backend yet
         return { ...MOCK_INSTITUTES[0], ...data, id };
     },
 
@@ -40,5 +38,5 @@ export const instituteService = {
 
     getSetupSteps: async (instituteId: string): Promise<SetupStep[]> => {
         return [...MOCK_SETUP_STEPS];
-    },
+    }
 };

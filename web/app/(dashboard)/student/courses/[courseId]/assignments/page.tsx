@@ -3,14 +3,14 @@
 import { use, useState } from "react";
 import { ChevronRight, FileCode, HelpCircle, History, Play } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CountdownTimer } from "@/features/student/assignments/components/countdown-timer";
-import { StatusBadge } from "@/features/student/assignments/components/status-badge";
-import { MOCK_ASSIGNMENTS, Assignment } from "@/features/student/assignments/data/mock-assignments";
-import { Badge } from "@/components/ui/badge";
-import { AssignmentDetailsDialog } from "@/features/student/assignments/components/assignment-details-dialog";
-import { SubmissionHistoryDialog } from "@/features/student/assignments/components/submission-history-dialog";
+import { Button } from "../../../../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../../../../components/ui/card";
+import { CountdownTimer } from "../../../../../../features/student/assignments/components/countdown-timer";
+import { StatusBadge } from "../../../../../../features/student/assignments/components/status-badge";
+import { MOCK_ASSIGNMENTS, Assignment } from "../../../../../../features/student/assignments/data/mock-assignments";
+import { Badge } from "../../../../../../components/ui/badge";
+import { AssignmentDetailsDialog } from "../../../../../../features/student/assignments/components/assignment-details-dialog";
+import { SubmissionHistoryDialog } from "../../../../../../features/student/assignments/components/submission-history-dialog";
 
 export default function StudentAssignmentsPage({ params }: { params: Promise<{ courseId: string }> }) {
     const { courseId } = use(params);

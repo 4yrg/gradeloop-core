@@ -9,8 +9,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "../ui/dialog"
+import { Button } from "../ui/button"
 import {
     Form,
     FormControl,
@@ -19,9 +19,9 @@ import {
     FormLabel,
     FormMessage,
     FormDescription
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "../ui/form"
+import { Input } from "../ui/input"
+import { Checkbox } from "../ui/checkbox"
 import {
     FileText,
     X,
@@ -32,17 +32,17 @@ import {
     Info,
     Upload
 } from "lucide-react"
-import { useAssignmentStore } from "@/store/use-assignment-store"
-import { createAssignmentSchema, CreateAssignmentValues } from "@/lib/validations/assignment"
-import { cn } from "@/lib/utils"
-import { DatePicker } from "@/components/ui/date-picker"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
+import { useAssignmentStore } from "../../stores/use-assignment-store"
+import { createAssignmentSchema, CreateAssignmentValues } from "../../lib/validations/assignment"
+import { cn } from "../../lib/utils"
+import { DatePicker } from "../ui/date-picker"
+import { ScrollArea } from "../ui/scroll-area"
+import { Separator } from "../ui/separator"
 import {
     RadioGroup,
     RadioGroupItem
-} from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
+} from "../ui/radio-group"
+import { Label } from "../ui/label"
 
 const assignmentTypes = [
     { id: "Lab", label: "Lab", icon: FlaskConical },

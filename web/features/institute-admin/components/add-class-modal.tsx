@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -10,9 +10,9 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { classesService } from "@/features/institute-admin/api/classes-service";
-import { ClassGroup } from "@/features/institute-admin/types";
+} from "../../../components/ui/dialog";
+import { classesService } from "../api/classes-service";
+import { ClassGroup } from "../types";
 
 interface AddClassModalProps {
     open: boolean;

@@ -10,21 +10,21 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "../../../components/ui/form";
+import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "../../../components/ui/select";
+import { Separator } from "../../../components/ui/separator";
 import { useSystemAdminStore } from "../store/use-system-admin-store";
-import { useCreateInstitute } from "../api/queries";
+import { useCreateInstitute } from "../../../hooks/institute/useCreateInstitute";
 import { Trash2, Plus, ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 export function CreateInstituteForm() {

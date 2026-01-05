@@ -11,12 +11,12 @@ import {
     SidebarMenuSub,
     SidebarMenuSubItem,
     SidebarMenuSubButton,
-} from "@/components/ui/sidebar";
+} from "../../ui/sidebar";
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "../../ui/collapsible";
 import {
     LayoutDashboard,
     Wrench,
@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../../ui/badge";
 
 export function AssignmentSidebar() {
     const pathname = usePathname();

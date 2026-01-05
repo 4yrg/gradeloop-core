@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Keyboard } from 'lucide-react';
-import type { KeystrokeEvent } from '@/hooks/use-keystroke-capture';
+import type { KeystrokeEvent } from '../../../hooks/use-keystroke-capture';
 
 interface CodeEditorTypingProps {
   userId: string;
@@ -69,28 +69,28 @@ export function CodeEditorTyping({
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      
+
       const textarea = e.currentTarget;
       const start = textarea.selectionStart;
       const value = textarea.value;
-      
+
       // Get the current line
       const lineStart = value.lastIndexOf('\n', start - 1) + 1;
       const lineEnd = value.indexOf('\n', start);
       const currentLine = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
-      
+
       // Calculate indentation (spaces at the start of the line)
       const indentMatch = currentLine.match(/^(\s*)/);
       const indent = indentMatch ? indentMatch[1] : '';
-      
+
       // Check if current line ends with : or { for smart indentation
       const shouldAddExtraIndent = currentLine.trim().endsWith(':') || currentLine.trim().endsWith('{');
       const extraIndent = shouldAddExtraIndent ? '    ' : ''; // 4 spaces
-      
+
       // Insert newline with indentation
       const newValue = value.substring(0, start) + '\n' + indent + extraIndent + value.substring(start);
       setTypedText(newValue);
-      
+
       // Set cursor position after state update
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 1 + indent.length + extraIndent.length;

@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { UserCheck, CheckCircle2, ArrowRight, Keyboard } from 'lucide-react';
 import { EnrollmentWizard } from './enrollment-wizard';
-import { keystrokeAuthService } from '@/lib/keystroke-auth-service';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { keystrokeAuthService } from '../../../lib/keystroke-auth-service';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 
 export function TrainUserForm() {
   const [username, setUsername] = useState('');
