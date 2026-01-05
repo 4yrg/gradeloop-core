@@ -240,6 +240,7 @@ services:
       SMTP_USER: dasun.wickr@gmail.com
       SMTP_PASS: "kwvb bdmg agtw nfvb"
       SMTP_SECURE: "false"
+      RABBITMQ_HOST: rabbitmq
     ports:
       - "3001:3001"
     # No depends_on, no network links to internal services if strict isolation were needed at network level, 
