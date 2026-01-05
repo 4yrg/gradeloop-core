@@ -24,4 +24,10 @@ public class InternalAuthController {
         authService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/users/bulk")
+    public ResponseEntity<java.util.List<CreateUserResponse>> createUsersBulk(
+            @RequestBody java.util.List<CreateUserRequest> requests) {
+        return ResponseEntity.ok(authService.createInternalUsersBulk(requests));
+    }
 }

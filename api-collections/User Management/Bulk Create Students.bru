@@ -1,0 +1,28 @@
+meta {
+  name: Bulk Create Students
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/users/students/bulk
+  body: json
+  auth: none
+}
+
+body:json {
+  [
+    {
+      "firstName": "Alice",
+      "lastName": "Cooper",
+      "email": "alice.student@example.com",
+      "instituteId": "inst-123"
+    },
+    {
+      "firstName": "Bob",
+      "lastName": "Marley",
+      "email": "bob.student@example.com",
+      "instituteId": "inst-123"
+    }
+  ]
+}
