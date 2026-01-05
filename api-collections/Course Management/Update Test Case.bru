@@ -1,0 +1,27 @@
+meta {
+  name: Update Test Case
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{GRADELOOP_API_URL}}/institutes/{{instituteId}}/courses/{{courseId}}/assignments/{{assignmentId}}/questions/{{questionId}}/test-cases/{{testCaseId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "input": "5 10",
+    "expectedOutput": "15",
+    "isHidden": true
+  }
+}
+
+vars:pre-request {
+  instituteId: 8976b9fd-b229-41c6-bf16-c159cff96848
+  courseId: 194f510c-ca1b-4c57-9764-415fc8f0808a
+  assignmentId: <REPLACE_WITH_ASSIGNMENT_ID>
+  questionId: <REPLACE_WITH_QUESTION_ID>
+  testCaseId: <REPLACE_WITH_TEST_CASE_ID>
+}
