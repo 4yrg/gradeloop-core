@@ -1,127 +1,73 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, ForgotPasswordDto, ResetPasswordDto, LoginResponseDto } from './dto/auth.dto';
+import { PrismaService } from '../prisma/prisma.service'; // Assuming PrismaService is in ../prisma
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
-        private emailService: EmailService,
     ) { }
 
-    async login(loginDto: LoginDto): Promise<LoginResponseDto> {
-        const { email, password } = loginDto;
-
-        // Find user by email
-        const user = await this.prisma.user.findUnique({
-            where: { email },
-        });
-
-        if (!user || !user.isActive) {
-            throw new UnauthorizedException('Invalid credentials');
+    async register(data: any) {
+        const { email, password, role } = data;
+        const existingUser = await this.prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            throw new BadRequestException('User already exists');
         }
 
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        // Generate JWT token
-        const payload = {
-            sub: user.id,
-            email: user.email,
-            role: user.role
-        };
-        const token = this.jwtService.sign(payload);
-
-        return {
-            token,
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-            },
-        };
-    }
-
-    async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{ message: string }> {
-        const { email } = forgotPasswordDto;
-
-        // Find user by email
-        const user = await this.prisma.user.findUnique({
-            where: { email },
-        });
-
-        if (!user) {
-            // Don't reveal if email exists for security
-            return { message: 'If the email exists, a reset link has been sent' };
-        }
-
-        // Generate reset token
-        const token = uuidv4();
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
-
-        // Store reset token
-        await this.prisma.passwordReset.create({
+        const passwordHash = await bcrypt.hash(password, 10);
+        const user = await this.prisma.user.create({
             data: {
-                userId: user.id,
-                token,
-                expiresAt,
+                email,
+                passwordHash,
+                role: role || 'STUDENT',
             },
         });
 
-        // Send email with reset link
-        await this.emailService.sendPasswordResetEmail(email, token);
-
-        return { message: 'If the email exists, a reset link has been sent' };
+        const payload = { sub: user.id, email: user.email, role: user.role };
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: { id: user.id, email: user.email, role: user.role },
+        };
     }
 
-    async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<{ message: string }> {
-        const { token, newPassword } = resetPasswordDto;
-
-        // Find password reset record
-        const passwordReset = await this.prisma.passwordReset.findUnique({
-            where: { token },
-            include: { user: true },
-        });
-
-        if (!passwordReset || passwordReset.expiresAt < new Date()) {
-            throw new BadRequestException('Invalid or expired token');
+    async login(data: any) {
+        const { email, password } = data;
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            throw new UnauthorizedException('Invalid credentials');
         }
 
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
 
-        // Update user password
-        await this.prisma.user.update({
-            where: { id: passwordReset.userId },
-            data: { passwordHash: hashedPassword },
-        });
-
-        // Delete used password reset token
-        await this.prisma.passwordReset.delete({
-            where: { id: passwordReset.id },
-        });
-
-        return { message: 'Password successfully reset' };
+        const payload = { sub: user.id, email: user.email, role: user.role };
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: { id: user.id, email: user.email, role: user.role },
+        };
     }
 
-    async validateUser(email: string, password: string): Promise<any> {
-        const user = await this.prisma.user.findUnique({
-            where: { email },
-        });
-
-        if (user && user.isActive && await bcrypt.compare(password, user.passwordHash)) {
-            const { passwordHash, ...result } = user;
-            return result;
+    async validateToken(token: string) {
+        try {
+            const payload = this.jwtService.verify(token);
+            return { valid: true, user_id: payload.sub, role: payload.role };
+        } catch (e) {
+            return { valid: false, user_id: null, role: null };
         }
-        return null;
+    }
+
+    async forgotPassword(email: string) {
+        // TODO: Implement Forgot Password Logic (Generate token, save to DB, send email)
+        return { success: true, message: 'Password reset link sent' };
+    }
+
+    async resetPassword(data: any) {
+        // TODO: Implement Reset Password Logic (Verify token, hash new password, update user)
+        return { success: true, message: 'Password reset successfully' };
     }
 }

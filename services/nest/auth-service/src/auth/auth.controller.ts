@@ -1,46 +1,33 @@
-import { Controller, Post, Body, ValidationPipe, HttpCode, HttpStatus, Get, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller } from '@nestjs/common';
+import { GrpcMethod } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
-import {
-    LoginDto,
-    ForgotPasswordDto,
-    ResetPasswordDto,
-    LoginResponseDto,
-} from './dto/auth.dto';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-    @Post('login')
-    @HttpCode(HttpStatus.OK)
-    async login(@Body(ValidationPipe) loginDto: LoginDto): Promise<LoginResponseDto> {
-        return this.authService.login(loginDto);
+    @GrpcMethod('AuthService', 'Register')
+    async register(data: any) {
+        return this.authService.register(data);
     }
 
-    @Post('forgot-password')
-    @HttpCode(HttpStatus.OK)
-    async forgotPassword(
-        @Body(ValidationPipe) forgotPasswordDto: ForgotPasswordDto,
-    ): Promise<{ message: string }> {
-        return this.authService.forgotPassword(forgotPasswordDto);
+    @GrpcMethod('AuthService', 'Login')
+    async login(data: any) {
+        return this.authService.login(data);
     }
 
-    @Post('reset-password')
-    @HttpCode(HttpStatus.OK)
-    async resetPassword(
-        @Body(ValidationPipe) resetPasswordDto: ResetPasswordDto,
-    ): Promise<{ message: string }> {
-        return this.authService.resetPassword(resetPasswordDto);
+    @GrpcMethod('AuthService', 'ValidateToken')
+    async validateToken(data: { token: string }) {
+        return this.authService.validateToken(data.token);
     }
 
-    @Get('me')
-    @UseGuards(AuthGuard('jwt'))
-    async getProfile(@Request() req: any) {
-        return {
-            id: req.user.id,
-            email: req.user.email,
-            role: req.user.role,
-        };
+    @GrpcMethod('AuthService', 'ForgotPassword')
+    async forgotPassword(data: { email: string }) {
+        return this.authService.forgotPassword(data.email);
+    }
+
+    @GrpcMethod('AuthService', 'ResetPassword')
+    async resetPassword(data: any) {
+        return this.authService.resetPassword(data);
     }
 }
