@@ -19,6 +19,13 @@ services:
       - name: user-routes
         paths:
           - /users
+  - name: keystroke-service
+    url: http://keystroke-service:8003
+    routes:
+      - name: keystroke-routes
+        strip_path: false
+        paths:
+          - /api/keystroke
 plugins:
   - name: cors
     config:
