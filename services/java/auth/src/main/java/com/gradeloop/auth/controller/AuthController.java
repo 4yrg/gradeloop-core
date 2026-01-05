@@ -38,12 +38,12 @@ public class AuthController {
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("error", "Email is required"));
         }
-        String token = authService.forgotPassword(email);
-        if (token == null) {
-            return ResponseEntity.ok(java.util.Collections.singletonMap("message",
-                    "If an account exists for " + email + ", a password reset link has been sent."));
+        try {
+            String token = authService.forgotPassword(email);
+            return ResponseEntity.ok(java.util.Collections.singletonMap("token", token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("error", e.getMessage()));
         }
-        return ResponseEntity.ok(java.util.Collections.singletonMap("token", token));
     }
 
     @PostMapping("/reset-password")
