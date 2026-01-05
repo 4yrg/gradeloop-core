@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 @Data
 @Builder
@@ -51,8 +53,16 @@ public class Assignment {
     private Boolean allowLateSubmissions;
     private LocalDateTime lateDueDate;
 
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Question> questions = new ArrayList<>();
+
+    @Embedded
+    private GradingPolicy gradingPolicy;
+
     private Boolean enforceTimeLimit;
     private Integer timeLimit; // in minutes
+    private Integer memoryLimit; // in MB
 
     private Boolean enableGroupSubmissions;
     private Integer groupSizeLimit;
