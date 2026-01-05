@@ -25,7 +25,8 @@ plugins:
   - name: cors
     config:
       origins:
-        - "*"
+        - "http://localhost:3000"
+        - "http://localhost:3001"
       methods:
         - GET
         - POST
@@ -33,9 +34,18 @@ plugins:
         - PATCH
         - DELETE
         - OPTIONS
+        - HEAD
       headers:
-        - "*"
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - X-Auth-Token
+        - Authorization
       exposed_headers:
-        - "*"
+        - X-Auth-Token
       credentials: true
       max_age: 3600
+      preflight_continue: false
