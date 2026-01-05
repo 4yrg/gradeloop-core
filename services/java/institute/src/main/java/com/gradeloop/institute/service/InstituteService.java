@@ -28,7 +28,7 @@ public class InstituteService {
     private final AuthServiceClient authServiceClient;
 
     @Transactional
-    public Institute createInstitute(CreateInstituteRequest request) {
+    public Institute createInstitute(CreateInstituteRequest request, Long createdBy) {
         if (instituteRepository.existsByCode(request.getCode())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Institute with code " + request.getCode() + " already exists");
@@ -39,6 +39,7 @@ public class InstituteService {
                 .code(request.getCode())
                 .domain(request.getDomain())
                 .contactEmail(request.getContactEmail())
+                .createdBy(createdBy)
                 .build();
 
         Institute savedInstitute = instituteRepository.save(institute);
