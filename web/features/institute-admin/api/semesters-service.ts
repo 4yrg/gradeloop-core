@@ -1,33 +1,27 @@
 import { Semester } from "../types";
-import { MOCK_SEMESTERS } from "../data/mock-semesters";
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { apiClient } from "@/api/client";
 
 export const semestersService = {
     getSemesters: async (): Promise<Semester[]> => {
-        await delay(500);
-        return [...MOCK_SEMESTERS];
+        const response = await apiClient.get<Semester[]>("/semesters");
+        return response.data;
     },
 
     createSemester: async (data: Omit<Semester, "id">): Promise<Semester> => {
-        await delay(800);
-        return {
-            ...data,
-            id: Math.random().toString(36).substring(2, 9),
-        };
+        const response = await apiClient.post<Semester>("/semesters", data);
+        return response.data;
     },
 
     updateSemester: async (id: string, data: Partial<Semester>): Promise<Semester> => {
-        await delay(600);
-        return { id, ...(MOCK_SEMESTERS.find(s => s.id === id) as Semester), ...data };
+        const response = await apiClient.put<Semester>(`/semesters/${id}`, data);
+        return response.data;
     },
 
     deleteSemester: async (id: string): Promise<void> => {
-        await delay(500);
+        await apiClient.delete(`/semesters/${id}`);
     },
 
     setActiveSemester: async (id: string): Promise<void> => {
-        await delay(300);
-        // Logic to unset others and set this one would happen on backend
+        await apiClient.patch(`/semesters/${id}/activate`);
     }
 };

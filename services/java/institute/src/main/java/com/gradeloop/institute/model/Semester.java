@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -14,30 +14,27 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "institutes")
-public class Institute {
+@Table(name = "semesters", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "code")
+})
+public class Semester {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false, unique = true)
     private String code;
 
     @Column(nullable = false)
-    private String domain;
+    private LocalDate startDate;
 
     @Column(nullable = false)
-    private String contactEmail;
+    private LocalDate endDate;
 
-    @Builder.Default
     @Column(nullable = false)
-    private Boolean isActive = true;
-
-    @com.fasterxml.jackson.annotation.JsonManagedReference
-    @OneToMany(mappedBy = "institute", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<InstituteAdmin> admins;
+    private boolean isActive;
 }

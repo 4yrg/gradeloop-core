@@ -1,0 +1,11 @@
+meta {
+  name: Delete Semester
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}
+  body: none
+  auth: none
+}

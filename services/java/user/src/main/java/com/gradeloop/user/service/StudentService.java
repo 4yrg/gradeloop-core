@@ -1,0 +1,125 @@
+package com.gradeloop.user.service;
+
+import com.gradeloop.user.client.AuthServiceClient;
+import com.gradeloop.user.client.auth.CreateAuthUserRequest;
+import com.gradeloop.user.client.auth.CreateAuthUserResponse;
+import com.gradeloop.user.dto.CreateStudentRequest;
+import com.gradeloop.user.dto.CreateUserResponse;
+import com.gradeloop.user.model.Student;
+import com.gradeloop.user.repository.StudentRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class StudentService {
+
+    private final StudentRepository studentRepository;
+    private final AuthServiceClient authServiceClient;
+
+    @Transactional
+    public CreateUserResponse createStudent(CreateStudentRequest request) {
+        // 1. Create User in Auth Service
+        CreateAuthUserResponse authUser = authServiceClient.createUser(request.getEmail(), "STUDENT");
+
+        // 2. Save Student Profile
+        Student student = null;
+        if (studentRepository.findByEmail(request.getEmail()).isPresent()) {
+            student = studentRepository.findByEmail(request.getEmail()).get();
+            // Update existing? Or just return?
+            // For now, assuming idempotency, we just return existing
+        } else {
+            student = Student.builder()
+                    .email(request.getEmail())
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .instituteId(request.getInstituteId())
+                    .authUserId(authUser.getUserId())
+                    .build();
+            student = studentRepository.save(student);
+        }
+
+        return CreateUserResponse.builder()
+                .id(student.getId())
+                .userId(authUser.getUserId())
+                .email(student.getEmail())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .tempPassword(authUser.getTempPassword())
+                .build();
+    }
+
+    @Transactional
+    public List<CreateUserResponse> createStudentsBulk(List<CreateStudentRequest> requests) {
+        // 1. Prepare Auth Requests
+        List<CreateAuthUserRequest> authRequests = requests.stream()
+                .map(req -> CreateAuthUserRequest.builder()
+                        .email(req.getEmail())
+                        .role("STUDENT")
+                        .build())
+                .collect(Collectors.toList());
+
+        // 2. Call Auth Service Bulk
+        List<CreateAuthUserResponse> authResponses = authServiceClient.createUsersBulk(authRequests);
+
+        // Map email to Auth Response
+        Map<String, CreateAuthUserResponse> authResponseMap = authResponses.stream()
+                .collect(Collectors.toMap(CreateAuthUserResponse::getEmail, Function.identity(),
+                        (existing, replacement) -> existing));
+
+        List<CreateUserResponse> responses = new ArrayList<>();
+
+        // 3. Process each request
+        for (CreateStudentRequest req : requests) {
+            try {
+                CreateAuthUserResponse authUser = authResponseMap.get(req.getEmail());
+                if (authUser == null) {
+                    // Should not happen if Auth Service works correctly
+                    responses.add(CreateUserResponse.builder()
+                            .email(req.getEmail())
+                            .error("Failed to create auth user")
+                            .build());
+                    continue;
+                }
+
+                Student student;
+                if (studentRepository.findByEmail(req.getEmail()).isPresent()) {
+                    student = studentRepository.findByEmail(req.getEmail()).get();
+                } else {
+                    student = Student.builder()
+                            .email(req.getEmail())
+                            .firstName(req.getFirstName())
+                            .lastName(req.getLastName())
+                            .instituteId(req.getInstituteId())
+                            .authUserId(authUser.getUserId())
+                            .build();
+                    student = studentRepository.save(student);
+                }
+
+                responses.add(CreateUserResponse.builder()
+                        .id(student.getId())
+                        .userId(authUser.getUserId())
+                        .email(student.getEmail())
+                        .firstName(student.getFirstName())
+                        .lastName(student.getLastName())
+                        .tempPassword(authUser.getTempPassword())
+                        .build());
+
+            } catch (Exception e) {
+                responses.add(CreateUserResponse.builder()
+                        .email(req.getEmail())
+                        .error("Error creating student profile: " + e.getMessage())
+                        .build());
+            }
+        }
+
+        return responses;
+    }
+}

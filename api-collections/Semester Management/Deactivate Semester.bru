@@ -1,0 +1,11 @@
+meta {
+  name: Deactivate Semester
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}/deactivate
+  body: none
+  auth: none
+}

@@ -15,8 +15,8 @@ export type UserRole = z.infer<typeof userRoleSchema>;
 // Semesters
 export const semesterSchema = z.object({
     id: z.string().uuid().optional(),
-    term: semesterTermSchema,
-    year: z.number().int().min(2000).max(2100),
+    name: z.string().min(1, "Name is required"),
+    code: z.string().min(1, "Code is required"),
     startDate: z.string().datetime(),
     endDate: z.string().datetime(),
     isActive: z.boolean().default(false),

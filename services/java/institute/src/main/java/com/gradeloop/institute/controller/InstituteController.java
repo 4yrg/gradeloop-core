@@ -1,8 +1,8 @@
 package com.gradeloop.institute.controller;
 
 import com.gradeloop.institute.dto.CreateInstituteRequest;
+import com.gradeloop.institute.dto.InstituteResponse;
 import com.gradeloop.institute.dto.UpdateInstituteRequest;
-import com.gradeloop.institute.model.Institute;
 import com.gradeloop.institute.service.InstituteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/institutes")
@@ -19,24 +20,37 @@ public class InstituteController {
     private final InstituteService instituteService;
 
     @PostMapping
-    public ResponseEntity<Institute> createInstitute(@RequestBody CreateInstituteRequest request) {
-        return ResponseEntity.ok(instituteService.createInstitute(request));
+    public ResponseEntity<InstituteResponse> createInstitute(@RequestBody CreateInstituteRequest request) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.createInstitute(request)));
     }
 
     @GetMapping
-    public ResponseEntity<List<Institute>> getAllInstitutes() {
-        return ResponseEntity.ok(instituteService.getAllInstitutes());
+    public ResponseEntity<List<InstituteResponse>> getAllInstitutes() {
+        return ResponseEntity.ok(
+                instituteService.getAllInstitutes().stream()
+                        .map(InstituteResponse::fromEntity)
+                        .collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Institute> getInstitute(@PathVariable UUID id) {
-        return ResponseEntity.ok(instituteService.getInstitute(id));
+    public ResponseEntity<InstituteResponse> getInstitute(@PathVariable UUID id) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.getInstitute(id)));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Institute> updateInstitute(@PathVariable UUID id,
+    public ResponseEntity<InstituteResponse> updateInstitute(@PathVariable UUID id,
             @RequestBody UpdateInstituteRequest request) {
-        return ResponseEntity.ok(instituteService.updateInstitute(id, request));
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.updateInstitute(id, request)));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<InstituteResponse> deactivateInstitute(@PathVariable UUID id) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.deactivateInstitute(id)));
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<InstituteResponse> activateInstitute(@PathVariable UUID id) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.activateInstitute(id)));
     }
 
     @DeleteMapping("/{id}")
