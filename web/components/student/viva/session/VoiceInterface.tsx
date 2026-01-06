@@ -88,7 +88,7 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
             {/* AI Question Display - Live typing text centered with scroll */}
             <div className="absolute inset-x-0 top-16 bottom-24 flex items-center justify-center px-6 md:px-12">
                 <div className="text-center max-w-3xl w-full h-full flex items-center justify-center overflow-hidden">
-                    <div className="max-h-full overflow-y-auto px-2 py-4 pointer-events-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+                    <div ref={scrollContainerRef} className="max-h-full overflow-y-auto px-2 py-4 pointer-events-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
                         {currentQuestion ? (
                             <p className={`font-medium leading-relaxed text-white transition-opacity duration-300 whitespace-pre-wrap ${isAiSpeaking || isTyping ? 'opacity-100' : 'opacity-80'} ${currentQuestion.length > 200 ? 'text-base md:text-lg' : currentQuestion.length > 150 ? 'text-lg md:text-xl' : currentQuestion.length > 80 ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl'}`}>
                                 {displayedText}
