@@ -30,7 +30,14 @@ public class TestCase {
     @Column(columnDefinition = "TEXT")
     private String expectedOutput;
 
+    @Column(name = "is_hidden")
     private boolean isHidden;
+
+    @Column(nullable = false)
+    private String visibility; // Test case visibility (e.g., "PUBLIC", "HIDDEN", "AFTER_DUE_DATE")
+
+    @Column(name = "marks")
+    private Integer marks; // Absolute marks/points for this test case
 
     // Optional: weighting for individual test cases if needed, but requirements
     // mention question-level weight.
