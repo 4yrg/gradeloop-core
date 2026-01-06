@@ -10,12 +10,16 @@ get {
   auth: bearer
 }
 
+params:query {
+  totalStudents: 45
+}
+
 auth:bearer {
   token: {{ACCESS_TOKEN}}
 }
 
-params:query {
-  totalStudents: 45
+vars:pre-request {
+  IVAS_BASE_URL: http://localhost:8084
 }
 
 docs {

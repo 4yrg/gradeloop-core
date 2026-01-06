@@ -14,6 +14,10 @@ auth:bearer {
   token: {{ACCESS_TOKEN}}
 }
 
+vars:pre-request {
+  IVAS_BASE_URL: http://localhost:8084
+}
+
 docs {
   # Get Viva Configuration
   
