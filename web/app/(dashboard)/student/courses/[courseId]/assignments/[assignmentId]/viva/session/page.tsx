@@ -53,15 +53,16 @@ export default function VivaSessionPage({
         },
     });
 
-    // Audio Capture Hook
+    // Audio Capture Hook - send complete audio blob when recording stops
     const audioCapture = useAudioCapture({
-        onAudioChunk: (chunk) => {
-            // Convert ArrayBuffer to base64 and send
-            const base64 = arrayBufferToBase64(chunk);
-            ivas.sendAudioChunk(base64);
-        },
-        onStop: (blob) => {
+        onStop: async (blob) => {
             console.log("Recording stopped, blob size:", blob.size);
+            // Convert complete blob to base64 and send
+            const buffer = await blob.arrayBuffer();
+            const base64 = arrayBufferToBase64(buffer);
+            ivas.sendAudioChunk(base64);
+            // Signal end of turn to process the audio
+            ivas.stopSpeaking();
         },
     });
 
@@ -106,8 +107,8 @@ export default function VivaSessionPage({
     // Handle microphone toggle
     const handleToggleMic = useCallback(async () => {
         if (audioCapture.isRecording) {
+            // Just stop recording - onStop callback handles sending audio and signaling end turn
             audioCapture.stopRecording();
-            ivas.stopSpeaking();
         } else {
             // Request permission if needed
             if (audioCapture.hasPermission === null) {
