@@ -15,7 +15,7 @@ from schemas import (
     AssessResponseResponse,
     HealthCheckResponse,
 )
-from services import ASRService, TTSService
+from services import ASRService, TTSService, LLMService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Initialize services (lazy loading - models loaded on first use)
 asr_service = ASRService()
 tts_service = TTSService()
+llm_service = LLMService()
 
 
 @router.get("/health", response_model=HealthCheckResponse)
@@ -36,7 +37,7 @@ async def health_check():
         services={
             "asr": {"status": "available" if asr_service.is_available else "unavailable", "model": f"whisper-{asr_service.model_size}"},
             "tts": {"status": "available" if tts_service.is_available else "unavailable", "model": "edge-tts"},
-            "llm": {"status": "available", "model": "llama3.1:8b"},
+            "llm": {"status": "available" if llm_service.is_available else "unavailable", "model": llm_service.model},
         },
     )
 
@@ -164,17 +165,33 @@ async def generate_question(request: GenerateQuestionRequest):
             detail="Either code or topic must be provided."
         )
     
-    # TODO: Implement actual LLM generation in Step 7
-    # For now, return a placeholder response
-    return GenerateQuestionResponse(
-        question="Can you explain how your code handles edge cases?",
-        difficulty="medium",
-        topic=request.topic or "general programming",
-        follow_up_hints=[
-            "Consider what happens with empty input",
-            "Think about boundary conditions",
-        ],
-    )
+    try:
+        # Use LLM service to generate question
+        result = llm_service.generate_question(
+            code=request.code,
+            topic=request.topic,
+            difficulty=request.difficulty or "medium",
+            conversation_history=request.conversation_history
+        )
+        
+        return GenerateQuestionResponse(
+            question=result["question"],
+            difficulty=result["difficulty"],
+            topic=result["topic"],
+            follow_up_hints=result.get("follow_up_hints", []),
+        )
+    except RuntimeError as e:
+        logger.error(f"Question generation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Question generation failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected question generation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during question generation."
+        )
 
 
 @router.post("/assess-response", response_model=AssessResponseResponse)
@@ -194,14 +211,33 @@ async def assess_response(request: AssessResponseRequest):
             detail="Both question and response must be provided."
         )
     
-    # TODO: Implement actual assessment in Step 7
-    # For now, return a placeholder response
-    return AssessResponseResponse(
-        understanding_level="partial",
-        clarity="clear",
-        confidence_score=0.7,
-        misconceptions=[],
-        strengths=["Clear communication"],
-        areas_for_improvement=["Could provide more specific examples"],
-        suggested_follow_up="Can you elaborate on that with a specific example?",
-    )
+    try:
+        # Use LLM service to assess response
+        result = llm_service.assess_response(
+            question=request.question,
+            response=request.response,
+            expected_concepts=request.expected_concepts,
+            code_context=request.code_context
+        )
+        
+        return AssessResponseResponse(
+            understanding_level=result["understanding_level"],
+            clarity=result["clarity"],
+            confidence_score=result["confidence_score"],
+            misconceptions=result.get("misconceptions", []),
+            strengths=result.get("strengths", []),
+            areas_for_improvement=result.get("areas_for_improvement", []),
+            suggested_follow_up=result.get("suggested_follow_up", ""),
+        )
+    except RuntimeError as e:
+        logger.error(f"Assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Response assessment failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during response assessment."
+        )
