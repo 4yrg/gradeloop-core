@@ -15,4 +15,7 @@ public class AuthResponse {
     private String role;
     private String email;
     private boolean forceReset;
+    private String name; // User's full name from user-db
+    private Long userId; // User profile ID from user-db
+    private String instituteId; // Institute ID if applicable (nullable)
 }

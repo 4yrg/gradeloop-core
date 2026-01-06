@@ -26,100 +26,103 @@ public class StudentService {
 
     @Transactional
     public CreateUserResponse createStudent(CreateStudentRequest request) {
-        // 1. Create User in Auth Service
-        CreateAuthUserResponse authUser = authServiceClient.createUser(request.getEmail(), "STUDENT");
+        // 1. Check if student already exists
+        if (studentRepository.findByEmail(request.getEmail()).isPresent()) {
+            Student existingStudent = studentRepository.findByEmail(request.getEmail()).get();
+            return CreateUserResponse.builder()
+                    .id(existingStudent.getId())
+                    .userId(existingStudent.getId())
+                    .email(existingStudent.getEmail())
+                    .fullName(existingStudent.getFullName())
+                    .role("student")
+                    .instituteId(existingStudent.getInstituteId())
+                    .build();
+        }
 
-        // 2. Save Student Profile
-        Student student = null;
+        // 2. Create Student Profile FIRST
+        Student student = Student.builder()
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .instituteId(request.getInstituteId())
+                .build();
+        student = studentRepository.save(student);
+
+        // 3. Create Auth User with reference to student ID
+        CreateAuthUserResponse authUser = null;
         try {
-            if (studentRepository.findByEmail(request.getEmail()).isPresent()) {
-                student = studentRepository.findByEmail(request.getEmail()).get();
-                // Update existing? Or just return?
-                // For now, assuming idempotency, we just return existing
-            } else {
-                student = Student.builder()
-                        .email(request.getEmail())
-                        .fullName(request.getFullName())
-                        .instituteId(request.getInstituteId())
-                        .authUserId(authUser.getUserId())
-                        .build();
-                student = studentRepository.save(student);
-            }
+            authUser = authServiceClient.createUser(request.getEmail(), "STUDENT", student.getId());
+            student.setAuthUserId(authUser.getAuthUserId());
+            student = studentRepository.save(student);
         } catch (Exception e) {
-            // Rollback Auth User
-            authServiceClient.deleteUser(authUser.getUserId());
-            throw e;
+            // Rollback: Delete student if auth creation fails
+            studentRepository.deleteById(student.getId());
+            throw new RuntimeException("Failed to create auth user: " + e.getMessage(), e);
         }
 
         return CreateUserResponse.builder()
                 .id(student.getId())
-                .userId(authUser.getUserId())
+                .userId(student.getId())
                 .email(student.getEmail())
                 .fullName(student.getFullName())
-                .tempPassword(authUser.getTempPassword())
+                .role("student")
                 .instituteId(student.getInstituteId())
                 .build();
     }
 
     @Transactional
     public List<CreateUserResponse> createStudentsBulk(List<CreateStudentRequest> requests) {
-        // 1. Prepare Auth Requests
-        List<CreateAuthUserRequest> authRequests = requests.stream()
-                .map(req -> CreateAuthUserRequest.builder()
-                        .email(req.getEmail())
-                        .role("STUDENT")
-                        .build())
-                .collect(Collectors.toList());
-
-        // 2. Call Auth Service Bulk
-        List<CreateAuthUserResponse> authResponses = authServiceClient.createUsersBulk(authRequests);
-
-        // Map email to Auth Response
-        Map<String, CreateAuthUserResponse> authResponseMap = authResponses.stream()
-                .collect(Collectors.toMap(CreateAuthUserResponse::getEmail, Function.identity(),
-                        (existing, replacement) -> existing));
-
         List<CreateUserResponse> responses = new ArrayList<>();
 
-        // 3. Process each request
+        // Process each request individually with proper rollback
         for (CreateStudentRequest req : requests) {
             try {
-                CreateAuthUserResponse authUser = authResponseMap.get(req.getEmail());
-                if (authUser == null) {
-                    // Should not happen if Auth Service works correctly
+                // Check if student already exists
+                if (studentRepository.findByEmail(req.getEmail()).isPresent()) {
+                    Student existingStudent = studentRepository.findByEmail(req.getEmail()).get();
                     responses.add(CreateUserResponse.builder()
-                            .email(req.getEmail())
-                            .error("Failed to create auth user")
+                            .id(existingStudent.getId())
+                            .userId(existingStudent.getId())
+                            .email(existingStudent.getEmail())
+                            .fullName(existingStudent.getFullName())
+                            .role("student")
+                            .instituteId(existingStudent.getInstituteId())
                             .build());
                     continue;
                 }
 
-                Student student;
-                if (studentRepository.findByEmail(req.getEmail()).isPresent()) {
-                    student = studentRepository.findByEmail(req.getEmail()).get();
-                } else {
-                    student = Student.builder()
-                            .email(req.getEmail())
-                            .fullName(req.getFullName())
-                            .instituteId(req.getInstituteId())
-                            .authUserId(authUser.getUserId())
-                            .build();
-                    student = studentRepository.save(student);
-                }
+                // Create Student Profile FIRST
+                Student student = Student.builder()
+                        .email(req.getEmail())
+                        .fullName(req.getFullName())
+                        .instituteId(req.getInstituteId())
+                        .build();
+                student = studentRepository.save(student);
 
-                responses.add(CreateUserResponse.builder()
-                        .id(student.getId())
-                        .userId(authUser.getUserId())
-                        .email(student.getEmail())
-                        .fullName(student.getFullName())
-                        .tempPassword(authUser.getTempPassword())
-                        .instituteId(student.getInstituteId())
-                        .build());
+                // Create Auth User with reference to student ID
+                try {
+                    CreateAuthUserResponse authUser = authServiceClient.createUser(
+                            req.getEmail(), "STUDENT", student.getId());
+                    student.setAuthUserId(authUser.getAuthUserId());
+                    student = studentRepository.save(student);
+
+                    responses.add(CreateUserResponse.builder()
+                            .id(student.getId())
+                            .userId(student.getId())
+                            .email(student.getEmail())
+                            .fullName(student.getFullName())
+                            .role("student")
+                            .instituteId(student.getInstituteId())
+                            .build());
+                } catch (Exception e) {
+                    // Rollback: Delete student if auth creation fails
+                    studentRepository.deleteById(student.getId());
+                    throw e;
+                }
 
             } catch (Exception e) {
                 responses.add(CreateUserResponse.builder()
                         .email(req.getEmail())
-                        .error("Error creating student profile: " + e.getMessage())
+                        .error("Error creating student: " + e.getMessage())
                         .build());
             }
         }

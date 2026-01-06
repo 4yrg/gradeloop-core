@@ -1,9 +1,11 @@
 package com.gradeloop.user.controller;
 
-import com.gradeloop.user.model.UserProfile;
+import com.gradeloop.user.dto.UserProfileResponse;
+import com.gradeloop.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,21 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final com.gradeloop.user.repository.UserProfileRepository userProfileRepository;
+    private final UserProfileService userProfileService;
 
-    @GetMapping
-    public ResponseEntity<java.util.List<UserProfile>> getUsers(
-            @org.springframework.web.bind.annotation.RequestParam(required = false) String email) {
-        if (email != null) {
-            return ResponseEntity
-                    .ok(userProfileRepository.findByEmail(email).map(java.util.List::of).orElse(java.util.List.of()));
+    @GetMapping("/profile/{userDbId}")
+    public ResponseEntity<UserProfileResponse> getUserProfile(@PathVariable Long userDbId) {
+        try {
+            return ResponseEntity.ok(userProfileService.getUserProfileById(userDbId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(userProfileRepository.findAll());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserProfile> getUserById(@org.springframework.web.bind.annotation.PathVariable Long id) {
-        return ResponseEntity
-                .ok(userProfileRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found")));
     }
 }

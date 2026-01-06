@@ -41,6 +41,9 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private AdminLevel adminLevel;
 
+    @Column(name = "user_db_id")
+    private Long userDbId; // Reference to user profile in user-service database
+
     @Column(updatable = false)
     private java.time.LocalDateTime createdAt;
 

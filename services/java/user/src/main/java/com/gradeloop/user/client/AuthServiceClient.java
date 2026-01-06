@@ -22,12 +22,13 @@ public class AuthServiceClient {
     @Value("${auth.service.url:http://auth-service:5000}")
     private String authServiceUrl;
 
-    public CreateAuthUserResponse createUser(String email, String role) {
+    public CreateAuthUserResponse createUser(String email, String role, Long userDbId) {
         String url = authServiceUrl + "/auth/internal/users";
 
         CreateAuthUserRequest request = CreateAuthUserRequest.builder()
                 .email(email)
                 .role(role)
+                .userDbId(userDbId)
                 .build();
 
         return restTemplate.postForObject(url, request, CreateAuthUserResponse.class);

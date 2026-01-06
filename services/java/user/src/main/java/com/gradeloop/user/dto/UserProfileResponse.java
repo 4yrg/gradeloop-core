@@ -1,4 +1,4 @@
-package com.gradeloop.user.client.auth;
+package com.gradeloop.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAuthUserRequest {
+public class UserProfileResponse {
+    private Long id;
     private String email;
+    private String fullName;
     private String role;
-    private Long userDbId; // Reference to user profile ID in user-service database
+    private String instituteId;
 }

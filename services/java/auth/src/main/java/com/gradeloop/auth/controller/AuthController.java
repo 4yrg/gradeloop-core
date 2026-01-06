@@ -33,6 +33,10 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
 
+        // Get user from auth-db
+        String email = authentication.getName();
+        com.gradeloop.auth.model.User user = authService.getUserByEmail(email);
+
         // Extract role from authorities (ROLE_ADMIN -> ADMIN)
         String role = authentication.getAuthorities().stream()
                 .findFirst()
@@ -40,8 +44,22 @@ public class AuthController {
                 .orElse("UNKNOWN");
 
         java.util.Map<String, Object> response = new java.util.HashMap<>();
-        response.put("email", authentication.getName());
+        response.put("email", email);
         response.put("role", role);
+
+        // Fetch user profile from user-service if userDbId exists
+        if (user.getUserDbId() != null) {
+            try {
+                com.gradeloop.auth.client.UserProfileResponse profile = authService.getUserProfile(user.getUserDbId());
+                response.put("name", profile.getFullName());
+                response.put("userId", profile.getId());
+                response.put("instituteId", profile.getInstituteId());
+            } catch (Exception e) {
+                System.out.println("Warning: Failed to fetch user profile for /me: " + e.getMessage());
+                // Continue without profile data
+            }
+        }
+
         return ResponseEntity.ok(response);
     }
 

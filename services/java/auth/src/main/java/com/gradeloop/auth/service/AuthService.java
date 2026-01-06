@@ -31,6 +31,7 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final com.gradeloop.auth.repository.InstituteAdminRepository instituteAdminRepository;
+    private final com.gradeloop.auth.client.UserServiceClient userServiceClient;
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         System.out.println("Login info - Attempting login for: " + request.getEmail());
@@ -46,12 +47,30 @@ public class AuthService {
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
             System.out.println("Login info - User found with role: " + user.getRole());
 
+            // Fetch user profile from user-service if userDbId exists
+            String fullName = null;
+            String instituteId = null;
+            if (user.getUserDbId() != null) {
+                try {
+                    com.gradeloop.auth.client.UserProfileResponse profile = userServiceClient
+                            .getUserProfile(user.getUserDbId());
+                    fullName = profile.getFullName();
+                    instituteId = profile.getInstituteId();
+                } catch (Exception e) {
+                    System.out.println("Warning: Failed to fetch user profile: " + e.getMessage());
+                    // Continue without profile data
+                }
+            }
+
             return AuthResponse.builder()
                     .message("Login successful")
                     .role(user.getRole().name())
                     .token(session.getId())
                     .email(user.getEmail())
                     .forceReset(user.isTemporaryPassword())
+                    .name(fullName)
+                    .userId(user.getUserDbId())
+                    .instituteId(instituteId)
                     .build();
         } catch (Exception e) {
             System.out.println("Login info - Authentication failed: " + e.getMessage());
@@ -178,9 +197,8 @@ public class AuthService {
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             return CreateUserResponse.builder()
-                    .userId(user.getId())
+                    .authUserId(user.getId())
                     .email(user.getEmail())
-                    .tempPassword(null)
                     .build();
         }
 
@@ -189,6 +207,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(tempPassword))
                 .role(request.getRole())
+                .userDbId(request.getUserDbId())
                 .tempPassword(tempPassword)
                 .isTemporaryPassword(true)
                 .build();
@@ -199,9 +218,8 @@ public class AuthService {
         emailService.sendWelcomeLink(savedUser.getEmail(), token);
 
         return CreateUserResponse.builder()
-                .userId(savedUser.getId())
+                .authUserId(savedUser.getId())
                 .email(savedUser.getEmail())
-                .tempPassword(null) // No longer needed
                 .build();
     }
 
@@ -250,6 +268,10 @@ public class AuthService {
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    public com.gradeloop.auth.client.UserProfileResponse getUserProfile(Long userDbId) {
+        return userServiceClient.getUserProfile(userDbId);
     }
 
     public java.util.Map<String, Object> getUserWithInstituteByEmail(String email) {
