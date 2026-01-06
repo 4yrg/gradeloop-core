@@ -14,6 +14,8 @@ import urllib.parse
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+from assessment import AdaptiveAssessmentEngine, Concept
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,8 +49,62 @@ class VivaSession:
     start_time: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     status: str = "active"  # active, paused, completed, error
     current_question: Optional[str] = None
+    current_concept: str = ""  # Track current concept being assessed
     assessment_scores: List[Dict[str, Any]] = field(default_factory=list)
     audio_chunks: List[bytes] = field(default_factory=list)  # Store chunks as list to preserve WebM structure
+    assessment_engine: Optional[AdaptiveAssessmentEngine] = field(default=None)
+    
+    def __post_init__(self):
+        """Initialize assessment engine after creation"""
+        if self.assessment_engine is None:
+            self.assessment_engine = AdaptiveAssessmentEngine()
+            # Initialize with concepts from the topic
+            concepts = self._extract_concepts_from_topic()
+            self.assessment_engine.start_session(concepts)
+    
+    def _extract_concepts_from_topic(self) -> List[Concept]:
+        """Extract concepts from the topic for assessment"""
+        # Default concepts based on common programming topics
+        topic_concepts = {
+            "recursion": [
+                Concept("recursion_basics", 0.3),
+                Concept("base_case", 0.4),
+                Concept("recursive_call", 0.5),
+                Concept("stack_overflow", 0.6),
+                Concept("recursion_vs_iteration", 0.5),
+            ],
+            "data structures": [
+                Concept("arrays", 0.3),
+                Concept("linked_lists", 0.5),
+                Concept("trees", 0.6),
+                Concept("hash_tables", 0.6),
+            ],
+            "algorithms": [
+                Concept("sorting", 0.4),
+                Concept("searching", 0.3),
+                Concept("time_complexity", 0.6),
+                Concept("space_complexity", 0.6),
+            ],
+            "python functions": [
+                Concept("function_definition", 0.3),
+                Concept("parameters_arguments", 0.4),
+                Concept("return_values", 0.4),
+                Concept("scope", 0.5),
+            ],
+        }
+        
+        # Find matching concepts based on topic keywords
+        topic_lower = self.topic.lower()
+        for key, concepts in topic_concepts.items():
+            if key in topic_lower:
+                return concepts
+        
+        # Default generic concepts
+        return [
+            Concept("understanding", 0.4),
+            Concept("application", 0.5),
+            Concept("explanation", 0.4),
+        ]
     
     def add_turn(self, speaker: str, text: str, audio_duration: float = None):
         """Add a conversation turn"""
@@ -60,6 +116,54 @@ class VivaSession:
         )
         self.conversation_history.append(turn)
         logger.info(f"Session {self.session_id}: Added turn - {speaker}: {text[:50]}...")
+    
+    def process_student_response(
+        self,
+        question: str,
+        response: str,
+        llm_assessment: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Process a student response through the adaptive assessment engine.
+        
+        Returns adaptive assessment results including next difficulty, 
+        concept mastery, ability estimates, etc.
+        """
+        if self.assessment_engine is None:
+            return {}
+        
+        # Use current concept or extract from topic
+        concept = self.current_concept or "understanding"
+        
+        result = self.assessment_engine.process_response(
+            question=question,
+            response=response,
+            concept=concept,
+            assessment=llm_assessment
+        )
+        
+        # Store assessment result
+        self.assessment_scores.append(result)
+        
+        return result
+    
+    def get_next_difficulty(self) -> str:
+        """Get recommended difficulty for next question"""
+        if self.assessment_engine and self.assessment_scores:
+            return self.assessment_scores[-1].get("next_difficulty", "same")
+        return "same"
+    
+    def should_end_session(self) -> bool:
+        """Check if session should end based on adaptive assessment"""
+        if self.assessment_engine:
+            return self.assessment_engine.should_end_session()
+        return len(self.conversation_history) >= 14  # 7 Q&A pairs
+    
+    def get_final_assessment(self) -> Dict[str, Any]:
+        """Get final adaptive assessment for the session"""
+        if self.assessment_engine:
+            return self.assessment_engine.generate_final_assessment()
+        return {"overall_score": 70, "competency_level": "INTERMEDIATE"}
     
     def get_history_for_llm(self) -> List[Dict[str, str]]:
         """Get conversation history in LLM format"""
@@ -81,7 +185,9 @@ class VivaSession:
             "status": self.status,
             "turns_count": len(self.conversation_history),
             "conversation_history": [turn.to_dict() for turn in self.conversation_history],
+            "adaptive_assessment": self.assessment_scores[-1] if self.assessment_scores else None,
         }
+
 
 
 class SessionManager:

@@ -417,9 +417,10 @@ async def _process_student_turn(session: VivaSession):
     1. Get accumulated audio
     2. Transcribe to text (ASR)
     3. Assess the response (LLM)
-    4. Generate follow-up question (LLM)
-    5. Synthesize response audio (TTS)
-    6. Send all results to client
+    4. Update adaptive assessment (BKT + IRT)
+    5. Generate follow-up question based on adaptive difficulty
+    6. Synthesize response audio (TTS)
+    7. Send all results to client
     """
     session_id = session.session_id
     
@@ -446,32 +447,49 @@ async def _process_student_turn(session: VivaSession):
         # Add to conversation history
         session.add_turn("STUDENT", student_text, transcription.get("duration"))
         
-        # Step 2: Assess the response
+        # Step 2: Assess the response using LLM
         logger.info(f"Assessing response for session {session_id}")
-        assessment = llm_service.assess_response(
+        llm_assessment = llm_service.assess_response(
             question=session.current_question or "Tell me about your code",
             response=student_text,
             code_context=session.code
         )
         
-        # Store assessment
-        session.assessment_scores.append(assessment)
+        # Step 3: Process through adaptive assessment engine (BKT + IRT)
+        adaptive_result = session.process_student_response(
+            question=session.current_question or "",
+            response=student_text,
+            llm_assessment=llm_assessment
+        )
+        
+        # Combine LLM assessment with adaptive metrics
+        combined_assessment = {
+            **llm_assessment,
+            "adaptive": {
+                "question_number": adaptive_result.get("question_number", 0),
+                "concept_mastery": adaptive_result.get("concept_mastery", 0),
+                "ability_level": adaptive_result.get("ability_level", "INTERMEDIATE"),
+                "ability_percentile": adaptive_result.get("ability_percentile", 50),
+                "questions_remaining": adaptive_result.get("questions_remaining", 5),
+            }
+        }
         
         # Send assessment to client
-        await session_manager.send_assessment(session_id, assessment)
+        await session_manager.send_assessment(session_id, combined_assessment)
         
-        # Step 3: Generate follow-up question based on assessment
-        understanding = assessment.get("understanding_level", "partial")
+        # Step 4: Check if session should end
+        if session.should_end_session():
+            await _end_viva_session(session)
+            return
         
-        # Adjust difficulty based on understanding
-        if understanding in ["excellent", "good"]:
-            difficulty = "harder"
-        elif understanding in ["minimal", "none"]:
-            difficulty = "easier"
-        else:
-            difficulty = "same"
+        # Step 5: Get adaptive difficulty recommendation
+        difficulty = adaptive_result.get("next_difficulty", "same")
+        suggested_concept = adaptive_result.get("suggested_focus", "understanding")
+        session.current_concept = suggested_concept
         
-        # Generate follow-up
+        logger.info(f"Adaptive recommendation: difficulty={difficulty}, focus={suggested_concept}")
+        
+        # Step 6: Generate follow-up question with adaptive difficulty
         await _generate_follow_up_question(session, difficulty)
         
     except Exception as e:
@@ -515,22 +533,51 @@ async def _generate_follow_up_question(session: VivaSession, difficulty: str = "
 
 
 async def _end_viva_session(session: VivaSession):
-    """End the viva session and send final assessment"""
+    """End the viva session and send final assessment with adaptive metrics"""
     session_id = session.session_id
     
     try:
         # Generate final assessment
         logger.info(f"Generating final assessment for session {session_id}")
         
-        final_assessment = llm_service.generate_final_assessment(
+        # Get LLM-based final assessment
+        llm_assessment = llm_service.generate_final_assessment(
             code=session.code,
             conversation_history=session.get_history_for_llm()
         )
         
-        # Add session metadata
-        final_assessment["session_id"] = session_id
-        final_assessment["total_turns"] = len(session.conversation_history)
-        final_assessment["duration_minutes"] = _calculate_session_duration(session)
+        # Get adaptive assessment (BKT + IRT)
+        adaptive_assessment = session.get_final_assessment()
+        
+        # Combine both assessments
+        # Use adaptive score as primary (it's based on actual measured performance)
+        # LLM provides qualitative analysis
+        final_assessment = {
+            # Use adaptive engine's calculated score
+            "overall_score": adaptive_assessment.get("overall_score", llm_assessment.get("overall_score", 70)),
+            "competency_level": adaptive_assessment.get("competency_level", llm_assessment.get("competency_level", "INTERMEDIATE")),
+            
+            # Adaptive metrics
+            "ability_theta": adaptive_assessment.get("ability_theta", 0),
+            "ability_percentile": adaptive_assessment.get("ability_percentile", 50),
+            "accuracy_rate": adaptive_assessment.get("accuracy_rate", 0),
+            
+            # Concept mastery from BKT
+            "concept_mastery": adaptive_assessment.get("concept_mastery", {}),
+            
+            # LLM qualitative analysis
+            "misconceptions": llm_assessment.get("misconceptions", []),
+            "strengths": adaptive_assessment.get("strengths", llm_assessment.get("strengths", [])),
+            "weaknesses": adaptive_assessment.get("weaknesses", llm_assessment.get("weaknesses", [])),
+            "full_analysis": llm_assessment.get("full_analysis", ""),
+            "recommendations": adaptive_assessment.get("recommendations", []),
+            
+            # Session metadata
+            "session_id": session_id,
+            "questions_answered": adaptive_assessment.get("questions_answered", 0),
+            "total_turns": len(session.conversation_history),
+            "duration_minutes": _calculate_session_duration(session),
+        }
         
         # Send final assessment
         await session_manager.send_session_end(session_id, final_assessment)
@@ -538,7 +585,7 @@ async def _end_viva_session(session: VivaSession):
         # End session
         session_manager.end_session(session_id)
         
-        logger.info(f"Viva session ended: {session_id}, score: {final_assessment.get('overall_score')}")
+        logger.info(f"Viva session ended: {session_id}, score: {final_assessment.get('overall_score')}, level: {final_assessment.get('competency_level')}")
         
     except Exception as e:
         logger.error(f"Failed to end session: {e}")
