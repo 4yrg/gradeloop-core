@@ -2,6 +2,7 @@ package com.gradeloop.ivas.service;
 
 import com.gradeloop.ivas.dto.DashboardResponse;
 import com.gradeloop.ivas.model.VivaConfiguration;
+import com.gradeloop.ivas.model.VivaQuestionTemplate;
 import com.gradeloop.ivas.model.VivaRubric;
 import com.gradeloop.ivas.model.VivaSession;
 import com.gradeloop.ivas.repository.VivaQuestionTemplateRepository;
