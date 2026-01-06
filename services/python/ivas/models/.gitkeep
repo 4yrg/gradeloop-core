@@ -1,0 +1,7 @@
+# This directory stores AI model files
+# Models are downloaded on first run or can be pre-downloaded
+# 
+# Structure:
+# models/
+# ├── whisper/    - Faster-Whisper ASR models
+# └── tts/        - Coqui TTS models
