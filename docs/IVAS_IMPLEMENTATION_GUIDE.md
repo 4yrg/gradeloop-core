@@ -1,3 +1,8 @@
+cd /Users/mpssj/all/code/uni/gradeloop-core/services/python/ivas && source venv/bin/activate && python -m uvicorn main:app --host 0.0.0.0 --port 8085 --reload
+
+lsof -ti:8085 | xargs kill -9 2>/dev/null; sleep 1 && cd /Users/mpssj/all/code/uni/gradeloop-core/services/python/ivas && source venv/bin/activate && python -m uvicorn main:app --host 0.0.0.0 --port 8085 --reload
+
+
 # IVAS Implementation Guide - Step by Step
 
 > **Intelligent Viva Assessment System** for GradeLoop  
