@@ -1,11 +1,9 @@
 package com.gradeloop.ivas.service;
 
-import com.gradeloop.ivas.client.institute.InstituteServiceClient;
-import com.gradeloop.ivas.client.institute.dto.AssignmentDTO;
-import com.gradeloop.ivas.client.user.UserServiceClient;
-import com.gradeloop.ivas.client.user.dto.StudentDTO;
 import com.gradeloop.ivas.model.VivaConfiguration;
+import com.gradeloop.ivas.model.VivaQuestion;
 import com.gradeloop.ivas.model.VivaSession;
+import com.gradeloop.ivas.repository.VivaQuestionRepository;
 import com.gradeloop.ivas.repository.VivaSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,23 +25,13 @@ public class VivaSessionService {
 
     private final VivaSessionRepository sessionRepository;
     private final VivaConfigurationService configurationService;
-    private final UserServiceClient userServiceClient;
-    private final InstituteServiceClient instituteServiceClient;
+    private final VivaQuestionRepository questionRepository;
 
     @Transactional
     public VivaSession startSession(UUID assignmentId, Long studentId) {
-        // Fetch student details from User Service
-        StudentDTO student = userServiceClient.getStudent(studentId);
-        log.info("Fetched student details: {} {} ({})", student.getFirstName(), student.getLastName(), student.getEmail());
-
-        // Fetch assignment details from Institute Service
-        AssignmentDTO assignment = instituteServiceClient.getAssignment(assignmentId);
-        log.info("Fetched assignment details: {} for course {}", assignment.getTitle(), assignment.getCourseName());
-
-        // Check if assignment is published
-        if (!assignment.getIsPublished()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment is not published yet");
-        }
+        // Mock student and assignment data (self-contained IVAS)
+        log.info("Starting viva session for student {} on assignment {}", studentId, assignmentId);
+        log.info("Using mock data - Student: Demo Student, Assignment: Programming Assignment 1");
 
         // Check configuration
         VivaConfiguration config = configurationService.getConfigurationByAssignmentId(assignmentId);
@@ -76,9 +64,8 @@ public class VivaSessionService {
                 .build();
 
         VivaSession saved = sessionRepository.save(session);
-        log.info("Started viva session id={} for student={} {} ({}), attempt={}, assignment={}",
-                saved.getId(), student.getFirstName(), student.getLastName(), 
-                student.getEmail(), attemptNumber, assignment.getTitle());
+        log.info("Started viva session id={} for student={}, attempt={}",
+                saved.getId(), studentId, attemptNumber);
         return saved;
     }
 
@@ -111,6 +98,30 @@ public class VivaSessionService {
         if (session.getStartedAt() != null) {
             long seconds = java.time.Duration.between(session.getStartedAt(), session.getCompletedAt()).getSeconds();
             session.setTimeSpent((int) seconds);
+        }
+
+        // Calculate final score from all questions
+        List<VivaQuestion> questions = questionRepository.findBySessionIdOrderBySequence(sessionId);
+        if (!questions.isEmpty()) {
+            double avgScore = questions.stream()
+                    .filter(q -> q.getResponseScore() != null)
+                    .mapToDouble(VivaQuestion::getResponseScore)
+                    .average()
+                    .orElse(0.0);
+            
+            session.setFinalScore(avgScore);
+            
+            // Get passing threshold from configuration
+            VivaConfiguration config = configurationService.getConfigurationByAssignmentId(session.getAssignmentId());
+            double passingThreshold = config.getPassingThreshold() != null ? config.getPassingThreshold() : 0.6;
+            
+            session.setPassFail(avgScore >= passingThreshold ? 
+                    VivaSession.PassFail.PASS : VivaSession.PassFail.FAIL);
+            
+            log.info("Session {} scored {}/1.0 ({}), answered {}/{} questions",
+                    sessionId, String.format("%.2f", avgScore), session.getPassFail(), 
+                    questions.stream().filter(q -> q.getStudentResponse() != null).count(),
+                    questions.size());
         }
 
         log.info("Ended viva session id={}", sessionId);

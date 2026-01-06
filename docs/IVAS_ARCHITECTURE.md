@@ -1,25 +1,53 @@
 # IVAS System Architecture
 
 > **Last Updated:** January 6, 2026  
-> **Current Status:** Foundation Complete | WebSocket & AI Services Pending
+> **Current Status:** Self-Contained MVP Approach - Phase 2 Complete
 
 ## 🎯 Quick Status
 
 ### ✅ Completed
-- Frontend UI (Student & Instructor pages)
-- Backend structure (Models, Repositories, Services)
-- Database schema
-- Basic REST APIs
+- ✅ Frontend UI (Student & Instructor pages)
+- ✅ Backend structure (Models, Repositories, Services)
+- ✅ Database schema (9 entities, all repositories)
+- ✅ REST APIs (10+ endpoints including question management)
+- ✅ **QuestionManagementService with 5 hardcoded questions** ⭐ NEW
+- ✅ **Session scoring and pass/fail logic** ⭐ NEW
+- ✅ **Self-contained with mock data (no external dependencies)** ⭐ NEW
 
 ### 🔴 Critical - Next Steps
-1. **Service-to-service communication** (User, Institute services)
-2. **WebSocket implementation** (Real-time audio streaming)
-3. **Python AI service** (Whisper STT, OpenAI TTS, GPT-4 NLP)
-4. **Audio processing pipeline**
+1. **Test new question endpoints** (1-2 hours)
+2. **Frontend integration** (1-2 days) - Connect UI to backend
+3. **WebSocket implementation** (3-4 days) - Real-time communication
+4. **Audio processing** (3-4 days) - Web Speech API or Python service
+5. **Polish & testing** (2-3 days)
+
+### 🟠 Optional Enhancements
+- Python AI service (advanced grading with GPT-4)
+- Adaptive question selection (IRT)
+- Voice cloning for AI tutor
+- Advanced analytics
 
 ---
 
-## High-Level Architecture
+## Architecture Decision: Self-Contained IVAS
+
+**Key Change:** IVAS operates independently without external service dependencies.
+
+### Mock Data Strategy
+- **Student info:** Hardcoded as "Demo Student" in logs
+- **Assignment info:** Hardcoded as "Programming Assignment 1"
+- **Questions:** 5 hardcoded questions in QuestionManagementService
+- **Scoring:** Demo algorithm (length + keyword matching)
+
+### Benefits
+- ✅ Faster development - no waiting for other services
+- ✅ Easier testing - single service to run
+- ✅ Clear scope - focus on viva functionality
+- ✅ Can integrate real services later
+
+---
+
+## High-Level Architecture (Simplified)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
