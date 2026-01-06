@@ -1,0 +1,15 @@
+meta {
+  name: Test IVAS Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{IVAS_API_URL}}/api/v1/viva/health
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  IVAS_API_URL: http://localhost:8084
+}
