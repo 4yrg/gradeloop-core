@@ -1,0 +1,15 @@
+meta {
+  name: Get Viva Dashboard
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{IVAS_API_URL}}/api/v1/viva/assignments/123e4567-e89b-12d3-a456-426614174000/dashboard?totalStudents=10
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  IVAS_API_URL: http://localhost:8084
+}
