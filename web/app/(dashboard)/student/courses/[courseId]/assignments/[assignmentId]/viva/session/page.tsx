@@ -3,14 +3,15 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TopBar } from "@/components/student/viva/session/TopBar";
-import { QuestionDisplay } from "@/components/student/viva/session/QuestionDisplay";
 import { VoiceInterface } from "@/components/student/viva/session/VoiceInterface";
 import { ControlBar } from "@/components/student/viva/session/ControlBar";
 import { SessionSidebar } from "@/components/student/viva/session/SessionSidebar";
+import { AssignmentInfoPanel } from "@/components/student/viva/session/AssignmentInfoPanel";
 import { useIvas } from "@/hooks/use-ivas";
 import { useAudioCapture } from "@/hooks/use-audio-capture";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Wifi, WifiOff } from "lucide-react";
+import { Loader2, AlertCircle, Wifi, WifiOff, PanelRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Mock code for now - in real app, this would come from the assignment
 const MOCK_CODE = `
@@ -24,6 +25,12 @@ def fibonacci(n):
         return fibonacci(n-1) + fibonacci(n-2)
 `;
 
+// Mock assignment data - in real app, this would come from API
+const MOCK_ASSIGNMENT = {
+    question: "Write a recursive function to calculate the nth Fibonacci number. Your solution should handle edge cases for n <= 0 and n == 1.",
+    studentAnswer: MOCK_CODE,
+};
+
 export default function VivaSessionPage({
     params
 }: {
@@ -35,6 +42,10 @@ export default function VivaSessionPage({
     // Session duration (10 minutes)
     const [timeLeft, setTimeLeft] = useState(600);
     const [sessionStarted, setSessionStarted] = useState(false);
+
+    // UI States
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [showAssignmentInfo, setShowAssignmentInfo] = useState(false);
 
     // IVAS Hook - connects to WebSocket and manages session
     const ivas = useIvas({
@@ -205,24 +216,24 @@ export default function VivaSessionPage({
             {/* Main Content Area */}
             <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 flex flex-col">
-                    <div className="flex-1 p-8 md:p-12 overflow-y-auto max-w-5xl mx-auto w-full flex flex-col justify-center gap-12">
+                    <div className={`flex-1 p-8 md:p-12 overflow-y-auto mx-auto w-full flex flex-col ${showAssignmentInfo ? 'justify-start gap-4' : 'justify-center'} ${sidebarCollapsed ? 'max-w-6xl' : 'max-w-5xl'}`}>
 
-                        {/* Question Zone */}
-                        <div className="flex-1 flex items-center">
-                            <QuestionDisplay
-                                question={ivas.currentQuestion || "Preparing your first question..."}
-                                codeSnippet={MOCK_CODE}
-                                concepts={["Recursion", "Data Structures"]}
-                            />
-                        </div>
+                        {/* Assignment Info Panel */}
+                        <AssignmentInfoPanel
+                            assignmentQuestion={MOCK_ASSIGNMENT.question}
+                            studentAnswer={MOCK_ASSIGNMENT.studentAnswer}
+                            isExpanded={showAssignmentInfo}
+                            onToggle={() => setShowAssignmentInfo(!showAssignmentInfo)}
+                        />
 
-                        {/* Interactive Zone */}
+                        {/* Voice Interface with Question Display */}
                         <div className="w-full">
                             <VoiceInterface
                                 isAiSpeaking={ivas.state === 'ai_speaking' || ivas.isAudioPlaying}
                                 isUserSpeaking={audioCapture.isRecording}
                                 transcription={ivas.userTranscript || ""}
                                 audioLevel={audioCapture.audioLevel}
+                                currentQuestion={ivas.currentQuestion || ""}
                             />
                         </div>
                     </div>
@@ -239,12 +250,29 @@ export default function VivaSessionPage({
                     />
                 </div>
 
+                {/* Sidebar Toggle Button (when collapsed) */}
+                {sidebarCollapsed && (
+                    <div className="absolute top-20 right-4 z-10">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setSidebarCollapsed(false)}
+                            className="h-10 w-10 bg-background/80 backdrop-blur-sm"
+                        >
+                            <PanelRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+
                 {/* Sidebar */}
-                <SessionSidebar
-                    history={ivas.conversationHistory}
-                    assessment={ivas.finalAssessment}
-                    isProcessing={ivas.state === 'processing'}
-                />
+                {!sidebarCollapsed && (
+                    <SessionSidebar
+                        history={ivas.conversationHistory}
+                        assessment={ivas.finalAssessment}
+                        isProcessing={ivas.state === 'processing'}
+                        onCollapse={() => setSidebarCollapsed(true)}
+                    />
+                )}
             </div>
         </div>
     );

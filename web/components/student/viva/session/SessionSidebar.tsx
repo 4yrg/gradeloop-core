@@ -1,9 +1,10 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, MessageSquare, AlertCircle, HelpCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, MessageSquare, AlertCircle, HelpCircle, Loader2, PanelRightClose } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { ConversationTurn, FinalAssessment, AssessResponseResponse } from "@/types/ivas";
 import { useMemo } from "react";
 
@@ -19,9 +20,10 @@ interface SessionSidebarProps {
     history: ConversationTurn[];
     assessment?: FinalAssessment | null;
     isProcessing?: boolean;
+    onCollapse?: () => void;
 }
 
-export function SessionSidebar({ history, assessment, isProcessing = false }: SessionSidebarProps) {
+export function SessionSidebar({ history, assessment, isProcessing = false, onCollapse }: SessionSidebarProps) {
     // Convert conversation history into Q&A pairs
     const qaPairs = useMemo<QAPair[]>(() => {
         const pairs: QAPair[] = [];
@@ -72,24 +74,31 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
     };
 
     return (
-        <div className="w-80 border-l bg-muted/10 flex flex-col h-full">
-            <div className="p-4 border-b">
-                <h3 className="font-semibold flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Session History
-                    {isProcessing && (
-                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-auto" />
+        <div className="w-80 border-l bg-muted/10 flex flex-col h-full overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+                <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Session History
+                        {isProcessing && (
+                            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                        )}
+                    </h3>
+                    {qaPairs.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {qaPairs.length} question{qaPairs.length !== 1 ? 's' : ''} answered
+                        </p>
                     )}
-                </h3>
-                {qaPairs.length > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {qaPairs.length} question{qaPairs.length !== 1 ? 's' : ''} answered
-                    </p>
+                </div>
+                {onCollapse && (
+                    <Button variant="ghost" size="icon" onClick={onCollapse} className="h-8 w-8">
+                        <PanelRightClose className="h-4 w-4" />
+                    </Button>
                 )}
             </div>
 
-            <ScrollArea className="flex-1 p-4">
-                <div className="space-y-6">
+            <ScrollArea className="flex-1 min-h-0">
+                <div className="space-y-6 p-4">
                     {qaPairs.length === 0 ? (
                         <div className="text-center text-sm text-muted-foreground py-10">
                             {isProcessing ? (
