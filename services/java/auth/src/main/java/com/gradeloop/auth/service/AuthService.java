@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.gradeloop.auth.client.InstituteAdminResponse;
+
 import java.util.UUID;
 
 @Service
@@ -30,7 +32,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
-    private final com.gradeloop.auth.repository.InstituteAdminRepository instituteAdminRepository;
     private final com.gradeloop.auth.client.UserServiceClient userServiceClient;
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
@@ -50,7 +51,23 @@ public class AuthService {
             // Fetch user profile from user-service if userDbId exists
             String fullName = null;
             String instituteId = null;
-            if (user.getUserDbId() != null) {
+
+            // For institute admins, fetch institute ID from user-service
+            if (user.getRole() == Role.INSTITUTE_ADMIN) {
+                try {
+                    InstituteAdminResponse adminInfo = userServiceClient
+                            .getInstituteAdminByAuthUserId(user.getId());
+                    instituteId = adminInfo.getInstituteId();
+                    fullName = adminInfo.getFullName();
+                    session.setAttribute("instituteId", instituteId);
+                    System.out.println("Login info - Institute admin logged in. Institute ID: " + instituteId);
+                } catch (Exception e) {
+                    System.out.println("Warning: Failed to fetch institute admin info: " + e.getMessage());
+                }
+            }
+
+            // Fetch user profile from user-service if userDbId exists (for other roles)
+            if (user.getUserDbId() != null && user.getRole() != Role.INSTITUTE_ADMIN) {
                 try {
                     com.gradeloop.auth.client.UserProfileResponse profile = userServiceClient
                             .getUserProfile(user.getUserDbId());
@@ -60,6 +77,11 @@ public class AuthService {
                     System.out.println("Warning: Failed to fetch user profile: " + e.getMessage());
                     // Continue without profile data
                 }
+            }
+
+            // Store institute ID in session if available
+            if (instituteId != null) {
+                session.setAttribute("instituteId", instituteId);
             }
 
             return AuthResponse.builder()
@@ -281,10 +303,15 @@ public class AuthService {
         response.put("email", user.getEmail());
         response.put("role", user.getRole().name());
 
-        // If user is an institute admin, fetch their institute ID
+        // If user is an institute admin, fetch their institute ID from user-service
         if (user.getRole() == Role.INSTITUTE_ADMIN) {
-            instituteAdminRepository.findByUserId(user.getId())
-                    .ifPresent(admin -> response.put("instituteId", admin.getInstituteId().toString()));
+            try {
+                InstituteAdminResponse adminInfo = userServiceClient
+                        .getInstituteAdminByAuthUserId(user.getId());
+                response.put("instituteId", adminInfo.getInstituteId());
+            } catch (Exception e) {
+                System.out.println("Warning: Failed to fetch institute ID: " + e.getMessage());
+            }
         }
 
         return response;

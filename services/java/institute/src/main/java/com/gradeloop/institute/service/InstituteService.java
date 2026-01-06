@@ -26,6 +26,7 @@ public class InstituteService {
     private final InstituteRepository instituteRepository;
     private final InstituteAdminRepository instituteAdminRepository;
     private final AuthServiceClient authServiceClient;
+    private final com.gradeloop.institute.client.UserServiceClient userServiceClient;
 
     @Transactional
     public Institute createInstitute(CreateInstituteRequest request, Long createdBy) {
@@ -49,6 +50,18 @@ public class InstituteService {
                 // Call Auth Service to create user
                 CreateAuthUserResponse authUser = authServiceClient.createInstituteAdmin(adminReq.getEmail(),
                         adminReq.getName());
+
+                // Create institute admin entry in user-service
+                try {
+                    userServiceClient.createInstituteAdmin(
+                            adminReq.getEmail(),
+                            adminReq.getName(),
+                            savedInstitute.getId().toString(),
+                            authUser.getAuthUserId(),
+                            adminReq.getRole() != null ? adminReq.getRole().toString() : "OWNER");
+                } catch (Exception e) {
+                    System.err.println("Failed to create institute admin in user-service: " + e.getMessage());
+                }
 
                 return InstituteAdmin.builder()
                         .institute(savedInstitute)

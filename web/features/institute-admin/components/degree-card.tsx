@@ -79,7 +79,7 @@ export function DegreeCard({ degree, onClick, onEdit, onDelete, onManageCourses 
             </div>
 
             <div className="bg-zinc-500 text-white px-5 py-2 text-xs font-medium mt-auto">
-                {degree.requiredCredits} Credits
+                {degree.credits} Credits
             </div>
         </div>
     );

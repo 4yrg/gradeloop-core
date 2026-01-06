@@ -22,4 +22,13 @@ public class UserServiceClient {
             throw new RuntimeException("Failed to fetch user profile: " + e.getMessage(), e);
         }
     }
+
+    public InstituteAdminResponse getInstituteAdminByAuthUserId(Long authUserId) {
+        String url = userServiceUrl + "/users/institute-admins/by-auth-user-id/" + authUserId;
+        try {
+            return restTemplate.getForObject(url, InstituteAdminResponse.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch institute admin: " + e.getMessage(), e);
+        }
+    }
 }

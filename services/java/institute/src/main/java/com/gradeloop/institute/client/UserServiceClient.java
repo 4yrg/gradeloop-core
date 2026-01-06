@@ -24,4 +24,17 @@ public class UserServiceClient {
         String url = userServiceUrl + "/users/instructors/" + instructorId;
         return restTemplate.getForObject(url, UserResponse.class);
     }
+
+    public void createInstituteAdmin(String email, String fullName, String instituteId, Long authUserId, String role) {
+        String url = userServiceUrl + "/users/institute-admins";
+
+        java.util.Map<String, Object> request = new java.util.HashMap<>();
+        request.put("email", email);
+        request.put("fullName", fullName);
+        request.put("instituteId", instituteId);
+        request.put("authUserId", authUserId);
+        request.put("role", role);
+
+        restTemplate.postForObject(url, request, Object.class);
+    }
 }

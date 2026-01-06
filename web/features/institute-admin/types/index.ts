@@ -29,7 +29,7 @@ export const degreeSchema = z.object({
     name: z.string().min(2, "Name is required"),
     code: z.string().min(2, "Code is required"), // e.g., "BS-CS"
     description: z.string().optional(),
-    requiredCredits: z.number().min(0),
+    credits: z.number().min(1, "Credits must be at least 1"),
 });
 export type Degree = z.infer<typeof degreeSchema>;
 

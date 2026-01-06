@@ -19,4 +19,21 @@ public class InstituteAdminController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/by-auth-user-id/{authUserId}")
+    public ResponseEntity<InstituteAdmin> getByAuthUserId(@PathVariable Long authUserId) {
+        return instituteAdminRepository.findByAuthUserId(authUserId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<InstituteAdmin> createInstituteAdmin(@RequestBody InstituteAdmin instituteAdmin) {
+        // Check if already exists
+        if (instituteAdminRepository.findByAuthUserId(instituteAdmin.getAuthUserId()).isPresent()) {
+            return ResponseEntity.ok(instituteAdminRepository.findByAuthUserId(instituteAdmin.getAuthUserId()).get());
+        }
+        InstituteAdmin saved = instituteAdminRepository.save(instituteAdmin);
+        return ResponseEntity.ok(saved);
+    }
 }

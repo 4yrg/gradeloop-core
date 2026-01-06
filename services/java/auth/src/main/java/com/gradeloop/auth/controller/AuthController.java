@@ -28,7 +28,8 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<java.util.Map<String, Object>> me(
-            org.springframework.security.core.Authentication authentication) {
+            org.springframework.security.core.Authentication authentication,
+            jakarta.servlet.http.HttpServletRequest request) {
         if (authentication == null) {
             return ResponseEntity.status(401).build();
         }
@@ -57,6 +58,15 @@ public class AuthController {
             } catch (Exception e) {
                 System.out.println("Warning: Failed to fetch user profile for /me: " + e.getMessage());
                 // Continue without profile data
+            }
+        }
+
+        // For institute admins or if instituteId not found, try to get from session
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            String sessionInstituteId = (String) session.getAttribute("instituteId");
+            if (sessionInstituteId != null && !response.containsKey("instituteId")) {
+                response.put("instituteId", sessionInstituteId);
             }
         }
 

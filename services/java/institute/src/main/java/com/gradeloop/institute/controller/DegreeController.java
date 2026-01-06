@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class DegreeController {
 
     @PostMapping("/institutes/{instituteId}/degrees")
     public ResponseEntity<DegreeResponse> createDegree(@PathVariable UUID instituteId,
-            @RequestBody CreateDegreeRequest request) {
+            @Valid @RequestBody CreateDegreeRequest request) {
         return ResponseEntity.ok(DegreeResponse.fromEntity(degreeService.createDegree(instituteId, request)));
     }
 
