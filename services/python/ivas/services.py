@@ -337,7 +337,7 @@ class TTSService:
 class LLMService:
     """
     Large Language Model Service using Ollama with Llama 3.1.
-    Will be fully implemented in Step 7.
+    Provides Socratic questioning and response assessment for viva.
     """
     
     def __init__(self, model: str = None):
@@ -345,7 +345,7 @@ class LLMService:
         Initialize LLM service.
         
         Args:
-            model: Ollama model name
+            model: Ollama model name (default: llama3.1:8b)
         """
         self.model = model or settings.OLLAMA_MODEL
         self.client = None
@@ -357,15 +357,39 @@ class LLMService:
         Initialize the Ollama client.
         Called lazily on first request.
         """
-        if self._initialized:
+        if self._initialized and self.client is not None:
             return
         
-        # TODO: Implement in Step 7
-        # import ollama
-        # self.client = ollama.Client(host=settings.OLLAMA_HOST)
+        try:
+            import ollama
+            
+            self.client = ollama.Client(host=settings.OLLAMA_HOST)
+            # Test connection
+            self.client.list()
+            self._initialized = True
+            logger.info(f"LLM Service initialized with Ollama at {settings.OLLAMA_HOST}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Ollama client: {e}")
+            raise RuntimeError(f"LLM initialization failed: {e}")
+    
+    def _build_messages(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        conversation_history: List[Dict[str, str]] = None
+    ) -> List[Dict[str, str]]:
+        """Build message list for Ollama chat API"""
+        messages = [{"role": "system", "content": system_prompt}]
         
-        self._initialized = True
-        logger.info("LLM Service initialized (placeholder)")
+        if conversation_history:
+            for turn in conversation_history:
+                messages.append({
+                    "role": turn.get("role", "user"),
+                    "content": turn.get("content", "")
+                })
+        
+        messages.append({"role": "user", "content": user_prompt})
+        return messages
     
     def generate_question(
         self,
@@ -380,7 +404,7 @@ class LLMService:
         Args:
             code: Student's code submission
             topic: Topic being assessed
-            difficulty: Question difficulty level
+            difficulty: Question difficulty level (easy, medium, hard)
             conversation_history: Previous conversation turns
         
         Returns:
@@ -388,18 +412,94 @@ class LLMService:
         """
         self.initialize()
         
-        # TODO: Implement actual generation in Step 7
-        logger.info(f"Question generation requested for topic: {topic}")
+        from prompts import SYSTEM_PROMPT, INITIAL_QUESTION_PROMPT, FOLLOW_UP_QUESTION_PROMPT, DIFFICULTY_PROMPTS
         
-        return {
-            "question": "Can you explain how your code handles edge cases?",
-            "difficulty": difficulty,
-            "topic": topic or "general programming",
-            "follow_up_hints": [
-                "Consider what happens with empty input",
-                "Think about boundary conditions",
+        # Build the prompt
+        if not conversation_history:
+            # Initial question
+            user_prompt = INITIAL_QUESTION_PROMPT.format(
+                code=code or "No code provided",
+                topic=topic or "general programming concepts",
+                difficulty=difficulty
+            )
+        else:
+            # Follow-up question
+            history_text = "\n".join([
+                f"{turn.get('role', 'unknown').upper()}: {turn.get('content', '')}"
+                for turn in conversation_history[-6:]  # Last 6 turns for context
+            ])
+            
+            # Determine difficulty adjustment based on conversation
+            difficulty_adjustment = DIFFICULTY_PROMPTS.get(difficulty, DIFFICULTY_PROMPTS["same"])
+            
+            user_prompt = FOLLOW_UP_QUESTION_PROMPT.format(
+                code=code or "No code provided",
+                conversation_history=history_text,
+                understanding_level="partial",  # This would come from assessment
+                difficulty_adjustment=difficulty_adjustment
+            )
+        
+        try:
+            logger.info(f"Generating question for topic: {topic}, difficulty: {difficulty}")
+            
+            messages = self._build_messages(SYSTEM_PROMPT, user_prompt, None)
+            
+            response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "num_predict": 256,
+                }
+            )
+            
+            question = response["message"]["content"].strip()
+            
+            # Clean up the question (remove any extra formatting)
+            question = question.strip('"\'')
+            if question.startswith("Question:"):
+                question = question[9:].strip()
+            
+            logger.info(f"Generated question: {question[:100]}...")
+            
+            return {
+                "question": question,
+                "difficulty": difficulty,
+                "topic": topic or "general programming",
+                "follow_up_hints": self._generate_hints(topic, difficulty),
+            }
+            
+        except Exception as e:
+            logger.error(f"Question generation failed: {e}")
+            # Return a fallback question
+            return {
+                "question": "Can you explain your approach to solving this problem?",
+                "difficulty": difficulty,
+                "topic": topic or "general programming",
+                "follow_up_hints": ["Think about the key steps", "Consider edge cases"],
+                "error": str(e)
+            }
+    
+    def _generate_hints(self, topic: Optional[str], difficulty: str) -> List[str]:
+        """Generate follow-up hints based on topic and difficulty"""
+        hints_map = {
+            "easy": [
+                "Can you walk me through the basic flow?",
+                "What does this function/variable do?",
+            ],
+            "medium": [
+                "Consider what happens with edge cases",
+                "Think about error handling",
+                "How would you test this?",
+            ],
+            "hard": [
+                "How would you optimize this?",
+                "What are the time/space complexities?",
+                "How would this scale?",
             ],
         }
+        return hints_map.get(difficulty, hints_map["medium"])
     
     def assess_response(
         self,
@@ -422,23 +522,173 @@ class LLMService:
         """
         self.initialize()
         
-        # TODO: Implement actual assessment in Step 7
-        logger.info(f"Assessment requested for response: {response[:50]}...")
+        from prompts import ASSESSMENT_PROMPT
+        import json
         
-        return {
-            "understanding_level": "partial",
-            "clarity": "clear",
-            "confidence_score": 0.7,
-            "misconceptions": [],
-            "strengths": ["Clear communication"],
-            "areas_for_improvement": ["Could provide more specific examples"],
-            "suggested_follow_up": "Can you elaborate on that with a specific example?",
-        }
+        user_prompt = ASSESSMENT_PROMPT.format(
+            question=question,
+            response=response,
+            code_context=code_context or "No code context provided",
+            expected_concepts=", ".join(expected_concepts) if expected_concepts else "General understanding"
+        )
+        
+        try:
+            logger.info(f"Assessing response: {response[:50]}...")
+            
+            messages = [
+                {"role": "system", "content": "You are an expert programming instructor assessing student responses. Always respond in valid JSON format."},
+                {"role": "user", "content": user_prompt}
+            ]
+            
+            llm_response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={
+                    "temperature": 0.3,  # Lower temperature for more consistent assessment
+                    "top_p": 0.9,
+                    "num_predict": 512,
+                },
+                format="json"
+            )
+            
+            result_text = llm_response["message"]["content"].strip()
+            
+            # Parse JSON response
+            try:
+                assessment = json.loads(result_text)
+            except json.JSONDecodeError:
+                # Try to extract JSON from response
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', result_text)
+                if json_match:
+                    assessment = json.loads(json_match.group())
+                else:
+                    raise ValueError("Could not parse JSON from response")
+            
+            # Normalize and validate the assessment
+            normalized = {
+                "understanding_level": assessment.get("understanding_level", "partial"),
+                "clarity": assessment.get("clarity", "clear"),
+                "confidence_score": float(assessment.get("confidence_score", 0.5)),
+                "misconceptions": assessment.get("misconceptions", []),
+                "strengths": assessment.get("strengths", []),
+                "areas_for_improvement": assessment.get("areas_for_improvement", []),
+                "suggested_follow_up": assessment.get("suggested_follow_up", "Can you elaborate on that?"),
+            }
+            
+            logger.info(f"Assessment complete: {normalized['understanding_level']}, confidence: {normalized['confidence_score']}")
+            
+            return normalized
+            
+        except Exception as e:
+            logger.error(f"Assessment failed: {e}")
+            # Return a fallback assessment
+            return {
+                "understanding_level": "partial",
+                "clarity": "clear",
+                "confidence_score": 0.5,
+                "misconceptions": [],
+                "strengths": ["Attempted to answer the question"],
+                "areas_for_improvement": ["Could not fully assess due to error"],
+                "suggested_follow_up": "Can you explain that in more detail?",
+                "error": str(e)
+            }
+    
+    def generate_final_assessment(
+        self,
+        code: str,
+        conversation_history: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """
+        Generate a final comprehensive assessment of the viva session.
+        
+        Args:
+            code: Student's code submission
+            conversation_history: Complete conversation from the session
+        
+        Returns:
+            Dict with final assessment details
+        """
+        self.initialize()
+        
+        from prompts import FINAL_ASSESSMENT_PROMPT
+        import json
+        
+        conversation_text = "\n".join([
+            f"{turn.get('role', 'unknown').upper()}: {turn.get('content', '')}"
+            for turn in conversation_history
+        ])
+        
+        user_prompt = FINAL_ASSESSMENT_PROMPT.format(
+            code=code,
+            conversation=conversation_text
+        )
+        
+        try:
+            logger.info("Generating final assessment...")
+            
+            messages = [
+                {"role": "system", "content": "You are an expert programming instructor providing a final assessment. Always respond in valid JSON format."},
+                {"role": "user", "content": user_prompt}
+            ]
+            
+            response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={
+                    "temperature": 0.3,
+                    "num_predict": 1024,
+                },
+                format="json"
+            )
+            
+            result_text = response["message"]["content"].strip()
+            
+            try:
+                assessment = json.loads(result_text)
+            except json.JSONDecodeError:
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', result_text)
+                if json_match:
+                    assessment = json.loads(json_match.group())
+                else:
+                    raise ValueError("Could not parse JSON from response")
+            
+            normalized = {
+                "overall_score": int(assessment.get("overall_score", 70)),
+                "competency_level": assessment.get("competency_level", "INTERMEDIATE"),
+                "misconceptions": assessment.get("misconceptions", []),
+                "strengths": assessment.get("strengths", []),
+                "weaknesses": assessment.get("weaknesses", []),
+                "full_analysis": assessment.get("full_analysis", "Assessment completed."),
+            }
+            
+            logger.info(f"Final assessment complete: score={normalized['overall_score']}, level={normalized['competency_level']}")
+            
+            return normalized
+            
+        except Exception as e:
+            logger.error(f"Final assessment failed: {e}")
+            return {
+                "overall_score": 70,
+                "competency_level": "INTERMEDIATE",
+                "misconceptions": [],
+                "strengths": ["Participated in viva session"],
+                "weaknesses": ["Assessment could not be fully completed"],
+                "full_analysis": f"Assessment partially completed. Error: {str(e)}",
+                "error": str(e)
+            }
     
     @property
     def is_available(self) -> bool:
         """Check if LLM service is available"""
-        return True  # Placeholder returns true
+        try:
+            import ollama
+            client = ollama.Client(host=settings.OLLAMA_HOST)
+            client.list()
+            return True
+        except:
+            return False
 
 
 # Singleton instances for the services
