@@ -12,7 +12,7 @@ The GradeLoop project uses a microservices architecture with:
 | **Frontend** | Next.js 16 (React 19) | `web/` |
 | **API Gateway** | Kong | `infra/docker/kong.yml` |
 | **IVAS Backend** | Spring Boot 4 (Java 17) | `services/java/ivas/` |
-| **AI Services** | FastAPI (Python) | `services/python/` (new) |
+| **IVAS AI Services** | FastAPI (Python) | `services/python/ivas/` |
 | **Database** | PostgreSQL 15 | `ivas-db` container |
 | **Message Queue** | RabbitMQ | Shared infrastructure |
 
@@ -198,22 +198,19 @@ curl http://localhost:8084/api/v1/viva/sessions/{sessionId}
 
 ### What to Do:
 
-1. **Create AI services directory structure:**
+1. **Create IVAS AI services directory structure:**
    ```
-   services/python/ai-services/
+   services/python/ivas/
+   ├── __init__.py
    ├── main.py
+   ├── config.py
+   ├── router.py
+   ├── schemas.py
+   ├── services.py
+   ├── prompts.py
    ├── requirements.txt
    ├── Dockerfile
-   ├── app/
-   │   ├── __init__.py
-   │   ├── config.py
-   │   └── modules/
-   │       └── ivas/
-   │           ├── __init__.py
-   │           ├── router.py
-   │           ├── schemas.py
-   │           ├── services.py
-   │           └── prompts.py
+   ├── .env.example
    └── models/
        ├── whisper/
        └── tts/
@@ -232,22 +229,23 @@ curl http://localhost:8084/api/v1/viva/sessions/{sessionId}
    ```python
    from fastapi import FastAPI
    from fastapi.middleware.cors import CORSMiddleware
-   from app.modules.ivas.router import router as ivas_router
+   from router import router as ivas_router
+   from config import settings
 
    app = FastAPI(title="IVAS AI Services", version="1.0.0")
    
-   app.add_middleware(CORSMiddleware, allow_origins=["*"], ...)
+   app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, ...)
    app.include_router(ivas_router, prefix="/ivas", tags=["IVAS"])
    
    @app.get("/health")
-   def health(): return {"status": "healthy"}
+   def health(): return {"status": "healthy", "service": "ivas-ai-services"}
    ```
 
 4. **Create basic `router.py` with health endpoint**
 
 5. **Run the service:**
    ```bash
-   cd services/python/ai-services
+   cd services/python/ivas
    python -m venv venv && source venv/bin/activate
    pip install -r requirements.txt
    uvicorn main:app --reload --port 8085
@@ -263,9 +261,14 @@ curl http://localhost:8085/ivas/health
 ```
 
 ### Files to Create:
-- [services/python/ai-services/main.py](services/python/ai-services/main.py)
-- [services/python/ai-services/requirements.txt](services/python/ai-services/requirements.txt)
-- [services/python/ai-services/app/modules/ivas/router.py](services/python/ai-services/app/modules/ivas/router.py)
+- [services/python/ivas/main.py](services/python/ivas/main.py)
+- [services/python/ivas/config.py](services/python/ivas/config.py)
+- [services/python/ivas/router.py](services/python/ivas/router.py)
+- [services/python/ivas/schemas.py](services/python/ivas/schemas.py)
+- [services/python/ivas/services.py](services/python/ivas/services.py)
+- [services/python/ivas/prompts.py](services/python/ivas/prompts.py)
+- [services/python/ivas/requirements.txt](services/python/ivas/requirements.txt)
+- [services/python/ivas/Dockerfile](services/python/ivas/Dockerfile)
 
 ---
 
@@ -294,7 +297,7 @@ curl http://localhost:8085/ivas/health
 
 3. **Create test script `test_asr.py`:**
    ```python
-   from app.modules.ivas.services import ASRService
+   from services import ASRService
    
    asr = ASRService()
    with open("test_audio.wav", "rb") as f:
@@ -323,8 +326,8 @@ curl -X POST http://localhost:8085/ivas/transcribe \
 ```
 
 ### Files to Modify:
-- [services/python/ai-services/requirements.txt](services/python/ai-services/requirements.txt)
-- [services/python/ai-services/app/modules/ivas/services.py](services/python/ai-services/app/modules/ivas/services.py)
+- [services/python/ivas/requirements.txt](services/python/ivas/requirements.txt)
+- [services/python/ivas/services.py](services/python/ivas/services.py)
 
 ---
 
@@ -352,7 +355,7 @@ curl -X POST http://localhost:8085/ivas/transcribe \
 
 3. **Create test script `test_tts.py`:**
    ```python
-   from app.modules.ivas.services import TTSService
+   from services import TTSService
    
    tts = TTSService()
    audio = tts.synthesize("Hello, let's begin the viva assessment.")
@@ -381,8 +384,8 @@ curl -X POST http://localhost:8085/ivas/synthesize \
 ```
 
 ### Files to Modify:
-- [services/python/ai-services/requirements.txt](services/python/ai-services/requirements.txt)
-- [services/python/ai-services/app/modules/ivas/services.py](services/python/ai-services/app/modules/ivas/services.py)
+- [services/python/ivas/requirements.txt](services/python/ivas/requirements.txt)
+- [services/python/ivas/services.py](services/python/ivas/services.py)
 
 ---
 
@@ -446,9 +449,9 @@ curl -X POST http://localhost:8085/ivas/generate-question \
 ```
 
 ### Files to Modify/Create:
-- [services/python/ai-services/requirements.txt](services/python/ai-services/requirements.txt)
-- [services/python/ai-services/app/modules/ivas/services.py](services/python/ai-services/app/modules/ivas/services.py)
-- [services/python/ai-services/app/modules/ivas/prompts.py](services/python/ai-services/app/modules/ivas/prompts.py)
+- [services/python/ivas/requirements.txt](services/python/ivas/requirements.txt)
+- [services/python/ivas/services.py](services/python/ivas/services.py)
+- [services/python/ivas/prompts.py](services/python/ivas/prompts.py)
 
 ---
 
@@ -513,8 +516,8 @@ ws.send(JSON.stringify({type: "audio_chunk", data: "..."}));
 ```
 
 ### Files to Create:
-- [services/python/ai-services/app/modules/ivas/session_manager.py](services/python/ai-services/app/modules/ivas/session_manager.py)
-- Update [services/python/ai-services/app/modules/ivas/router.py](services/python/ai-services/app/modules/ivas/router.py)
+- [services/python/ivas/session_manager.py](services/python/ivas/session_manager.py)
+- Update [services/python/ivas/router.py](services/python/ivas/router.py)
 
 ---
 
@@ -666,7 +669,7 @@ cd web && pnpm dev
 
 1. **Create assessment engine in Python:**
    ```python
-   # services/python/ai-services/app/modules/ivas/assessment.py
+   # services/python/ivas/assessment.py
    
    class AdaptiveAssessmentEngine:
        def __init__(self):
@@ -736,8 +739,8 @@ cd web && pnpm dev
 ```
 
 ### Files to Create:
-- [services/python/ai-services/app/modules/ivas/assessment.py](services/python/ai-services/app/modules/ivas/assessment.py)
-- Update [services/python/ai-services/app/modules/ivas/prompts.py](services/python/ai-services/app/modules/ivas/prompts.py)
+- [services/python/ivas/assessment.py](services/python/ivas/assessment.py)
+- Update [services/python/ivas/prompts.py](services/python/ivas/prompts.py)
 
 ---
 
@@ -799,9 +802,9 @@ cd web && pnpm dev
 
 ### What to Do:
 
-1. **Create AI services Dockerfile:**
+1. **Create IVAS AI services Dockerfile:**
    ```dockerfile
-   # services/python/ai-services/Dockerfile
+   # services/python/ivas/Dockerfile
    FROM python:3.11-slim
    
    WORKDIR /app
@@ -816,9 +819,9 @@ cd web && pnpm dev
 
 2. **Update `docker-compose.yml`:**
    ```yaml
-   ai-services:
+   ivas:
      build:
-       context: ../../services/python/ai-services
+       context: ../../services/python/ivas
        dockerfile: Dockerfile
      environment:
        OLLAMA_HOST: http://ollama:11434
@@ -873,7 +876,7 @@ curl http://localhost:8000/ivas/api/v1/viva/health
 ```
 
 ### Files to Create/Modify:
-- [services/python/ai-services/Dockerfile](services/python/ai-services/Dockerfile)
+- [services/python/ivas/Dockerfile](services/python/ivas/Dockerfile)
 - Update [infra/docker/docker-compose.yml](infra/docker/docker-compose.yml)
 - Update [infra/docker/kong.yml](infra/docker/kong.yml)
 
@@ -893,7 +896,7 @@ curl http://localhost:8000/ivas/api/v1/viva/health
 
 2. **Add Python unit tests:**
    ```
-   services/python/ai-services/tests/
+   services/python/ivas/tests/
    ├── test_asr.py
    ├── test_tts.py
    ├── test_llm.py
@@ -923,7 +926,7 @@ curl http://localhost:8000/ivas/api/v1/viva/health
 cd services/java/ivas && ./mvnw test
 
 # Run Python tests
-cd services/python/ai-services && pytest
+cd services/python/ivas && pytest
 
 # All tests pass
 # No unhandled exceptions in logs
@@ -942,7 +945,7 @@ cd services/python/ai-services && pytest
 1. **Create IVAS README:**
    ```
    services/java/ivas/README.md
-   services/python/ai-services/README.md
+   services/python/ivas/README.md
    ```
 
 2. **Document API endpoints:**
@@ -952,7 +955,7 @@ cd services/python/ai-services && pytest
 3. **Create environment templates:**
    ```
    services/java/ivas/.env.example
-   services/python/ai-services/.env.example
+   services/python/ivas/.env.example
    ```
 
 4. **Update main architecture docs:**
@@ -1007,8 +1010,8 @@ cd infra/docker && docker compose up -d
 # Start IVAS Spring Boot
 cd services/java/ivas && ./mvnw spring-boot:run
 
-# Start AI Services
-cd services/python/ai-services && uvicorn main:app --reload --port 8085
+# Start IVAS AI Services
+cd services/python/ivas && uvicorn main:app --reload --port 8085
 
 # Start Frontend
 cd web && pnpm dev
@@ -1018,7 +1021,7 @@ ollama serve
 
 # Run tests
 cd services/java/ivas && ./mvnw test
-cd services/python/ai-services && pytest
+cd services/python/ivas && pytest
 cd web && pnpm test
 ```
 
