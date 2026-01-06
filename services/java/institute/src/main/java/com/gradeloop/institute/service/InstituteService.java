@@ -52,7 +52,7 @@ public class InstituteService {
 
                 return InstituteAdmin.builder()
                         .institute(savedInstitute)
-                        .userId(authUser.getUserId())
+                        .userId(authUser.getAuthUserId())
                         .role(adminReq.getRole() != null ? adminReq.getRole() : InstituteAdminRole.OWNER)
                         .build();
             }).collect(Collectors.toList());
