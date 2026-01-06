@@ -2,7 +2,7 @@ import { apiClient } from "@/api/client";
 import { Person } from "../types";
 
 export const peopleService = {
-    getUsers: async (role?: string): Promise<Person[]> => {
+    getPeople: async (role?: string): Promise<Person[]> => {
         let endpoint = "/users";
         if (role === "student") {
             endpoint = "/users/students";
@@ -27,12 +27,26 @@ export const peopleService = {
         return response.data;
     },
 
-    updatePerson: async (id: string, data: Partial<Person>): Promise<Person> => {
-        const response = await apiClient.put<Person>(`/users/${id}`, data);
+    updatePerson: async (id: string, role: string, data: Partial<Person>): Promise<Person> => {
+        const endpoint = role === "student" ? `/users/students/${id}` : role === "instructor" ? `/users/instructors/${id}` : `/users/${id}`;
+        const response = await apiClient.put<Person>(endpoint, data);
         return response.data;
     },
 
-    deletePerson: async (id: string): Promise<void> => {
-        await apiClient.delete(`/users/${id}`);
+    deletePerson: async (id: string, role: string): Promise<void> => {
+        const endpoint = role === "student" ? `/users/students/${id}` : role === "instructor" ? `/users/instructors/${id}` : `/users/${id}`;
+        await apiClient.delete(endpoint);
+    },
+
+    bulkCreatePeople: async (role: string, data: any[]): Promise<any[]> => {
+        const endpoint = role === "student" ? "/users/students/bulk" : "/users/instructors/bulk";
+        const response = await apiClient.post<any[]>(endpoint, data);
+        return response.data;
+    },
+
+    downloadTemplate: (role: string) => {
+        const endpoint = role === "student" ? "/users/students/template" : "/users/instructors/template";
+        const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${endpoint}`;
+        window.open(url, '_blank');
     }
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, FileUp, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { Upload, FileUp, AlertCircle, CheckCircle2, X, Download } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import {
@@ -29,6 +29,7 @@ interface BulkImportModalProps<T> {
     entityName: string;
     templateHeaders: string[]; // e.g., ["firstName", "lastName", "email"]
     mapRow: (row: string[]) => T | null; // Function to map CSV row to object
+    onDownloadTemplate?: () => void;
 }
 
 export function BulkImportModal<T>({
@@ -38,6 +39,7 @@ export function BulkImportModal<T>({
     entityName,
     templateHeaders,
     mapRow,
+    onDownloadTemplate
 }: BulkImportModalProps<T>) {
     const [step, setStep] = useState<"upload" | "preview">("upload");
     const [file, setFile] = useState<File | null>(null);
@@ -159,8 +161,19 @@ export function BulkImportModal<T>({
                         >
                             Select CSV
                         </Button>
-                        <div className="mt-4 text-xs text-muted-foreground">
+                        <div className="mt-4 flex flex-col items-center gap-2 text-xs text-muted-foreground">
                             <p>Expected format: {templateHeaders.join(", ")}</p>
+                            {onDownloadTemplate && (
+                                <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 flex items-center gap-1"
+                                    onClick={onDownloadTemplate}
+                                >
+                                    <Download className="h-3 w-3" />
+                                    Download Template
+                                </Button>
+                            )}
                         </div>
                     </div>
                 )}

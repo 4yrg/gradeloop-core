@@ -38,11 +38,9 @@ export function PersonModal({
     const form = useForm<Person>({
         resolver: zodResolver(personSchema),
         defaultValues: initialData || {
-            firstName: "",
-            lastName: "",
+            fullName: "",
             email: "",
             role: "student",
-            studentId: "",
         },
     });
 
@@ -61,33 +59,20 @@ export function PersonModal({
                         {initialData ? "Edit Person" : "Add Person"}
                     </DialogTitle>
                     <DialogDescription>
-                        Add a new user to the institute.
+                        {initialData ? "Update user details." : "Add a new user to the institute."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="firstName">First Name</Label>
-                            <Input
-                                id="firstName"
-                                {...form.register("firstName")}
-                                placeholder="e.g. John"
-                            />
-                            {form.formState.errors.firstName && (
-                                <p className="text-sm text-red-500">{form.formState.errors.firstName.message}</p>
-                            )}
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="lastName">Last Name</Label>
-                            <Input
-                                id="lastName"
-                                {...form.register("lastName")}
-                                placeholder="e.g. Doe"
-                            />
-                            {form.formState.errors.lastName && (
-                                <p className="text-sm text-red-500">{form.formState.errors.lastName.message}</p>
-                            )}
-                        </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
+                            id="fullName"
+                            {...form.register("fullName")}
+                            placeholder="e.g. John Doe"
+                        />
+                        {form.formState.errors.fullName && (
+                            <p className="text-sm text-red-500">{form.formState.errors.fullName.message}</p>
+                        )}
                     </div>
 
                     <div className="grid gap-2">
@@ -106,7 +91,7 @@ export function PersonModal({
                     <div className="grid gap-2">
                         <Label htmlFor="role">Role</Label>
                         <Select
-                            defaultValue={form.getValues("role")}
+                            value={form.watch("role")}
                             onValueChange={(value) => form.setValue("role", value as UserRole)}
                         >
                             <SelectTrigger>
@@ -123,17 +108,14 @@ export function PersonModal({
                         )}
                     </div>
 
-                    {selectedRole === "student" && (
+                    {selectedRole === "instructor" && (
                         <div className="grid gap-2">
-                            <Label htmlFor="studentId">Student ID</Label>
+                            <Label htmlFor="department">Department</Label>
                             <Input
-                                id="studentId"
-                                {...form.register("studentId")}
-                                placeholder="e.g. S12345678"
+                                id="department"
+                                {...form.register("department")}
+                                placeholder="e.g. Computer Science"
                             />
-                            {form.formState.errors.studentId && (
-                                <p className="text-sm text-red-500">{form.formState.errors.studentId.message}</p>
-                            )}
                         </div>
                     )}
 

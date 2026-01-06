@@ -50,7 +50,7 @@ export function InstructorListTable({
                             return (
                                 <TableRow key={instructor.id}>
                                     <TableCell className="font-medium">
-                                        {instructor.firstName} {instructor.lastName}
+                                        {instructor.fullName}
                                     </TableCell>
                                     <TableCell>{instructor.email}</TableCell>
                                     <TableCell>

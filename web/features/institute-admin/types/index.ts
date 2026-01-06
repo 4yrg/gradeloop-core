@@ -60,13 +60,15 @@ export type CourseOffering = z.infer<typeof courseOfferingSchema>;
 
 // People
 export const personSchema = z.object({
-    id: z.string().uuid().optional(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
+    id: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    fullName: z.string().min(1, "Full name is required"),
     email: z.string().email(),
     role: userRoleSchema,
     studentId: z.string().optional(), // For students
     instituteId: z.string().optional(),
+    department: z.string().optional(), // For instructors
 });
 export type Person = z.infer<typeof personSchema>;
 

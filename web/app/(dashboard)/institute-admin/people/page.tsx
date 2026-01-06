@@ -13,14 +13,19 @@ import {
     usePeople,
     useCreatePerson,
     useUpdatePerson,
-    useDeletePerson
+    useDeletePerson,
+    useBulkCreatePeople
 } from "../../../../features/institute-admin/hooks/use-people";
+import { peopleService } from "../../../../features/institute-admin/api/people.api";
+import { useUser } from "../../../../hooks/use-user";
 
 export default function PeoplePage() {
     const [activeTab, setActiveTab] = useState<"student" | "instructor">("student");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+    const { user } = useUser();
+    const instituteId = user?.instituteId;
 
     // Data Fetching
     const { data: allPeople = [], isLoading } = usePeople(activeTab);
@@ -45,7 +50,7 @@ export default function PeoplePage() {
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this person?")) {
-            deleteMutation.mutate(id, {
+            deleteMutation.mutate({ id, role: activeTab }, {
                 onSuccess: () => toast.success("Person deleted successfully"),
                 onError: () => toast.error("Failed to delete person")
             });
@@ -57,7 +62,7 @@ export default function PeoplePage() {
         const personData = { ...data, role: data.role || activeTab };
 
         if (editingPerson && editingPerson.id) {
-            updateMutation.mutate({ id: editingPerson.id, data: personData }, {
+            updateMutation.mutate({ id: editingPerson.id, role: editingPerson.role, data: personData }, {
                 onSuccess: () => {
                     toast.success("Person updated successfully");
                     setIsModalOpen(false);
@@ -67,8 +72,7 @@ export default function PeoplePage() {
         } else {
             // Remove ID if present and inject instituteId
             const { id, ...createData } = personData;
-            // TODO: dynamic instituteId
-            (createData as any).instituteId = "123e4567-e89b-12d3-a456-426614174000";
+            (createData as any).instituteId = instituteId;
 
             createMutation.mutate(createData, {
                 onSuccess: () => {
@@ -80,32 +84,36 @@ export default function PeoplePage() {
         }
     };
 
+    const bulkCreateMutation = useBulkCreatePeople();
+
     const handleBulkImport = async (data: Person[]) => {
-        // Bulk import logic would need a corresponding mutation or service method.
-        // For now, let's log or stub it as the request focused on basic CRUD integration first.
-        console.warn("Bulk import not fully integrated yet");
-        toast.info("Bulk import coming soon");
-        setIsImportModalOpen(false);
-        /*
-        try {
-            const created = await peopleService.bulkCreatePeople(data);
-            setPeople((prev) => [...prev, ...created]);
-        } catch (error) {
-            console.error("Failed to bulk create people", error);
-            throw error;
-        }
-        */
+        bulkCreateMutation.mutate({ role: activeTab, data }, {
+            onSuccess: () => {
+                toast.success(`Successfully imported ${data.length} ${activeTab}s`);
+                setIsImportModalOpen(false);
+            },
+            onError: () => toast.error("Failed to import people")
+        });
     };
 
     const mapCsvRowToPerson = (row: string[]): Person | null => {
-        if (row.length < 3) return null;
-        return {
-            firstName: row[0],
-            lastName: row[1],
-            email: row[2],
-            role: (row[3] as UserRole) || activeTab,
-            studentId: row[4] || "",
-        } as Person;
+        if (row.length < 2) return null;
+        if (activeTab === 'student') {
+            return {
+                fullName: row[0],
+                email: row[1],
+                instituteId: instituteId,
+                role: "student"
+            } as Person;
+        } else {
+            return {
+                fullName: row[0],
+                email: row[1],
+                instituteId: instituteId,
+                department: row[2] || "",
+                role: "instructor"
+            } as Person;
+        }
     };
 
     return (
@@ -172,8 +180,12 @@ export default function PeoplePage() {
                 onOpenChange={setIsImportModalOpen}
                 onImport={handleBulkImport}
                 entityName={activeTab === 'student' ? "Students" : "Instructors"}
-                templateHeaders={["First Name", "Last Name", "Email", "Role", "Student ID"]}
+                templateHeaders={activeTab === 'student'
+                    ? ["Full Name", "Email"]
+                    : ["Full Name", "Email", "Department"]
+                }
                 mapRow={mapCsvRowToPerson}
+                onDownloadTemplate={() => peopleService.downloadTemplate(activeTab)}
             />
         </div>
     );

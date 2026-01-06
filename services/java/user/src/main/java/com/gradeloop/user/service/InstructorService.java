@@ -36,6 +36,7 @@ public class InstructorService {
                     .fullName(existingInstructor.getFullName())
                     .role("instructor")
                     .instituteId(existingInstructor.getInstituteId())
+                    .department(existingInstructor.getDepartment())
                     .build();
         }
 
@@ -67,6 +68,7 @@ public class InstructorService {
                 .fullName(instructor.getFullName())
                 .role("instructor")
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 
@@ -87,6 +89,7 @@ public class InstructorService {
                             .fullName(existingInstructor.getFullName())
                             .role("instructor")
                             .instituteId(existingInstructor.getInstituteId())
+                            .department(existingInstructor.getDepartment())
                             .build());
                     continue;
                 }
@@ -114,6 +117,7 @@ public class InstructorService {
                             .fullName(instructor.getFullName())
                             .role("instructor")
                             .instituteId(instructor.getInstituteId())
+                            .department(instructor.getDepartment())
                             .build());
                 } catch (Exception e) {
                     // Rollback: Delete instructor if auth creation fails
@@ -141,6 +145,7 @@ public class InstructorService {
                         .fullName(instructor.getFullName())
                         .role("instructor")
                         .instituteId(instructor.getInstituteId())
+                        .department(instructor.getDepartment())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -154,6 +159,9 @@ public class InstructorService {
         if (request.getFullName() != null)
             instructor.setFullName(request.getFullName());
 
+        if (request.getDepartment() != null)
+            instructor.setDepartment(request.getDepartment());
+
         instructor = instructorRepository.save(instructor);
 
         return CreateUserResponse.builder()
@@ -162,6 +170,7 @@ public class InstructorService {
                 .email(instructor.getEmail())
                 .fullName(instructor.getFullName())
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 
@@ -181,6 +190,7 @@ public class InstructorService {
                 .fullName(instructor.getFullName())
                 .role("instructor")
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 }

@@ -40,7 +40,7 @@ export function StudentListTable({ data, onRemoveStudent }: StudentListTableProp
                         data.map((student) => (
                             <TableRow key={student.id}>
                                 <TableCell className="font-medium">{student.studentId || "N/A"}</TableCell>
-                                <TableCell>{student.firstName} {student.lastName}</TableCell>
+                                <TableCell>{student.fullName}</TableCell>
                                 <TableCell>{student.email}</TableCell>
                                 <TableCell className="text-right">
                                     <Button
