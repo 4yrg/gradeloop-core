@@ -1,5 +1,24 @@
 # IVAS System Architecture
 
+> **Last Updated:** January 6, 2026  
+> **Current Status:** Foundation Complete | WebSocket & AI Services Pending
+
+## 🎯 Quick Status
+
+### ✅ Completed
+- Frontend UI (Student & Instructor pages)
+- Backend structure (Models, Repositories, Services)
+- Database schema
+- Basic REST APIs
+
+### 🔴 Critical - Next Steps
+1. **Service-to-service communication** (User, Institute services)
+2. **WebSocket implementation** (Real-time audio streaming)
+3. **Python AI service** (Whisper STT, OpenAI TTS, GPT-4 NLP)
+4. **Audio processing pipeline**
+
+---
+
 ## High-Level Architecture
 
 ```
@@ -588,6 +607,134 @@ WebSocket URL: ws://localhost:8080/ws/viva/sessions/{sessionId}
 │    - Database connection issues                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Current Service Status
+
+### Java Services (Spring Boot)
+
+| Service | Port | Status | Notes |
+|---------|------|--------|-------|
+| Auth Service | 8081 | ✅ Running | JWT validation working |
+| User Service | 8082 | ✅ Running | Student/instructor data available |
+| Institute Service | 8083 | ✅ Running | Course/assignment data available |
+| **IVAS Service** | **8084** | ✅ Running | Foundation complete, needs integration |
+| Submission Service | - | ❌ Not Built | Will be built later |
+
+### Python Services
+
+| Service | Port | Status | Notes |
+|---------|------|--------|-------|
+| Keystroke Service | 8001 | ✅ Running | For CIPAS module |
+| **IVAS AI Service** | **8002** | ❌ Not Built | **CRITICAL - Need to create** |
+
+### What IVAS Service Has Now
+
+**✅ Completed Components:**
+```
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── model/                          ✅ 9 entities
+├── repository/                     ✅ All repos
+├── service/                        ✅ 4 services (basic)
+├── controller/                     ✅ 4 controllers
+├── dto/                            ✅ All DTOs
+└── config/SecurityConfig.java      ✅ Done
+```
+
+**🔴 Missing Components (CRITICAL):**
+```
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── client/                         🔴 EMPTY - Need service clients
+├── websocket/                      🔴 EMPTY - Need WebSocket handler
+└── service/                        🔴 Missing 3 services:
+    ├── AudioProcessingService.java
+    ├── QuestionManagementService.java
+    └── GradingService.java
+```
+
+---
+
+## Integration Architecture
+
+### How IVAS Communicates with Other Services
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      IVAS Service (8084)                     │
+└────┬──────────────┬──────────────┬──────────────┬───────────┘
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+┌─────────┐  ┌──────────┐  ┌────────────┐  ┌──────────────┐
+│  Auth   │  │   User   │  │ Institute  │  │  IVAS AI     │
+│ Service │  │ Service  │  │  Service   │  │  Service     │
+│ ✅ 8081 │  │ ✅ 8082  │  │  ✅ 8083   │  │  ❌ 8002     │
+└─────────┘  └──────────┘  └────────────┘  └──────────────┘
+```
+
+### Communication Patterns
+
+**1. Service-to-Service REST (Need to implement):**
+```
+IVAS → User Service: GET /api/v1/students/{id}
+IVAS → Institute Service: GET /api/v1/assignments/{id}
+IVAS → IVAS AI: POST /api/v1/ai/stt/transcribe
+```
+
+**2. WebSocket Real-time (Need to implement):**
+```
+Frontend ←→ ws://localhost:8084/ws/viva/sessions/{sessionId}
+```
+
+---
+
+## Environment Configuration
+
+### IVAS Service (application.properties):
+```properties
+server.port=8084
+spring.application.name=ivas-service
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/gradeloop
+spring.datasource.username=postgres
+spring.datasource.password=password
+
+# Add these for service communication
+user.service.url=http://localhost:8082
+institute.service.url=http://localhost:8083
+ivas.ai.service.url=http://localhost:8002
+
+jwt.secret=${JWT_SECRET}
+```
+
+### Python AI Service (.env):
+```bash
+OPENAI_API_KEY=sk-...
+WHISPER_MODEL_SIZE=base
+PORT=8002
+```
+
+---
+
+## Next Immediate Actions 🔴
+
+### Week 1: Service Integration
+**Create these files:**
+```
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── client/
+│   ├── user/UserServiceClient.java          🔴 CREATE
+│   ├── institute/InstituteServiceClient.java 🔴 CREATE
+│   └── ai/IvasAIClient.java                 🔴 CREATE LATER
+└── config/RestClientConfig.java             🔴 CREATE
+```
+
+### Week 2-3: WebSocket + Python AI
+1. Implement WebSocket handler
+2. Create Python AI service (FastAPI)
+3. Connect everything
+
+---
 
 ## Scalability Considerations
 
