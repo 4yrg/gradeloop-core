@@ -4,6 +4,7 @@ IVAS Router - API endpoints for viva assessment AI services
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import Response
+import logging
 
 from schemas import (
     TranscribeResponse,
@@ -14,8 +15,13 @@ from schemas import (
     AssessResponseResponse,
     HealthCheckResponse,
 )
+from services import ASRService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# Initialize ASR service (lazy loading - model loaded on first use)
+asr_service = ASRService()
 
 
 @router.get("/health", response_model=HealthCheckResponse)
@@ -27,7 +33,7 @@ async def health_check():
     return HealthCheckResponse(
         status="healthy",
         services={
-            "asr": {"status": "available", "model": "whisper-base"},
+            "asr": {"status": "available" if asr_service.is_available else "unavailable", "model": f"whisper-{asr_service.model_size}"},
             "tts": {"status": "available", "model": "xtts-v2"},
             "llm": {"status": "available", "model": "llama3.1:8b"},
         },
@@ -46,7 +52,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
         Transcription text and metadata
     """
     # Validate file type
-    if not file.content_type or not file.content_type.startswith("audio/"):
+    if file.content_type and not file.content_type.startswith("audio/"):
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Please upload an audio file."
@@ -61,14 +67,28 @@ async def transcribe_audio(file: UploadFile = File(...)):
             detail="Empty audio file provided."
         )
     
-    # TODO: Implement actual ASR in Step 5
-    # For now, return a placeholder response
-    return TranscribeResponse(
-        transcript="[Transcription will be implemented in Step 5]",
-        confidence=0.0,
-        duration=0.0,
-        language="en",
-    )
+    try:
+        # Use ASR service to transcribe
+        result = asr_service.transcribe(audio_bytes)
+        
+        return TranscribeResponse(
+            transcript=result["transcript"],
+            confidence=result["confidence"],
+            duration=result["duration"],
+            language=result["language"],
+        )
+    except RuntimeError as e:
+        logger.error(f"Transcription error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Transcription failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected transcription error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during transcription."
+        )
 
 
 @router.post("/synthesize")

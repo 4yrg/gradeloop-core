@@ -5,16 +5,21 @@ Contains ASR, TTS, and LLM service classes
 
 from typing import Optional, List, Dict, Any
 import logging
+import tempfile
+import os
 
 from config import settings
 
 logger = logging.getLogger(__name__)
 
+# Lazy import for whisper to avoid startup delay
+_whisper_model = None
+
 
 class ASRService:
     """
-    Automatic Speech Recognition Service using Faster-Whisper.
-    Will be fully implemented in Step 5.
+    Automatic Speech Recognition Service using OpenAI Whisper.
+    Provides accurate transcription of audio to text.
     """
     
     def __init__(self, model_size: str = None):
@@ -34,48 +39,109 @@ class ASRService:
         Initialize the Whisper model.
         Called lazily on first transcription request.
         """
-        if self._initialized:
+        global _whisper_model
+        
+        if self._initialized and self.model is not None:
             return
         
-        # TODO: Implement in Step 5
-        # from faster_whisper import WhisperModel
-        # self.model = WhisperModel(
-        #     self.model_size,
-        #     device=settings.WHISPER_DEVICE,
-        #     compute_type=settings.WHISPER_COMPUTE_TYPE
-        # )
+        # Reuse global model if same size
+        if _whisper_model is not None:
+            self.model = _whisper_model
+            self._initialized = True
+            logger.info("ASR Service reusing existing model")
+            return
         
-        self._initialized = True
-        logger.info("ASR Service initialized (placeholder)")
+        try:
+            import whisper
+            
+            logger.info(f"Loading Whisper model: {self.model_size}...")
+            self.model = whisper.load_model(self.model_size)
+            _whisper_model = self.model
+            self._initialized = True
+            logger.info(f"Whisper model loaded successfully: {self.model_size}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Whisper model: {e}")
+            raise RuntimeError(f"ASR initialization failed: {e}")
     
     def transcribe(self, audio_bytes: bytes, language: str = "en") -> Dict[str, Any]:
         """
         Transcribe audio to text.
         
         Args:
-            audio_bytes: Raw audio data
-            language: Expected language code
+            audio_bytes: Raw audio data (WAV, MP3, etc.)
+            language: Expected language code (e.g., 'en', 'es', 'fr')
         
         Returns:
             Dict with transcript, confidence, duration, and language
         """
         self.initialize()
         
-        # TODO: Implement actual transcription in Step 5
-        # For now, return placeholder
-        logger.info(f"Transcription requested for {len(audio_bytes)} bytes of audio")
+        if len(audio_bytes) == 0:
+            return {
+                "transcript": "",
+                "confidence": 0.0,
+                "duration": 0.0,
+                "language": language,
+            }
         
-        return {
-            "transcript": "[Transcription will be implemented in Step 5]",
-            "confidence": 0.0,
-            "duration": 0.0,
-            "language": language,
-        }
+        # Save audio to temp file (whisper requires file path)
+        temp_file = None
+        try:
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            temp_file.write(audio_bytes)
+            temp_file.close()
+            
+            logger.info(f"Transcribing {len(audio_bytes)} bytes of audio...")
+            
+            # Perform transcription using openai-whisper
+            result = self.model.transcribe(
+                temp_file.name,
+                language=language,
+                fp16=False,  # Use FP32 for CPU compatibility
+            )
+            
+            transcript = result.get("text", "").strip()
+            detected_language = result.get("language", language)
+            
+            # Calculate duration from segments if available
+            segments = result.get("segments", [])
+            duration = 0.0
+            total_confidence = 0.0
+            
+            if segments:
+                duration = segments[-1].get("end", 0.0) if segments else 0.0
+                # Average no_speech_prob as inverse confidence
+                for seg in segments:
+                    total_confidence += (1.0 - seg.get("no_speech_prob", 0.5))
+                avg_confidence = total_confidence / len(segments)
+            else:
+                avg_confidence = 0.5
+            
+            logger.info(f"Transcription complete: {len(transcript)} chars, {duration:.1f}s")
+            
+            return {
+                "transcript": transcript,
+                "confidence": round(avg_confidence, 3),
+                "duration": round(duration, 2),
+                "language": detected_language,
+            }
+            
+        except Exception as e:
+            logger.error(f"Transcription failed: {e}")
+            raise RuntimeError(f"Transcription failed: {e}")
+        finally:
+            # Clean up temp file
+            if temp_file and os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
     
     @property
     def is_available(self) -> bool:
         """Check if ASR service is available"""
-        return True  # Placeholder returns true
+        try:
+            import whisper
+            return True
+        except ImportError:
+            return False
 
 
 class TTSService:
