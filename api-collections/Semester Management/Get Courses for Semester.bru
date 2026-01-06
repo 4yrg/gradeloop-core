@@ -1,0 +1,11 @@
+meta {
+  name: Get Courses for Semester
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}/courses
+  body: none
+  auth: none
+}

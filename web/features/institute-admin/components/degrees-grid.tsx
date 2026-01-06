@@ -9,9 +9,12 @@ interface DegreesGridProps {
     data: Degree[];
     onDegreeClick: (degree: Degree) => void;
     onCreateClick: () => void;
+    onEdit?: (degree: Degree) => void;
+    onDelete?: (id: string) => void;
+    onManageCourses?: (degree: Degree) => void;
 }
 
-export function DegreesGrid({ data, onDegreeClick, onCreateClick }: DegreesGridProps) {
+export function DegreesGrid({ data, onDegreeClick, onCreateClick, onEdit, onDelete, onManageCourses }: DegreesGridProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* "New Degree" Placeholder Card */}
@@ -33,6 +36,9 @@ export function DegreesGrid({ data, onDegreeClick, onCreateClick }: DegreesGridP
                     key={degree.id}
                     degree={degree}
                     onClick={onDegreeClick}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onManageCourses={onManageCourses}
                 />
             ))}
         </div>

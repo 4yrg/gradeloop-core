@@ -9,16 +9,17 @@ import {
     TableRow,
 } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, BookOpen } from "lucide-react";
 import { Degree } from "../types";
 
 interface DegreesListProps {
     data: Degree[];
     onEdit: (degree: Degree) => void;
     onDelete: (id: string) => void;
+    onManageCourses: (degree: Degree) => void;
 }
 
-export function DegreesList({ data, onEdit, onDelete }: DegreesListProps) {
+export function DegreesList({ data, onEdit, onDelete, onManageCourses }: DegreesListProps) {
     return (
         <div className="rounded-md border">
             <Table>
@@ -52,6 +53,14 @@ export function DegreesList({ data, onEdit, onDelete }: DegreesListProps) {
                                 <TableCell>{degree.requiredCredits}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Manage Courses"
+                                            onClick={() => onManageCourses(degree)}
+                                        >
+                                            <BookOpen className="h-4 w-4" />
+                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"

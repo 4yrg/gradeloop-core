@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -12,47 +14,41 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "degrees", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "code", "institute_id" })
+@Table(name = "semester_courses", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "semester_id", "course_id" })
 })
-public class Degree {
+public class SemesterCourse {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String code;
-
-    @Column(nullable = false)
-    private Integer credits;
-
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "semester_id", nullable = false)
+    private Semester semester;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "institute_id", nullable = false)
-    private Institute institute;
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
 
     // Audit Fields
     @Column(updatable = false)
     private Long createdBy;
 
     @Column(updatable = false, nullable = false)
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     private Long updatedBy;
 
-    private java.time.LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = java.time.LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = java.time.LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 }

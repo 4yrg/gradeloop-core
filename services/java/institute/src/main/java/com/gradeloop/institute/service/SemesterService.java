@@ -136,4 +136,38 @@ public class SemesterService {
                 .isActive(semester.isActive())
                 .build();
     }
+
+    private final com.gradeloop.institute.repository.SemesterCourseRepository semesterCourseRepository;
+    private final com.gradeloop.institute.repository.CourseRepository courseRepository;
+
+    @Transactional
+    public void addCourseToSemester(UUID semesterId, UUID courseId) {
+        if (semesterCourseRepository.existsBySemesterIdAndCourseId(semesterId, courseId)) {
+            throw new IllegalArgumentException("Course already added to semester");
+        }
+        Semester semester = findSemesterById(semesterId);
+        com.gradeloop.institute.model.Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        com.gradeloop.institute.model.SemesterCourse semesterCourse = com.gradeloop.institute.model.SemesterCourse
+                .builder()
+                .semester(semester)
+                .course(course)
+                .build();
+        semesterCourseRepository.save(semesterCourse);
+    }
+
+    @Transactional
+    public void removeCourseFromSemester(UUID semesterId, UUID courseId) {
+        if (!semesterCourseRepository.existsBySemesterIdAndCourseId(semesterId, courseId)) {
+            throw new IllegalArgumentException("Link not found");
+        }
+        semesterCourseRepository.deleteBySemesterIdAndCourseId(semesterId, courseId);
+    }
+
+    public List<com.gradeloop.institute.model.Course> getCoursesForSemester(UUID semesterId) {
+        return semesterCourseRepository.findBySemesterId(semesterId).stream()
+                .map(com.gradeloop.institute.model.SemesterCourse::getCourse)
+                .collect(Collectors.toList());
+    }
 }
