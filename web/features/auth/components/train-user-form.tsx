@@ -48,10 +48,14 @@ export function TrainUserForm() {
       return;
     }
 
-    // Check if username already exists
+    // Check if username already exists (allow re-enrollment with warning)
     if (enrolledUsers.includes(username)) {
-      setError('This username is already enrolled. Please choose a different name.');
-      return;
+      const confirmed = window.confirm(
+        `"${username}" is already enrolled. Re-enrolling will overwrite the existing template.\n\nDo you want to continue?`
+      );
+      if (!confirmed) {
+        return;
+      }
     }
 
     // Generate user ID and start enrollment
