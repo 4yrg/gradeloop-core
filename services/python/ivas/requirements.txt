@@ -14,3 +14,6 @@ numpy>=1.24.0
 # TTS - Text-to-Speech (Step 6)
 edge-tts
 pydub
+
+# LLM - Large Language Model (Step 7)
+ollama
