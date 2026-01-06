@@ -22,14 +22,22 @@ public class InstituteServiceClient {
 
     /**
      * Get assignment details from Institute Service
+     * Note: Institute service uses nested path - will need instituteId and courseId
+     * For now, using a simplified approach - may need to be enhanced
      *
      * @param assignmentId Assignment UUID
      * @return AssignmentDTO with assignment information
      */
     public AssignmentDTO getAssignment(UUID assignmentId) {
         try {
-            String url = restClientConfig.getInstituteServiceUrl() + "/api/v1/assignments/" + assignmentId;
-            log.info("Fetching assignment details from: {}", url);
+            // TODO: Institute service uses /institutes/{instituteId}/courses/{courseId}/assignments/{assignmentId}
+            // For now, log warning that this needs the full path
+            log.warn("Assignment fetch may fail - Institute service requires instituteId and courseId in path");
+            log.warn("Full path should be: /institutes/{{instituteId}}/courses/{{courseId}}/assignments/{}", assignmentId);
+            
+            // Attempting simplified path - this may need to be updated based on actual Institute Service implementation
+            String url = restClientConfig.getInstituteServiceUrl() + "/assignments/" + assignmentId;
+            log.info("Attempting to fetch assignment from: {}", url);
 
             AssignmentDTO assignment = restTemplate.getForObject(url, AssignmentDTO.class);
 
@@ -47,7 +55,7 @@ public class InstituteServiceClient {
             log.error("Error fetching assignment with id {}: {}", assignmentId, e.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "Institute service unavailable: " + e.getMessage()
+                    "Institute service unavailable or path incorrect: " + e.getMessage()
             );
         }
     }
@@ -60,7 +68,7 @@ public class InstituteServiceClient {
      */
     public CourseDTO getCourse(UUID courseId) {
         try {
-            String url = restClientConfig.getInstituteServiceUrl() + "/api/v1/courses/" + courseId;
+            String url = restClientConfig.getInstituteServiceUrl() + "/courses/" + courseId;
             log.info("Fetching course details from: {}", url);
 
             CourseDTO course = restTemplate.getForObject(url, CourseDTO.class);
