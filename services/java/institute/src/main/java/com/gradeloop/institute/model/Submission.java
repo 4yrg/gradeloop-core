@@ -23,7 +23,7 @@ public class Submission {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID userId;
+    private String studentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignment_id", nullable = false)

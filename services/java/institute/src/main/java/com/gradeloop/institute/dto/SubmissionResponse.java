@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SubmissionResponse {
     private UUID id;
-    private UUID userId;
+    private String studentId;
     private UUID assignmentId;
     private String fileName;
     private Long fileSize;
@@ -29,7 +29,7 @@ public class SubmissionResponse {
     public static SubmissionResponse fromEntity(Submission submission) {
         return SubmissionResponse.builder()
                 .id(submission.getId())
-                .userId(submission.getUserId())
+                .studentId(submission.getStudentId())
                 .assignmentId(submission.getAssignmentId())
                 .fileName(submission.getFileName())
                 .fileSize(submission.getFileSize())

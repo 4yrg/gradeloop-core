@@ -36,8 +36,8 @@ public class SubmissionService {
      * Submit an assignment with a code file
      */
     @Transactional
-    public Submission submitAssignment(UUID userId, UUID assignmentId, MultipartFile file) {
-        log.info("Processing submission for user: {} and assignment: {}", userId, assignmentId);
+    public Submission submitAssignment(String studentId, UUID assignmentId, MultipartFile file) {
+        log.info("Processing submission for student: {} and assignment: {}", studentId, assignmentId);
 
         // Validate assignment exists
         Assignment assignment = assignmentRepository.findById(assignmentId)
@@ -47,7 +47,7 @@ public class SubmissionService {
         ensureBucketExists();
 
         // Generate unique object key for MinIO
-        String objectKey = generateObjectKey(userId, assignmentId, file.getOriginalFilename());
+        String objectKey = generateObjectKey(studentId, assignmentId, file.getOriginalFilename());
 
         try {
             // Upload file to MinIO
@@ -55,7 +55,7 @@ public class SubmissionService {
 
             // Create submission record
             Submission submission = Submission.builder()
-                    .userId(userId)
+                    .studentId(studentId)
                     .assignment(assignment)
                     .fileName(file.getOriginalFilename())
                     .fileObjectKey(objectKey)
@@ -76,10 +76,10 @@ public class SubmissionService {
     }
 
     /**
-     * Get all submissions for a user
+     * Get all submissions for a student
      */
-    public List<Submission> getUserSubmissions(UUID userId) {
-        return submissionRepository.findByUserId(userId);
+    public List<Submission> getStudentSubmissions(String studentId) {
+        return submissionRepository.findByStudentId(studentId);
     }
 
     /**
@@ -183,7 +183,7 @@ public class SubmissionService {
     /**
      * Generate unique object key for MinIO storage
      */
-    private String generateObjectKey(UUID userId, UUID assignmentId, String originalFilename) {
+    private String generateObjectKey(String studentId, UUID assignmentId, String originalFilename) {
         String timestamp = String.valueOf(System.currentTimeMillis());
         String extension = "";
         
@@ -192,7 +192,7 @@ public class SubmissionService {
         }
         
         return String.format("submissions/%s/%s/%s%s", 
-                userId, assignmentId, timestamp, extension);
+                studentId, assignmentId, timestamp, extension);
     }
 }
 

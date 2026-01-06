@@ -10,9 +10,9 @@ import java.util.UUID;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
-    List<Submission> findByUserId(UUID userId);
+    List<Submission> findByStudentId(String studentId);
     
     List<Submission> findByAssignment_Id(UUID assignmentId);
     
-    Optional<Submission> findByUserIdAndAssignment_Id(UUID userId, UUID assignmentId);
+    Optional<Submission> findByStudentIdAndAssignment_Id(String studentId, UUID assignmentId);
 }

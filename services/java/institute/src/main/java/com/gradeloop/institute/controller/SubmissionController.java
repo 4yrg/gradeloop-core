@@ -27,31 +27,31 @@ public class SubmissionController {
 
     /**
      * Submit an assignment
-     * POST /api/submissions?userId={userId}&assignmentId={assignmentId}
+     * POST /api/submissions?studentId={studentId}&assignmentId={assignmentId}
      */
     @PostMapping(value = "/submissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SubmissionResponse> submitAssignment(
-            @RequestParam UUID userId,
+            @RequestParam String studentId,
             @RequestParam UUID assignmentId,
             @RequestPart("file") MultipartFile file) {
         
-        log.info("Received submission request for user: {} and assignment: {}", userId, assignmentId);
+        log.info("Received submission request for student: {} and assignment: {}", studentId, assignmentId);
         
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         
-        Submission submission = submissionService.submitAssignment(userId, assignmentId, file);
+        Submission submission = submissionService.submitAssignment(studentId, assignmentId, file);
         return ResponseEntity.ok(SubmissionResponse.fromEntity(submission));
     }
 
     /**
-     * Get all submissions for a user
-     * GET /api/users/{userId}/submissions
+     * Get all submissions for a student
+     * GET /api/students/{studentId}/submissions
      */
-    @GetMapping("/users/{userId}/submissions")
-    public ResponseEntity<List<SubmissionResponse>> getUserSubmissions(@PathVariable UUID userId) {
-        List<Submission> submissions = submissionService.getUserSubmissions(userId);
+    @GetMapping("/students/{studentId}/submissions")
+    public ResponseEntity<List<SubmissionResponse>> getStudentSubmissions(@PathVariable String studentId) {
+        List<Submission> submissions = submissionService.getStudentSubmissions(studentId);
         return ResponseEntity.ok(
                 submissions.stream()
                         .map(SubmissionResponse::fromEntity)
