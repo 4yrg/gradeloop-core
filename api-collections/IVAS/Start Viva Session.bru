@@ -1,0 +1,45 @@
+meta {
+  name: Start Viva Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{IVAS_BASE_URL}}/api/v1/viva/sessions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+body:json {
+  {
+    "studentId": "{{STUDENT_ID}}",
+    "assignmentId": "{{ASSIGNMENT_ID}}",
+    "courseId": "{{COURSE_ID}}"
+  }
+}
+
+docs {
+  # Start Viva Session
+  
+  Creates a new viva session for a student.
+  
+  ## Request Body
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | studentId | string | Yes | UUID of the student |
+  | assignmentId | string | Yes | UUID of the assignment |
+  | courseId | string | Yes | UUID of the course |
+  
+  ## Expected Response (201 Created)
+  ```json
+  {
+    "sessionId": "uuid",
+    "status": "IN_PROGRESS",
+    "startedAt": "2026-01-06T10:00:00Z"
+  }
+  ```
+}

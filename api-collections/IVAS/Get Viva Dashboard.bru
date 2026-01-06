@@ -1,15 +1,61 @@
 meta {
   name: Get Viva Dashboard
   type: http
-  seq: 2
+  seq: 6
 }
 
 get {
-  url: {{IVAS_API_URL}}/api/v1/viva/assignments/123e4567-e89b-12d3-a456-426614174000/dashboard?totalStudents=10
+  url: {{IVAS_BASE_URL}}/api/v1/viva/assignments/{{ASSIGNMENT_ID}}/dashboard?totalStudents=45
   body: none
-  auth: none
+  auth: bearer
 }
 
-vars:pre-request {
-  IVAS_API_URL: http://localhost:8084
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+params:query {
+  totalStudents: 45
+}
+
+docs {
+  # Get Viva Dashboard
+  
+  Retrieves dashboard statistics for instructors viewing viva results.
+  
+  ## Path Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | assignmentId | string | UUID of the assignment |
+  
+  ## Query Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | totalStudents | int | Total number of students in the class |
+  
+  ## Expected Response (200 OK)
+  ```json
+  {
+    "assignmentId": "uuid",
+    "statusOverview": {
+      "totalStudents": 45,
+      "vivasCompleted": 32,
+      "vivasInProgress": 5,
+      "vivasNotStarted": 8,
+      "averageScore": 78.5,
+      "averageDurationMinutes": 12.5
+    },
+    "competencyDistribution": {
+      "NOVICE": 15,
+      "INTERMEDIATE": 45,
+      "ADVANCED": 35,
+      "EXPERT": 5
+    },
+    "commonMisconceptions": [
+      "Time complexity confusion",
+      "Memory management concepts"
+    ],
+    "passRate": 87.5
+  }
+  ```
 }

@@ -1,0 +1,46 @@
+meta {
+  name: Get Session Assessment
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{IVAS_BASE_URL}}/api/v1/viva/sessions/{{SESSION_ID}}/assessment
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+docs {
+  # Get Session Assessment
+  
+  Retrieves the detailed assessment for a completed viva session.
+  
+  ## Path Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | sessionId | string | UUID of the viva session |
+  
+  ## Expected Response (200 OK)
+  ```json
+  {
+    "sessionId": "uuid",
+    "overallScore": 85,
+    "competencyLevel": "INTERMEDIATE",
+    "misconceptions": [
+      "Confused time complexity of binary search"
+    ],
+    "strengths": [
+      "Good understanding of data structures",
+      "Clear explanation of code logic"
+    ],
+    "weaknesses": [
+      "Needs improvement in complexity analysis"
+    ],
+    "fullAnalysis": "The student demonstrated..."
+  }
+  ```
+}
