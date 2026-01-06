@@ -111,7 +111,7 @@ export function CreateAssignmentDialog() {
                                 <ChevronLeft className="h-6 w-6" />
                             </button>
                         )}
-                        <DialogTitle className="text-xl font-bold tracking-tight">{step === 1 ? "Create assignment" : "Assignment Settings"}</DialogTitle>
+                        <DialogTitle className="text-xl font-bold tracking-tight">{step === 1 ? "Create assignment" : "Create Submission Draft"}</DialogTitle>
                     </div>
                     <button onClick={() => reset()} className="hover:opacity-70 transition-opacity">
                         <X className="h-6 w-6" />
@@ -185,48 +185,7 @@ export function CreateAssignmentDialog() {
                                             )}
                                         />
 
-                                        <section className="space-y-6">
-                                            <div className="flex flex-col gap-4">
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="font-bold text-lg">Grading Template</h4>
-                                                    <div className="bg-secondary/50 px-3 py-1 flex items-center gap-2 text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
-                                                        <Info className="h-3.5 w-3.5 text-primary" />
-                                                        <span>Guidelines at <span className="font-bold underline cursor-pointer">gradeloop template docs</span></span>
-                                                    </div>
-                                                </div>
 
-                                                <div className="flex items-center gap-6 p-4 border bg-muted/10">
-                                                    <FileText className="h-8 w-8 text-muted-foreground" />
-                                                    <div className="flex flex-col flex-1 shrink min-w-0">
-                                                        <span className="text-sm font-medium truncate">
-                                                            {form.watch("templateFile") ? (form.watch("templateFile") as File).name : "No file selected"}
-                                                        </span>
-                                                        <span className="text-xs text-muted-foreground">Please upload a valid .json template</span>
-                                                    </div>
-                                                    <input
-                                                        type="file"
-                                                        accept=".json"
-                                                        className="hidden"
-                                                        id="template-upload"
-                                                        onChange={(e) => {
-                                                            const file = e.target.files?.[0]
-                                                            if (file) form.setValue("templateFile", file)
-                                                        }}
-                                                    />
-                                                    <Button
-                                                        variant="outline"
-                                                        className="bg-secondary border-primary/20 hover:bg-secondary/80 h-9 rounded-none px-6 font-semibold"
-                                                        type="button"
-                                                        onClick={() => document.getElementById("template-upload")?.click()}
-                                                    >
-                                                        <Upload className="h-4 w-4 mr-2" />
-                                                        Select File
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </section>
-
-                                        <Separator />
 
                                         <section className="space-y-8">
                                             <h4 className="font-bold text-lg">Scoring & Grading</h4>
@@ -475,27 +434,7 @@ export function CreateAssignmentDialog() {
                                             </div>
                                         </section>
 
-                                        <Separator />
 
-                                        <section className="space-y-6">
-                                            <h4 className="font-bold text-lg">Assistance</h4>
-                                            <FormField
-                                                control={form.control as any}
-                                                name="enableAiAssistance"
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                                        <FormControl>
-                                                            <Checkbox
-                                                                checked={field.value}
-                                                                onCheckedChange={field.onChange}
-                                                                className="h-5 w-5 rounded-none"
-                                                            />
-                                                        </FormControl>
-                                                        <FormLabel className="font-semibold text-base cursor-pointer">Enable Socratic AI assistance</FormLabel>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </section>
                                     </form>
                                 </Form>
                             )}
