@@ -15,4 +15,6 @@ public class TestCaseResponse {
     private String input;
     private String expectedOutput;
     private boolean isHidden;
+    private String visibility; // Test case visibility
+    private Integer marks; // Absolute marks/points for this test case
 }
