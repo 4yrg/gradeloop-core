@@ -64,31 +64,35 @@ class LLMService:
         Returns:
             The first question text
         """
-        prompt = f"""You are an expert computer science educator conducting a viva voce (oral examination) to assess a student's CONCEPTUAL UNDERSTANDING, not their ability to read code.
+        prompt = f"""You are a friendly programming teacher conducting a simple oral exam for a beginner student.
 
-Assignment: {assignment_title}
-Description: {assignment_description}
+Assignment Topic: {assignment_title}
+(This assignment involves loops and patterns)
 
-The student has submitted code for this assignment. Your job is to test if they truly understand the underlying concepts.
+Your job is to ask SIMPLE CONCEPTUAL questions about programming. NO CODE questions!
 
-Generate ONE question that tests CONCEPTUAL understanding. The question should:
-- Test understanding of the underlying algorithm/data structure concepts (e.g., "Why do AVL trees need balancing?", "What problem does this solve?")
-- NOT ask them to explain their specific code line by line
-- Be answerable by someone who understands the concept even without seeing the code
-- Be clear and suitable for a verbal response
-- Start simple (this is question 1 of 5)
+Ask ONE simple conceptual question. Choose from these:
 
-Good examples:
-- "What is the main advantage of using an AVL tree over a regular binary search tree?"
-- "Can you explain what 'balance factor' means in the context of self-balancing trees?"
-- "Why is O(log n) time complexity important for search operations?"
+CONCEPTUAL QUESTIONS (ask these!):
+- "What is a for loop?"
+- "What is a while loop?"
+- "What is the difference between a for loop and a while loop?"
+- "When would you use a for loop instead of a while loop?"
+- "What is a nested loop?"
+- "Why do we use loops in programming?"
+- "What does iteration mean?"
+- "What is an infinite loop?"
+- "What is a loop counter?"
+- "What happens if a loop condition is always true?"
 
-Bad examples (DO NOT ask these):
-- "Can you explain what your insert function does?"
-- "Walk me through your code line by line"
-- "What does line 15 of your code do?"
+RULES:
+1. Ask about CONCEPTS only - what something IS or WHY we use it
+2. Questions should be answerable in simple English without looking at code
+3. NO questions about specific code syntax or implementation
+4. NO questions like "point out in your code" or "in your solution"
+5. Start with the SIMPLEST conceptual question
 
-Return ONLY the question text, nothing else."""
+Return ONLY the question text in simple English, nothing else."""
 
         question = self._call_ollama(prompt, temperature=0.7)
         # Clean up any markdown or extra formatting
@@ -121,31 +125,40 @@ Return ONLY the question text, nothing else."""
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Assessment: {entry.understanding_level} (Score: {entry.score}/100)\n"
         
-        prompt = f"""You are an expert computer science educator conducting a viva voce examination.
+        prompt = f"""You are a friendly programming teacher conducting a simple oral exam for a beginner student.
 
 Previous conversation:
 {history_text}
 
 Latest Answer: {current_answer}
 
-This is question {question_number} of 5. Generate the next CONCEPTUAL question.
+This is question {question_number} of 5. Ask another SIMPLE CONCEPTUAL question.
 
-Rules:
-1. Test understanding of CONCEPTS, not code reading ability
-2. Adapt difficulty based on previous performance:
-   - If student showed good understanding (score >= 70): Ask deeper conceptual questions (time complexity analysis, trade-offs, edge cases, comparisons with alternatives)
-   - If student struggled (score < 50): Ask simpler foundational questions to identify gaps
-3. DO NOT ask them to explain code line by line
-4. DO NOT repeat similar questions
+CONCEPTUAL QUESTIONS (pick one that wasn't asked before):
+- "What is a for loop?"
+- "What is a while loop?"
+- "What is the difference between a for loop and a while loop?"
+- "When would you use a for loop instead of a while loop?"
+- "What is a nested loop?"
+- "Why do we use loops in programming?"
+- "What does iteration mean?"
+- "What is an infinite loop?"
+- "What is a loop counter?"
+- "What happens if a loop condition is always true?"
+- "What is the purpose of a loop condition?"
+- "Can you have a loop inside another loop?"
+- "What is the benefit of using loops?"
+- "What would happen without loops - how else could you repeat code?"
 
-Question progression examples:
-- Q1: Basic concept ("What is an AVL tree?")
-- Q2: Purpose/advantage ("Why use it over alternatives?")
-- Q3: Core mechanism ("How does balancing work conceptually?")
-- Q4: Analysis ("What's the time complexity and why?")
-- Q5: Application/edge cases ("When would you choose this over a hash table?")
+RULES:
+1. Ask about CONCEPTS only - what something IS or WHY we use it
+2. Questions must be answerable in simple English WITHOUT looking at code
+3. NO questions about specific code, syntax, or "your code"
+4. NO questions like "point out", "in your solution", "why did you use"
+5. If student struggled, ask an EASIER conceptual question
+6. If student did well, ask a slightly deeper conceptual question
 
-Return ONLY the question text, nothing else."""
+Return ONLY the question text in simple English, nothing else."""
 
         question = self._call_ollama(prompt, temperature=0.7)
         question = question.replace("**", "").replace(f"Question {question_number}:", "").strip()
@@ -163,38 +176,40 @@ Return ONLY the question text, nothing else."""
         Returns:
             Dictionary with 'understanding_level' and 'score'
         """
-        prompt = f"""You are a STRICT examiner assessing a student's verbal answer in an oral examination.
+        prompt = f"""You are a FAIR examiner assessing a beginner student's verbal answer in an oral exam.
 
 Question Asked: {question}
 
 Student's Answer: "{answer}"
 
-IMPORTANT SCORING RULES - BE STRICT:
+SCORING RULES - BE FAIR TO BEGINNERS:
 
 1. First, check if the answer is VALID:
-   - Is it on-topic and attempts to answer the question?
-   - Is it in appropriate academic language?
-   - Does it contain actual technical content?
+   - Does it attempt to answer the question?
+   - Is it on-topic?
 
-2. If the answer is INVALID (off-topic, inappropriate, nonsense, or refuses to answer), score it as:
+2. If INVALID (off-topic, nonsense, "I don't know", inappropriate), score as:
    LEVEL: none
-   SCORE: 0
+   SCORE: 0-15
 
-3. If the answer is valid, score based on ACCURACY and DEPTH:
-   - excellent (85-100): Comprehensive, accurate, shows deep understanding with examples or nuance
-   - good (65-84): Mostly correct, demonstrates solid understanding, minor gaps acceptable
-   - partial (40-64): Some correct elements but missing key concepts or has misconceptions
-   - minimal (15-39): Very limited correct content, major gaps or errors
-   - none (0-14): Completely wrong, irrelevant, inappropriate, or empty
+3. If VALID, score based on correctness:
+   - excellent (85-100): Correct answer with good explanation or example
+   - good (70-84): Correct answer, shows understanding
+   - partial (50-69): Partially correct, has the right idea but incomplete
+   - minimal (25-49): Vague or mostly incorrect
+   - none (0-24): Wrong, off-topic, or refuses to answer
 
-CRITICAL: 
-- An answer like "I don't know" = SCORE: 5
-- An answer with profanity or refusing to engage = SCORE: 0
-- An answer that mentions some keywords but is vague = SCORE: 20-40
-- Only give 80+ for genuinely good explanations with accurate content
+EXAMPLES:
+- "What is a for loop?" → "A loop that runs a specific number of times" = GOOD (75)
+- "What is a for loop?" → "For loop is used when we know the number of iterations" = GOOD (70-75)
+- "What is a for loop?" → "It repeats code" = PARTIAL (50-55)
+- "What is a for loop?" → "I don't know" = NONE (5)
 
-Analyze the answer carefully, then respond EXACTLY in this format:
-ANALYSIS: [1-2 sentence analysis of the answer quality]
+BE FAIR: If the student gives a correct answer in simple words, give them credit (70+). 
+This is an oral exam - answers don't need to be textbook perfect.
+
+Respond EXACTLY in this format:
+ANALYSIS: [1 sentence - is the answer correct?]
 LEVEL: [level]
 SCORE: [number]"""
 

@@ -74,49 +74,80 @@ const IVAS_API_URL = 'http://localhost:8085';
 // Mock assignment data
 const MOCK_ASSIGNMENT = {
     id: 'asgn-1',
-    title: 'Data Structures: Balanced Binary Search Trees',
-    description: 'Implement an AVL tree with insert, delete, search, and level-order traversal operations.',
-    problemStatement: 'Create a self-balancing AVL tree that maintains O(log n) time complexity for all operations.',
-    studentCode: `class AVLNode:
-    def __init__(self, key):
-        self.key = key
-        self.left = None
-        self.right = None
-        self.height = 1
+    title: 'Print Star Patterns using Loops',
+    description: 'Write a Java program to print various star patterns using nested for loops. Implement methods to print a right-angled triangle, an inverted triangle, and a pyramid pattern.',
+    problemStatement: `Write methods to print the following star patterns:
 
-class AVLTree:
-    def __init__(self):
-        self.root = None
+1. Right-angled Triangle (n=5):
+*
+**
+***
+****
+*****
+
+2. Inverted Triangle (n=5):
+*****
+****
+***
+**
+*
+
+3. Pyramid (n=5):
+    *
+   ***
+  *****
+ *******
+*********
+
+Each method should take 'n' (number of rows) as input parameter.`,
+    studentCode: `public class StarPatterns {
     
-    def height(self, node):
-        if not node:
-            return 0
-        return node.height
+    // Print a right-angled triangle pattern
+    public static void rightTriangle(int n) {
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= i; j++) {
+                System.out.print("*");
+            }
+            System.out.println();
+        }
+    }
     
-    def balance(self, node):
-        if not node:
-            return 0
-        return self.height(node.left) - self.height(node.right)
+    // Print an inverted triangle pattern
+    public static void invertedTriangle(int n) {
+        for (int i = n; i >= 1; i--) {
+            for (int j = 1; j <= i; j++) {
+                System.out.print("*");
+            }
+            System.out.println();
+        }
+    }
     
-    def insert(self, root, key):
-        if not root:
-            return AVLNode(key)
-        elif key < root.key:
-            root.left = self.insert(root.left, key)
-        else:
-            root.right = self.insert(root.right, key)
+    // Print a pyramid pattern
+    public static void pyramid(int n) {
+        for (int i = 1; i <= n; i++) {
+            // Print spaces
+            for (int j = 1; j <= n - i; j++) {
+                System.out.print(" ");
+            }
+            // Print stars
+            for (int j = 1; j <= 2 * i - 1; j++) {
+                System.out.print("*");
+            }
+            System.out.println();
+        }
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Right Triangle (n=5):");
+        rightTriangle(5);
         
-        root.height = 1 + max(self.height(root.left), self.height(root.right))
-        balance = self.balance(root)
+        System.out.println("\\nInverted Triangle (n=5):");
+        invertedTriangle(5);
         
-        # Left Left Case
-        if balance > 1 and key < root.left.key:
-            return self.right_rotate(root)
-        # Right Right Case
-        if balance < -1 and key > root.right.key:
-            return self.left_rotate(root)
-        
-        return root`,
+        System.out.println("\\nPyramid (n=5):");
+        pyramid(5);
+    }
+}`,
 };
 
 // Audio Waveform Component
