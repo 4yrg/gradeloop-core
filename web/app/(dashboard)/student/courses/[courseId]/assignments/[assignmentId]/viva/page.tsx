@@ -797,46 +797,48 @@ export default function VivaPage({
                 </div>
 
                 {/* Right Panel - Session History */}
-                <div className="w-80 border-l bg-card flex flex-col shrink-0">
-                    <div className="p-4 border-b">
+                <div className="w-80 border-l bg-card flex flex-col shrink-0 overflow-hidden">
+                    <div className="p-4 border-b shrink-0">
                         <h2 className="font-semibold flex items-center gap-2">
                             <MessageSquare className="h-4 w-4" />
                             Session History
                         </h2>
                     </div>
 
-                    <ScrollArea className="flex-1">
-                        <div className="p-4 space-y-4">
-                            {conversationHistory.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-8">
-                                    No questions answered yet.
-                                </p>
-                            ) : (
-                                conversationHistory.map((entry, i) => (
-                                    <div key={i} className="space-y-2 pb-4 border-b last:border-0">
-                                        <div className="flex items-center justify-between">
-                                            <Badge variant="outline" className="text-[10px]">Q{entry.question_number}</Badge>
-                                            <Badge className={cn("text-[10px]", getLevelColor(entry.understanding_level))}>
-                                                {entry.score}
-                                            </Badge>
+                    <div className="flex-1 overflow-hidden">
+                        <ScrollArea className="h-full">
+                            <div className="p-4 space-y-4">
+                                {conversationHistory.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                        No questions answered yet.
+                                    </p>
+                                ) : (
+                                    conversationHistory.map((entry, i) => (
+                                        <div key={i} className="space-y-2 pb-4 border-b last:border-0">
+                                            <div className="flex items-center justify-between">
+                                                <Badge variant="outline" className="text-[10px]">Q{entry.question_number}</Badge>
+                                                <Badge className={cn("text-[10px]", getLevelColor(entry.understanding_level))}>
+                                                    {entry.score}
+                                                </Badge>
+                                            </div>
+                                            <div className="text-xs bg-muted/50 p-2 rounded">
+                                                <p className="font-medium text-muted-foreground mb-1">Q:</p>
+                                                <p className="line-clamp-2">{entry.question_text}</p>
+                                            </div>
+                                            <div className="text-xs bg-primary/5 p-2 rounded">
+                                                <p className="font-medium text-muted-foreground mb-1">A:</p>
+                                                <p className="line-clamp-3">{entry.answer_text}</p>
+                                            </div>
                                         </div>
-                                        <div className="text-xs bg-muted/50 p-2 rounded">
-                                            <p className="font-medium text-muted-foreground mb-1">Q:</p>
-                                            <p className="line-clamp-2">{entry.question_text}</p>
-                                        </div>
-                                        <div className="text-xs bg-primary/5 p-2 rounded">
-                                            <p className="font-medium text-muted-foreground mb-1">A:</p>
-                                            <p className="line-clamp-3">{entry.answer_text}</p>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                            <div ref={historyEndRef} />
-                        </div>
-                    </ScrollArea>
+                                    ))
+                                )}
+                                <div ref={historyEndRef} />
+                            </div>
+                        </ScrollArea>
+                    </div>
 
                     {/* Concepts Section */}
-                    <div className="p-4 border-t">
+                    <div className="p-4 border-t shrink-0">
                         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                             Concepts
                         </h3>
