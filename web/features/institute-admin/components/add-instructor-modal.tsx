@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../../components/ui/dialog";
-import { peopleService } from "../api/people-service";
+import { peopleService } from "../api/people.api";
 import { Person } from "../types";
 import { cn } from "../../../lib/utils";
 
@@ -39,8 +39,7 @@ export function AddInstructorModal({
     const availableInstructors = instructors.filter(
         (p) => !currentInstructorIds.includes(p.id || "") &&
             p.role === "instructor" &&
-            (p.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.email.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
@@ -136,7 +135,7 @@ export function AddInstructorModal({
                                                 />
                                                 <div className="flex-1">
                                                     <p className="text-sm font-medium leading-none">
-                                                        {instructor.firstName} {instructor.lastName}
+                                                        {instructor.fullName}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         {instructor.email}

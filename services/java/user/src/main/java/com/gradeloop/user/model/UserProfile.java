@@ -21,6 +21,31 @@ public class UserProfile {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private String firstName;
-    private String lastName;
+    private String fullName;
+
+    @Column(nullable = false, unique = true)
+    private Long authUserId;
+
+    private String userId; // Nullable as per requirement, maybe for student ID etc.
+
+    @Column(nullable = false)
+    private String role; // Storing role string as requested
+
+    @Column(updatable = false)
+    private java.time.LocalDateTime createdAt;
+    private String createdBy;
+
+    private java.time.LocalDateTime updatedAt;
+    private String updatedBy;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+        if (updatedAt == null) updatedAt = java.time.LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = java.time.LocalDateTime.now();
+    }
 }

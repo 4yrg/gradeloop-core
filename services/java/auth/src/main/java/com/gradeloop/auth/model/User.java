@@ -34,10 +34,31 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+    private String tempPassword;
+
     private boolean isTemporaryPassword;
 
     @Enumerated(EnumType.STRING)
     private AdminLevel adminLevel;
+
+    @Column(name = "user_db_id")
+    private Long userDbId; // Reference to user profile in user-service database
+
+    @Column(updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    private java.time.LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+        updatedAt = java.time.LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = java.time.LocalDateTime.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,0 +1,11 @@
+meta {
+  name: Link Course to Degree
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/degrees/{{degreeId}}/courses/{{courseId}}
+  body: none
+  auth: none
+}

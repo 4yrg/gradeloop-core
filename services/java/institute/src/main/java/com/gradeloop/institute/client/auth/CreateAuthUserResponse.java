@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class CreateAuthUserResponse {
-    private Long userId;
+    private Long authUserId;
     private String email;
     private String tempPassword;
 }

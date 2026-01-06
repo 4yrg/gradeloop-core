@@ -1,63 +1,60 @@
+import { apiClient } from "@/api/client";
 import { ClassGroup, Person } from "../types";
-import { MOCK_CLASSES } from "../data/mock-classes";
-import { MOCK_PEOPLE } from "../data/mock-people";
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { peopleService } from "./people.api";
 
 export const classesService = {
     getClassesForDegree: async (degreeId: string): Promise<ClassGroup[]> => {
-        await delay(600);
-        // In a real app, this would query by degreeId. 
-        // For mock, we'll return all if degreeId matches, or some random ones if mock IDs don't align perfectly yet.
-        return MOCK_CLASSES.filter(c => c.degreeId === degreeId || !c.degreeId);
+        const response = await apiClient.get<ClassGroup[]>(`/degrees/${degreeId}/classes`);
+        return response.data;
     },
 
-    createClass: async (data: ClassGroup): Promise<ClassGroup> => {
-        await delay(800);
-        return {
-            ...data,
-            id: Math.random().toString(36).substring(2, 9),
-            studentCount: 0,
-        };
+    createClass: async (instituteId: string, data: Partial<ClassGroup>): Promise<ClassGroup> => {
+        const response = await apiClient.post<ClassGroup>(`/institutes/${instituteId}/classes`, data);
+        return response.data;
+    },
+
+    bulkCreateClasses: async (instituteId: string, data: any[]): Promise<ClassGroup[]> => {
+        const response = await apiClient.post<ClassGroup[]>(`/institutes/${instituteId}/classes/bulk`, data);
+        return response.data;
+    },
+
+    downloadTemplate: (instituteId: string) => {
+        const endpoint = `/institutes/${instituteId}/classes/template`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}${endpoint}`;
+        window.open(url, '_blank');
     },
 
     updateClass: async (id: string, data: Partial<ClassGroup>): Promise<ClassGroup> => {
-        await delay(500);
-        return {
-            id,
-            name: data.name || "Updated Class",
-            degreeId: data.degreeId || "",
-            studentCount: data.studentCount || 0,
-        };
+        const response = await apiClient.patch<ClassGroup>(`/classes/${id}`, data);
+        return response.data;
     },
 
-    getClassById: async (id: string): Promise<ClassGroup | undefined> => {
-        await delay(500);
-        return MOCK_CLASSES.find(c => c.id === id);
+    getClassById: async (id: string): Promise<ClassGroup> => {
+        const response = await apiClient.get<ClassGroup>(`/classes/${id}`);
+        return response.data;
     },
 
     getStudentsForClass: async (classId: string): Promise<Person[]> => {
-        await delay(600);
-        // Mocking return of random students for now
-        return MOCK_PEOPLE.filter(p => p.role === "student");
+        const response = await apiClient.get<ClassGroup>(`/classes/${classId}`);
+        const studentIds = response.data.studentIds || [];
+        if (studentIds.length === 0) return [];
+
+        return peopleService.getStudentsByIds(studentIds.map(id => Number(id)));
     },
 
-    importStudents: async (classId: string, students: Partial<Person>[]): Promise<void> => {
-        await delay(1500);
-        // Mock success
+    importStudents: async (classId: string, studentIds: number[]): Promise<void> => {
+        await apiClient.post(`/classes/${classId}/students`, studentIds);
     },
 
-    addStudentsToClass: async (classId: string, studentIds: string[]): Promise<void> => {
-        await delay(800);
-        // Mock success
+    addStudentsToClass: async (classId: string, studentIds: number[]): Promise<void> => {
+        await apiClient.post(`/classes/${classId}/students`, studentIds);
     },
 
     removeStudentFromClass: async (classId: string, studentId: string): Promise<void> => {
-        await delay(500);
-        // Mock success
+        // backend doesn't have this yet, skipping for now
     },
 
     deleteClass: async (id: string): Promise<void> => {
-        await delay(500);
+        await apiClient.delete(`/classes/${id}`);
     }
 };

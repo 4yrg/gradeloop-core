@@ -1,0 +1,11 @@
+meta {
+  name: Link Course to Semester
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}/courses/{{courseId}}
+  body: none
+  auth: none
+}

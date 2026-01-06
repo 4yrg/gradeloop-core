@@ -4,18 +4,25 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ClassesGrid } from "../../../../../../features/institute-admin/components/classes-grid";
 import { ClassModal } from "../../../../../../features/institute-admin/components/class-modal";
+import { BulkImportModal } from "../../../../../../features/institute-admin/components/bulk-import-modal";
 import { classesService } from "../../../../../../features/institute-admin/api/classes-service";
+import { peopleService } from "../../../../../../features/institute-admin/api/people.api";
 import { ClassGroup, Person } from "../../../../../../features/institute-admin/types";
 import { Button } from "../../../../../../components/ui/button";
+import { useUser } from "../../../../../../hooks/use-user";
+import { Upload } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DegreeClassesPage() {
     const params = useParams();
     const router = useRouter();
+    const { user } = useUser();
     const degreeId = params.degreeId as string;
 
     const [classes, setClasses] = useState<ClassGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
     useEffect(() => {
         if (degreeId) {
@@ -40,28 +47,60 @@ export default function DegreeClassesPage() {
     };
 
     const handleSubmit = async (data: ClassGroup, studentIds: string[], importedStudents: Partial<Person>[]) => {
+        if (!user?.instituteId) {
+            toast.error("User or Institute ID not found");
+            return;
+        }
+
         try {
-            const created = await classesService.createClass(data);
+            // 1. Create the class
+            const created = await classesService.createClass(user.instituteId, { ...data, degreeId });
 
-            const promises = [];
+            const finalStudentIds: number[] = [...studentIds.map(id => parseInt(id)).filter(id => !isNaN(id))];
 
-            if (studentIds.length > 0 && created.id) {
-                promises.push(classesService.addStudentsToClass(created.id, studentIds));
-            }
-
+            // 2. Handle imported students
             if (importedStudents.length > 0 && created.id) {
-                promises.push(classesService.importStudents(created.id, importedStudents));
+                const studentsToCreate = importedStudents.map(s => ({
+                    ...s,
+                    instituteId: user.instituteId,
+                    role: "student"
+                }));
+                // Note: backend already checks for existing by email
+                const createdResults = await peopleService.bulkCreatePeople("student", studentsToCreate);
+
+                const newIds = createdResults
+                    .filter(res => res.id)
+                    .map(res => Number(res.id));
+
+                finalStudentIds.push(...newIds);
             }
 
-            if (promises.length > 0) {
-                await Promise.all(promises);
-                // Update local count
-                created.studentCount = studentIds.length + importedStudents.length;
+            // 3. Add all students if any
+            if (finalStudentIds.length > 0 && created.id) {
+                await classesService.addStudentsToClass(created.id, finalStudentIds);
             }
 
-            setClasses((prev) => [...prev, created]);
+            toast.success("Class created successfully with assigned students");
+            setClasses((prev) => [...prev, { ...created, studentCount: finalStudentIds.length }]);
+            setIsModalOpen(false);
         } catch (error) {
             console.error("Failed to create class", error);
+            toast.error("Failed to create class or assign students");
+        }
+    };
+
+    const handleBulkImportClasses = async (data: Partial<Person>[]) => {
+        if (!user?.instituteId) return;
+
+        try {
+            const classRequests = data.map(item => ({
+                name: item.fullName || "Unnamed Class",
+                degreeId: degreeId
+            }));
+            const createdClasses = await classesService.bulkCreateClasses(user.instituteId, classRequests);
+            setClasses((prev) => [...prev, ...createdClasses]);
+        } catch (error) {
+            console.error("Failed to bulk import classes", error);
         }
     };
 
@@ -71,9 +110,15 @@ export default function DegreeClassesPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h2 className="text-xl font-bold tracking-tight">Classes</h2>
-                <p className="text-muted-foreground">Manage student cohorts and sections.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-xl font-bold tracking-tight">Classes</h2>
+                    <p className="text-muted-foreground">Manage student cohorts and sections.</p>
+                </div>
+                <Button variant="outline" onClick={() => setIsBulkImportOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Bulk Import
+                </Button>
             </div>
 
             {loading ? (
@@ -91,6 +136,16 @@ export default function DegreeClassesPage() {
                 onOpenChange={setIsModalOpen}
                 onSubmit={handleSubmit}
                 degreeId={degreeId}
+            />
+
+            <BulkImportModal
+                open={isBulkImportOpen}
+                onOpenChange={setIsBulkImportOpen}
+                onImport={handleBulkImportClasses}
+                onDownloadTemplate={() => user?.instituteId && classesService.downloadTemplate(user.instituteId)}
+                entityName="Classes"
+                templateHeaders={["Name"]}
+                mapRow={(row) => ({ fullName: row[0] })}
             />
         </div>
     );

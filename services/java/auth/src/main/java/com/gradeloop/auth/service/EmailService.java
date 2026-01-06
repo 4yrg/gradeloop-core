@@ -32,6 +32,17 @@ public class EmailService {
         sendEmail(email, subject, message);
     }
 
+    public void sendWelcomeLink(String email, String token) {
+        String resetLink = "http://localhost:3000/reset-password?token=" + token; // Frontend URL
+        String subject = "Welcome to GradeLoop - Setup Your Account";
+        String message = "Welcome to GradeLoop!\n\n"
+                + "Your account has been created. Please click the link below to set your password and access your account:\n"
+                + resetLink + "\n\n"
+                + "This link will expire in 24 hours.";
+
+        sendEmail(email, subject, message);
+    }
+
     private void sendEmail(String to, String subject, String text) {
         try {
             java.util.Map<String, String> payload = new java.util.HashMap<>();

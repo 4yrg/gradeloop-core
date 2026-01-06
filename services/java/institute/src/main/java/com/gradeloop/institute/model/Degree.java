@@ -34,4 +34,25 @@ public class Degree {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "institute_id", nullable = false)
     private Institute institute;
+
+    // Audit Fields
+    @Column(updatable = false)
+    private Long createdBy;
+
+    @Column(updatable = false, nullable = false)
+    private java.time.LocalDateTime createdAt;
+
+    private Long updatedBy;
+
+    private java.time.LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = java.time.LocalDateTime.now();
+    }
 }
