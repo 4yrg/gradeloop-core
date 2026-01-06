@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateUserRequest {
     private String email;
-    private String name; // Note: specific services might store name, Auth Service just needs email/role
-                         // usually, but good to have if we extend User later.
     private Role role;
+    private Long userDbId; // Reference to user profile ID in user-service database
 }

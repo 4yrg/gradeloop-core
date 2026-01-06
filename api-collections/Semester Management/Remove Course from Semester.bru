@@ -1,0 +1,11 @@
+meta {
+  name: Remove Course from Semester
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{GRADELOOP_API_URL}}/semesters/{{semesterId}}/courses/{{courseId}}
+  body: none
+  auth: none
+}

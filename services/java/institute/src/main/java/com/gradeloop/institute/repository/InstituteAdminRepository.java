@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface InstituteAdminRepository extends JpaRepository<InstituteAdmin, UUID> {
     List<InstituteAdmin> findByInstituteId(UUID instituteId);
+
+    java.util.Optional<InstituteAdmin> findByUserId(Long userId);
 }

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateAuthUserResponse {
-    private Long userId;
+    private Long authUserId;
     private String email;
-    private String tempPassword;
 }

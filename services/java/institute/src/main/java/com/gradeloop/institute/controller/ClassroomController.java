@@ -5,6 +5,7 @@ import com.gradeloop.institute.dto.CreateClassroomRequest;
 import com.gradeloop.institute.dto.UpdateClassroomRequest;
 import com.gradeloop.institute.service.ClassroomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,30 @@ public class ClassroomController {
         return ResponseEntity.ok(classroomService.getAllClassrooms(instituteId).stream()
                 .map(ClassroomResponse::fromEntity)
                 .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/degrees/{degreeId}/classes")
+    public ResponseEntity<List<ClassroomResponse>> getClassroomsByDegree(@PathVariable UUID degreeId) {
+        return ResponseEntity.ok(classroomService.getClassroomsByDegree(degreeId).stream()
+                .map(ClassroomResponse::fromEntity)
+                .collect(Collectors.toList()));
+    }
+
+    @PostMapping("/institutes/{instituteId}/classes/bulk")
+    public ResponseEntity<List<ClassroomResponse>> createClassroomsBulk(@PathVariable UUID instituteId,
+            @RequestBody List<CreateClassroomRequest> requests) {
+        return ResponseEntity.ok(classroomService.createClassroomsBulk(instituteId, requests).stream()
+                .map(ClassroomResponse::fromEntity)
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/institutes/{instituteId}/classes/template")
+    public ResponseEntity<String> getTemplate() {
+        String template = "name\nClass of 2026,Section A";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=classes_template.csv")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(template);
     }
 
     @GetMapping("/classes/{id}")

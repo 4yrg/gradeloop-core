@@ -10,7 +10,7 @@ import {
 } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
-import { Edit, Trash2, CheckCircle2 } from "lucide-react";
+import { Edit, Trash2, CheckCircle2, BookOpen } from "lucide-react";
 import { Semester } from "../types";
 
 interface SemestersListProps {
@@ -18,9 +18,10 @@ interface SemestersListProps {
     onEdit: (semester: Semester) => void;
     onDelete: (id: string) => void;
     onSetActive: (id: string) => void;
+    onManageCourses: (semester: Semester) => void;
 }
 
-export function SemestersList({ data, onEdit, onDelete, onSetActive }: SemestersListProps) {
+export function SemestersList({ data, onEdit, onDelete, onSetActive, onManageCourses }: SemestersListProps) {
     return (
         <div className="rounded-md border">
             <Table>
@@ -67,6 +68,14 @@ export function SemestersList({ data, onEdit, onDelete, onSetActive }: Semesters
                                                 <CheckCircle2 className="h-4 w-4 text-muted-foreground hover:text-green-600" />
                                             </Button>
                                         )}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Manage Courses"
+                                            onClick={() => onManageCourses(semester)}
+                                        >
+                                            <BookOpen className="h-4 w-4" />
+                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"

@@ -23,5 +23,21 @@ export const semestersService = {
 
     setActiveSemester: async (id: string): Promise<void> => {
         await apiClient.patch(`/semesters/${id}/activate`);
+    },
+
+    // Relationship Management
+    addCourseToSemester: async (semesterId: string, courseId: string): Promise<void> => {
+        await apiClient.post(`/semesters/${semesterId}/courses/${courseId}`);
+    },
+
+    removeCourseFromSemester: async (semesterId: string, courseId: string): Promise<void> => {
+        await apiClient.delete(`/semesters/${semesterId}/courses/${courseId}`);
+    },
+
+    getCoursesForSemester: async (semesterId: string): Promise<any[]> => { // Using any[] for now or import Course if available
+        // Need to import Course. For now assume it logic works or I add import.
+        // But types are in the same file likely.
+        const response = await apiClient.get(`/semesters/${semesterId}/courses`);
+        return response.data;
     }
 };

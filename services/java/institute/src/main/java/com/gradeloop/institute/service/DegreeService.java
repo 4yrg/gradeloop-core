@@ -5,6 +5,8 @@ import com.gradeloop.institute.dto.UpdateDegreeRequest;
 import com.gradeloop.institute.model.Degree;
 import com.gradeloop.institute.model.Institute;
 import com.gradeloop.institute.repository.DegreeRepository;
+import com.gradeloop.institute.repository.DegreeCourseRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -84,5 +86,38 @@ public class DegreeService {
         UUID instituteId = degree.getInstitute().getId();
         degreeRepository.delete(degree);
         log.info("Deleted degree id={} for instituteId={}", id, instituteId);
+    }
+
+    private final DegreeCourseRepository degreeCourseRepository;
+    private final com.gradeloop.institute.repository.CourseRepository courseRepository;
+
+    @Transactional
+    public void addCourseToDegree(UUID degreeId, UUID courseId) {
+        if (degreeCourseRepository.existsByDegreeIdAndCourseId(degreeId, courseId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Course already added to degree");
+        }
+        Degree degree = getDegree(degreeId);
+        com.gradeloop.institute.model.Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        com.gradeloop.institute.model.DegreeCourse degreeCourse = com.gradeloop.institute.model.DegreeCourse.builder()
+                .degree(degree)
+                .course(course)
+                .build();
+        degreeCourseRepository.save(degreeCourse);
+    }
+
+    @Transactional
+    public void removeCourseFromDegree(UUID degreeId, UUID courseId) {
+        if (!degreeCourseRepository.existsByDegreeIdAndCourseId(degreeId, courseId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Link not found");
+        }
+        degreeCourseRepository.deleteByDegreeIdAndCourseId(degreeId, courseId);
+    }
+
+    public List<com.gradeloop.institute.model.Course> getCoursesForDegree(UUID degreeId) {
+        return degreeCourseRepository.findByDegreeId(degreeId).stream()
+                .map(com.gradeloop.institute.model.DegreeCourse::getCourse)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

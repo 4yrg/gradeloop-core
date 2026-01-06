@@ -27,6 +27,10 @@ public class Classroom {
     @JoinColumn(name = "institute_id", nullable = false)
     private Institute institute;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "degree_id")
+    private Degree degree;
+
     @ElementCollection
     @CollectionTable(name = "classroom_students", joinColumns = @JoinColumn(name = "classroom_id"))
     @Column(name = "student_id")

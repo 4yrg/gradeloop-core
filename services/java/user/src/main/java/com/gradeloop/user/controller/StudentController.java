@@ -4,6 +4,7 @@ import com.gradeloop.user.dto.CreateStudentRequest;
 import com.gradeloop.user.dto.CreateUserResponse;
 import com.gradeloop.user.service.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,15 @@ public class StudentController {
         return ResponseEntity.ok(studentService.createStudentsBulk(requests));
     }
 
+    @GetMapping("/template")
+    public ResponseEntity<String> getTemplate() {
+        String template = "fullName,email,studentId\nJohn Doe,john.student@example.com,STU12345";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students_template.csv")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(template);
+    }
+
     @GetMapping
     public ResponseEntity<List<CreateUserResponse>> getAllStudents() {
         return ResponseEntity.ok(studentService.getAllStudents());
@@ -47,5 +57,10 @@ public class StudentController {
     @GetMapping("/{id}")
     public ResponseEntity<CreateUserResponse> getStudent(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
+    }
+
+    @GetMapping("/batch")
+    public ResponseEntity<List<CreateUserResponse>> getStudentsByIds(@RequestParam List<Long> ids) {
+        return ResponseEntity.ok(studentService.getStudentsByIds(ids));
     }
 }

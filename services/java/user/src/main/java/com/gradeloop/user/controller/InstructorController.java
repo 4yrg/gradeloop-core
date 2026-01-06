@@ -4,6 +4,7 @@ import com.gradeloop.user.dto.CreateInstructorRequest;
 import com.gradeloop.user.dto.CreateUserResponse;
 import com.gradeloop.user.service.InstructorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,15 @@ public class InstructorController {
     public ResponseEntity<List<CreateUserResponse>> createInstructorsBulk(
             @RequestBody List<CreateInstructorRequest> requests) {
         return ResponseEntity.ok(instructorService.createInstructorsBulk(requests));
+    }
+
+    @GetMapping("/template")
+    public ResponseEntity<String> getTemplate() {
+        String template = "fullName,email,department\nJane Smith,jane.instructor@example.com,Computer Science";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=instructors_template.csv")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(template);
     }
 
     @GetMapping

@@ -1,0 +1,43 @@
+meta {
+  name: Get Viva Configuration
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{IVAS_BASE_URL}}/api/v1/viva/assignments/{{ASSIGNMENT_ID}}/config
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+vars:pre-request {
+  IVAS_BASE_URL: http://localhost:8084
+}
+
+docs {
+  # Get Viva Configuration
+  
+  Retrieves the viva configuration for a specific assignment.
+  
+  ## Path Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | assignmentId | string | UUID of the assignment |
+  
+  ## Expected Response (200 OK)
+  ```json
+  {
+    "assignmentId": "uuid",
+    "enabled": true,
+    "maxQuestions": 7,
+    "maxDurationMinutes": 15,
+    "passingScore": 60,
+    "rubricConfigured": true,
+    "questionBankReady": true
+  }
+  ```
+}

@@ -29,7 +29,7 @@ export const degreeSchema = z.object({
     name: z.string().min(2, "Name is required"),
     code: z.string().min(2, "Code is required"), // e.g., "BS-CS"
     description: z.string().optional(),
-    requiredCredits: z.number().min(0),
+    credits: z.number().min(1, "Credits must be at least 1"),
 });
 export type Degree = z.infer<typeof degreeSchema>;
 
@@ -60,13 +60,15 @@ export type CourseOffering = z.infer<typeof courseOfferingSchema>;
 
 // People
 export const personSchema = z.object({
-    id: z.string().uuid().optional(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
+    id: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    fullName: z.string().min(1, "Full name is required"),
     email: z.string().email(),
     role: userRoleSchema,
     studentId: z.string().optional(), // For students
     instituteId: z.string().optional(),
+    department: z.string().optional(), // For instructors
 });
 export type Person = z.infer<typeof personSchema>;
 
@@ -76,5 +78,6 @@ export const classGroupSchema = z.object({
     name: z.string().min(2, "Class name is required"), // e.g. "Class of 2025"
     degreeId: z.string().uuid(),
     studentCount: z.number().default(0),
+    studentIds: z.array(z.number()).optional(),
 });
 export type ClassGroup = z.infer<typeof classGroupSchema>;
