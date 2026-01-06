@@ -25,6 +25,13 @@ services:
         strip_path: false
         paths:
           - /users
+  - name: ivas-service
+    url: http://ivas-service:8084
+    routes:
+      - name: ivas-routes
+        strip_path: false
+        paths:
+          - /api/v1/viva
   - name: keystroke-service
     url: http://keystroke-service:8003
     routes:
