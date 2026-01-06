@@ -4,7 +4,6 @@ import com.gradeloop.institute.dto.CreateAssignmentRequest;
 import com.gradeloop.institute.model.Assignment;
 import com.gradeloop.institute.model.Course;
 import com.gradeloop.institute.repository.AssignmentRepository;
-import com.gradeloop.institute.repository.CourseRepository;
 import com.gradeloop.institute.repository.QuestionRepository;
 import com.gradeloop.institute.repository.TestCaseRepository;
 import com.gradeloop.institute.dto.*;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
@@ -35,16 +36,12 @@ public class AssignmentService {
         // Validate Course exists
         Course course = courseService.getCourse(courseId); // Reusing existing service method
 
-        // Logical Validation
-        if (request.getDueDate() != null && request.getReleaseDate() != null
-                && request.getDueDate().isBefore(request.getReleaseDate())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Due date cannot be before release date");
-        }
-        if (Boolean.TRUE.equals(request.getAllowLateSubmissions()) && request.getLateDueDate() != null
-                && request.getDueDate() != null && request.getLateDueDate().isBefore(request.getDueDate())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Late due date cannot be before regular due date");
-        }
+        // Phase 1 Validation
+        validateDateOrdering(request.getReleaseDate(), request.getDueDate(), request.getLateDueDate());
+        validateLateSubmissionRequirements(request.getAllowLateSubmissions(), request.getLateDueDate(),
+                request.getDueDate());
+        validateGroupSubmissionRequirements(request.getEnableGroupSubmissions(), request.getGroupSizeLimit());
+        validateLeaderboardRequirements(request.getEnableLeaderboard(), request.getLeaderboardEntries());
 
         Assignment assignment = Assignment.builder()
                 .name(request.getName())
@@ -65,7 +62,10 @@ public class AssignmentService {
                 .leaderboardEntries(request.getLeaderboardEntries())
                 .build();
 
-        return assignmentRepository.save(assignment);
+        Assignment savedAssignment = assignmentRepository.save(assignment);
+        log.info("Assignment draft created: assignmentId={}, courseId={}, name={}, type={}",
+                savedAssignment.getId(), courseId, savedAssignment.getName(), savedAssignment.getType());
+        return savedAssignment;
     }
 
     @Transactional
@@ -77,14 +77,24 @@ public class AssignmentService {
                 .mapToInt(q -> q.getOrderIndex() != null ? q.getOrderIndex() : 0)
                 .max().orElse(-1);
 
+        // Validate resource limits if provided
+        validateResourceLimits(request.getTimeLimit(), request.getMemoryLimit());
+
         Question question = Question.builder()
                 .assignment(assignment)
+                .title(request.getTitle())
                 .description(request.getDescription())
                 .points(request.getPoints())
+                .weight(request.getWeight())
+                .timeLimit(request.getTimeLimit())
+                .memoryLimit(request.getMemoryLimit())
                 .orderIndex(maxOrderIndex + 1)
                 .build();
 
         Question savedQuestion = questionRepository.save(question);
+        log.info("Question added: assignmentId={}, questionId={}, description={}, timeLimit={}, memoryLimit={}",
+                assignmentId, savedQuestion.getId(), savedQuestion.getDescription(),
+                savedQuestion.getTimeLimit(), savedQuestion.getMemoryLimit());
         return mapToQuestionResponse(savedQuestion);
     }
 
@@ -92,12 +102,25 @@ public class AssignmentService {
     public QuestionResponse updateQuestion(UUID assignmentId, UUID questionId, UpdateQuestionRequest request) {
         Question question = getQuestion(questionId, assignmentId);
 
+        if (request.getTitle() != null)
+            question.setTitle(request.getTitle());
         if (request.getDescription() != null)
             question.setDescription(request.getDescription());
         if (request.getPoints() != null)
             question.setPoints(request.getPoints());
+        if (request.getWeight() != null)
+            question.setWeight(request.getWeight());
+        if (request.getTimeLimit() != null) {
+            validateResourceLimits(request.getTimeLimit(), null);
+            question.setTimeLimit(request.getTimeLimit());
+        }
+        if (request.getMemoryLimit() != null) {
+            validateResourceLimits(null, request.getMemoryLimit());
+            question.setMemoryLimit(request.getMemoryLimit());
+        }
 
         Question savedQuestion = questionRepository.save(question);
+        log.info("Question updated: assignmentId={}, questionId={}", assignmentId, questionId);
         return mapToQuestionResponse(savedQuestion);
     }
 
@@ -112,14 +135,30 @@ public class AssignmentService {
         // Validate question belongs to assignment
         Question question = getQuestion(questionId, assignmentId);
 
+        // Validate marks if provided
+        if (request.getMarks() != null && request.getMarks() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Test case marks must be non-negative, received: %d", request.getMarks()));
+        }
+
+        // Validate visibility is provided
+        if (request.getVisibility() == null || request.getVisibility().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Test case visibility is required (e.g., 'PUBLIC', 'HIDDEN')");
+        }
+
         TestCase testCase = TestCase.builder()
                 .question(question)
                 .input(request.getInput())
                 .expectedOutput(request.getExpectedOutput())
                 .isHidden(Boolean.TRUE.equals(request.getIsHidden()))
+                .visibility(request.getVisibility())
+                .marks(request.getMarks())
                 .build();
 
         TestCase savedTestCase = testCaseRepository.save(testCase);
+        log.info("Test case added: assignmentId={}, questionId={}, testCaseId={}, marks={}, isHidden={}",
+                assignmentId, questionId, savedTestCase.getId(), savedTestCase.getMarks(), savedTestCase.isHidden());
         return mapToTestCaseResponse(savedTestCase);
     }
 
@@ -142,24 +181,34 @@ public class AssignmentService {
             testCase.setExpectedOutput(request.getExpectedOutput());
         if (request.getIsHidden() != null)
             testCase.setHidden(request.getIsHidden());
+        if (request.getVisibility() != null)
+            testCase.setVisibility(request.getVisibility());
+        if (request.getMarks() != null) {
+            if (request.getMarks() < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Test case marks must be non-negative, received: %d", request.getMarks()));
+            }
+            testCase.setMarks(request.getMarks());
+        }
+        if (request.getVisibility() != null && !request.getVisibility().trim().isEmpty()) {
+            testCase.setVisibility(request.getVisibility());
+        }
 
         TestCase savedTestCase = testCaseRepository.save(testCase);
+        log.info("Test case updated: assignmentId={}, questionId={}, testCaseId={}",
+                assignmentId, questionId, testCaseId);
         return mapToTestCaseResponse(savedTestCase);
     }
 
     @Transactional
     public void deleteTestCase(UUID assignmentId, UUID questionId, UUID testCaseId) {
         // Ensure hierarchy logic
-        Question question = getQuestion(questionId, assignmentId);
-        TestCase testCase = testCaseRepository.findById(testCaseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test case not found"));
-
-        if (!testCase.getQuestion().getId().equals(question.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Test case does not belong to the specified question");
-        }
+        getQuestion(questionId, assignmentId); // Validate question belongs to assignment
+        TestCase testCase = getTestCase(testCaseId, questionId);
 
         testCaseRepository.delete(testCase);
+        log.info("Test case deleted: assignmentId={}, questionId={}, testCaseId={}",
+                assignmentId, questionId, testCaseId);
     }
 
     @Transactional
@@ -214,22 +263,40 @@ public class AssignmentService {
                     "Retry penalty specified but retries are disabled");
         }
 
-        return assignmentRepository.save(assignment);
+        Assignment savedAssignment = assignmentRepository.save(assignment);
+        log.info("Grading policy updated: assignmentId={}, allowPartialCredits={}, enableRetries={}",
+                assignmentId, policy.getAllowPartialCredits(), policy.getEnableRetries());
+        return savedAssignment;
     }
 
     private Assignment getAssignment(UUID assignmentId) {
         return assignmentRepository.findById(assignmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Assignment with ID '%s' not found", assignmentId)));
     }
 
     private Question getQuestion(UUID questionId, UUID assignmentId) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Question with ID '%s' not found", questionId)));
+
         if (!question.getAssignment().getId().equals(assignmentId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Question does not belong to the specified assignment");
+                    String.format("Question '%s' does not belong to assignment '%s'", questionId, assignmentId));
         }
         return question;
+    }
+
+    private TestCase getTestCase(UUID testCaseId, UUID questionId) {
+        TestCase testCase = testCaseRepository.findById(testCaseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("Test case with ID '%s' not found", testCaseId)));
+
+        if (!testCase.getQuestion().getId().equals(questionId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Test case '%s' does not belong to question '%s'", testCaseId, questionId));
+        }
+        return testCase;
     }
 
     private QuestionResponse mapToQuestionResponse(Question question) {
@@ -239,8 +306,12 @@ public class AssignmentService {
 
         return QuestionResponse.builder()
                 .id(question.getId())
+                .title(question.getTitle())
                 .description(question.getDescription())
                 .points(question.getPoints())
+                .weight(question.getWeight())
+                .timeLimit(question.getTimeLimit())
+                .memoryLimit(question.getMemoryLimit())
                 .testCases(testCases)
                 .build();
     }
@@ -251,6 +322,58 @@ public class AssignmentService {
                 .input(testCase.getInput())
                 .expectedOutput(testCase.getExpectedOutput())
                 .isHidden(testCase.isHidden())
+                .visibility(testCase.getVisibility())
+                .marks(testCase.getMarks())
                 .build();
+    }
+
+    // Validation helper methods
+    private void validateDateOrdering(LocalDateTime releaseDate, LocalDateTime dueDate, LocalDateTime lateDueDate) {
+        if (dueDate != null && releaseDate != null && dueDate.isBefore(releaseDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Due date cannot be before release date");
+        }
+        if (lateDueDate != null && dueDate != null && lateDueDate.isBefore(dueDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Late due date cannot be before regular due date");
+        }
+    }
+
+    private void validateLateSubmissionRequirements(Boolean allowLate, LocalDateTime lateDueDate,
+            LocalDateTime dueDate) {
+        if (Boolean.TRUE.equals(allowLate)) {
+            if (lateDueDate == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Late due date is required when late submissions are allowed");
+            }
+            if (dueDate != null && lateDueDate.isBefore(dueDate)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Late due date must be after regular due date");
+            }
+        }
+    }
+
+    private void validateGroupSubmissionRequirements(Boolean enableGroup, Integer groupSize) {
+        if (Boolean.TRUE.equals(enableGroup) && (groupSize == null || groupSize < 1)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Group size limit must be at least 1 when group submissions are enabled");
+        }
+    }
+
+    private void validateLeaderboardRequirements(Boolean enableLeaderboard, Integer entries) {
+        if (Boolean.TRUE.equals(enableLeaderboard) && (entries == null || entries < 1)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Leaderboard entries must be at least 1 when leaderboard is enabled");
+        }
+    }
+
+    private void validateResourceLimits(Integer timeLimit, Integer memoryLimit) {
+        if (timeLimit != null && timeLimit < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Time limit must be non-negative (in milliseconds), received: %d", timeLimit));
+        }
+        if (memoryLimit != null && memoryLimit < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Memory limit must be non-negative (in MB), received: %d", memoryLimit));
+        }
     }
 }
