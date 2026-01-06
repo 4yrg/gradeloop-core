@@ -1,5 +1,9 @@
 package com.gradeloop.ivas.service;
 
+import com.gradeloop.ivas.client.institute.InstituteServiceClient;
+import com.gradeloop.ivas.client.institute.dto.AssignmentDTO;
+import com.gradeloop.ivas.client.user.UserServiceClient;
+import com.gradeloop.ivas.client.user.dto.StudentDTO;
 import com.gradeloop.ivas.model.VivaConfiguration;
 import com.gradeloop.ivas.model.VivaSession;
 import com.gradeloop.ivas.repository.VivaSessionRepository;
@@ -23,9 +27,24 @@ public class VivaSessionService {
 
     private final VivaSessionRepository sessionRepository;
     private final VivaConfigurationService configurationService;
+    private final UserServiceClient userServiceClient;
+    private final InstituteServiceClient instituteServiceClient;
 
     @Transactional
     public VivaSession startSession(UUID assignmentId, Long studentId) {
+        // Fetch student details from User Service
+        StudentDTO student = userServiceClient.getStudent(studentId);
+        log.info("Fetched student details: {} {} ({})", student.getFirstName(), student.getLastName(), student.getEmail());
+
+        // Fetch assignment details from Institute Service
+        AssignmentDTO assignment = instituteServiceClient.getAssignment(assignmentId);
+        log.info("Fetched assignment details: {} for course {}", assignment.getTitle(), assignment.getCourseName());
+
+        // Check if assignment is published
+        if (!assignment.getIsPublished()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment is not published yet");
+        }
+
         // Check configuration
         VivaConfiguration config = configurationService.getConfigurationByAssignmentId(assignmentId);
         
@@ -57,7 +76,9 @@ public class VivaSessionService {
                 .build();
 
         VivaSession saved = sessionRepository.save(session);
-        log.info("Started viva session id={} for student={}, attempt={}", saved.getId(), studentId, attemptNumber);
+        log.info("Started viva session id={} for student={} {} ({}), attempt={}, assignment={}",
+                saved.getId(), student.getFirstName(), student.getLastName(), 
+                student.getEmail(), attemptNumber, assignment.getTitle());
         return saved;
     }
 
