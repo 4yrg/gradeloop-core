@@ -2,7 +2,7 @@
 IVAS Schemas - Pydantic models for request/response validation
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Literal
 from pydantic import BaseModel, Field
 
 
@@ -141,35 +141,35 @@ class WebSocketMessage(BaseModel):
 
 class AudioChunkMessage(BaseModel):
     """Audio chunk from client"""
-    type: str = Field("audio_chunk", const=True)
+    type: Literal["audio_chunk"] = "audio_chunk"
     data: str = Field(..., description="Base64 encoded audio data")
 
 
 class EndTurnMessage(BaseModel):
     """Signal end of speaking turn"""
-    type: str = Field("end_turn", const=True)
+    type: Literal["end_turn"] = "end_turn"
     data: Optional[Any] = None
 
 
 class TranscriptMessage(BaseModel):
     """Transcript result to client"""
-    type: str = Field("transcript", const=True)
+    type: Literal["transcript"] = "transcript"
     data: str = Field(..., description="Transcribed text")
 
 
 class AIResponseMessage(BaseModel):
     """AI text response to client"""
-    type: str = Field("ai_response", const=True)
+    type: Literal["ai_response"] = "ai_response"
     data: str = Field(..., description="AI's response text")
 
 
 class AIAudioMessage(BaseModel):
     """AI audio response to client"""
-    type: str = Field("ai_audio", const=True)
+    type: Literal["ai_audio"] = "ai_audio"
     data: str = Field(..., description="Base64 encoded audio")
 
 
 class SessionEndMessage(BaseModel):
     """Session end notification"""
-    type: str = Field("session_end", const=True)
+    type: Literal["session_end"] = "session_end"
     data: Dict[str, Any] = Field(..., description="Final assessment data")
