@@ -144,38 +144,108 @@ class ASRService:
             return False
 
 
+# Lazy import for TTS
+_tts_initialized = False
+
+
 class TTSService:
     """
-    Text-to-Speech Service using Coqui XTTS v2.
-    Will be fully implemented in Step 6.
+    Text-to-Speech Service using Edge TTS (Microsoft Azure Neural Voices).
+    Provides high-quality, natural-sounding speech synthesis.
     """
+    
+    # Voice mappings for different emotions/styles
+    VOICE_STYLES = {
+        "neutral": "en-US-AriaNeural",
+        "friendly": "en-US-JennyNeural",
+        "professional": "en-US-GuyNeural",
+        "empathetic": "en-US-SaraNeural",
+        "calm": "en-GB-SoniaNeural",
+    }
     
     def __init__(self, model_name: str = None):
         """
         Initialize TTS service.
         
         Args:
-            model_name: TTS model to use
+            model_name: Voice model to use (default: en-US-AriaNeural)
         """
         self.model_name = model_name or settings.TTS_MODEL
-        self.model = None
         self._initialized = False
-        logger.info(f"TTS Service created with model: {self.model_name}")
+        logger.info(f"TTS Service created with voice: {self.model_name}")
     
     def initialize(self):
         """
-        Initialize the TTS model.
+        Initialize the TTS service.
         Called lazily on first synthesis request.
         """
+        global _tts_initialized
+        
         if self._initialized:
             return
         
-        # TODO: Implement in Step 6
-        # from TTS.api import TTS
-        # self.model = TTS(self.model_name)
+        try:
+            import edge_tts
+            self._initialized = True
+            _tts_initialized = True
+            logger.info("TTS Service initialized successfully")
+        except ImportError as e:
+            logger.error(f"Failed to import edge_tts: {e}")
+            raise RuntimeError("TTS initialization failed: edge-tts not installed")
+    
+    async def synthesize_async(
+        self, 
+        text: str, 
+        emotion: str = "neutral",
+        speed: float = 1.0,
+        language: str = "en"
+    ) -> bytes:
+        """
+        Synthesize speech from text asynchronously.
         
-        self._initialized = True
-        logger.info("TTS Service initialized (placeholder)")
+        Args:
+            text: Text to synthesize
+            emotion: Emotion/style of speech (neutral, friendly, professional, empathetic, calm)
+            speed: Speech speed multiplier (0.5 to 2.0)
+            language: Language code (used for voice selection)
+        
+        Returns:
+            WAV audio bytes
+        """
+        self.initialize()
+        
+        import edge_tts
+        import io
+        
+        # Select voice based on emotion
+        voice = self.VOICE_STYLES.get(emotion, self.VOICE_STYLES["neutral"])
+        
+        # Adjust rate based on speed
+        rate = f"{int((speed - 1) * 100):+d}%"
+        
+        logger.info(f"TTS synthesizing: '{text[:50]}...' with voice={voice}, rate={rate}")
+        
+        try:
+            # Create communicator
+            communicate = edge_tts.Communicate(text, voice, rate=rate)
+            
+            # Collect audio data
+            audio_data = io.BytesIO()
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_data.write(chunk["data"])
+            
+            audio_bytes = audio_data.getvalue()
+            
+            # Convert MP3 to WAV for consistent output format
+            wav_bytes = self._mp3_to_wav(audio_bytes)
+            
+            logger.info(f"TTS synthesis complete: {len(wav_bytes)} bytes")
+            return wav_bytes
+            
+        except Exception as e:
+            logger.error(f"TTS synthesis failed: {e}")
+            raise RuntimeError(f"TTS synthesis failed: {e}")
     
     def synthesize(
         self, 
@@ -185,25 +255,56 @@ class TTSService:
         language: str = "en"
     ) -> bytes:
         """
-        Synthesize speech from text.
+        Synchronous wrapper for synthesize_async.
         
         Args:
             text: Text to synthesize
-            emotion: Emotion/tone of speech
+            emotion: Emotion/style of speech
             speed: Speech speed multiplier
             language: Language code
         
         Returns:
             WAV audio bytes
         """
-        self.initialize()
+        import asyncio
         
-        # TODO: Implement actual synthesis in Step 6
-        # For now, return empty WAV
-        logger.info(f"TTS requested for text: {text[:50]}...")
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         
-        # Return minimal valid WAV header
-        return self._create_empty_wav()
+        if loop.is_running():
+            # If called from async context, create new loop in thread
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    asyncio.run,
+                    self.synthesize_async(text, emotion, speed, language)
+                )
+                return future.result()
+        else:
+            return loop.run_until_complete(
+                self.synthesize_async(text, emotion, speed, language)
+            )
+    
+    def _mp3_to_wav(self, mp3_bytes: bytes) -> bytes:
+        """Convert MP3 audio to WAV format"""
+        try:
+            from pydub import AudioSegment
+            import io
+            
+            # Load MP3
+            audio = AudioSegment.from_mp3(io.BytesIO(mp3_bytes))
+            
+            # Convert to WAV
+            wav_buffer = io.BytesIO()
+            audio.export(wav_buffer, format="wav")
+            return wav_buffer.getvalue()
+            
+        except Exception as e:
+            logger.warning(f"MP3 to WAV conversion failed: {e}, returning MP3")
+            return mp3_bytes
     
     def _create_empty_wav(self) -> bytes:
         """Create an empty but valid WAV file"""
@@ -226,7 +327,11 @@ class TTSService:
     @property
     def is_available(self) -> bool:
         """Check if TTS service is available"""
-        return True  # Placeholder returns true
+        try:
+            import edge_tts
+            return True
+        except ImportError:
+            return False
 
 
 class LLMService:
