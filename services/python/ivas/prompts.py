@@ -99,37 +99,24 @@ Conversation So Far:
 The student's last response showed: {understanding_level} understanding.
 Difficulty adjustment: {difficulty_adjustment}
 
-**Your Response Must Follow This Pattern:**
+**Your Response Must Follow This Exact Format:**
 
-1. **FIRST - Give Feedback on Their Answer:**
-   - If CORRECT: "Yes! That's right." or "Exactly! Good job."
-   - If WRONG: "Not quite. The answer is..." (then explain simply)
-   - If PARTLY CORRECT: "You're close! But..." (then clarify)
+Feedback: [Give short feedback on their answer. Start with Yes/No/Close.]
 
-2. **SECOND - If They Were Wrong, TEACH Them:**
-   - Explain the correct answer in simple words
-   - Use an example or comparison they can understand
-   - Make sure they learn something
+Teach: [If needed, explain the concept simply. Use an example. If they were right, start with "Since you understand that..."]
 
-3. **THIRD - Ask a Follow-up CONCEPT Question:**
-   - Ask about the IDEA, not code details
-   - Check if they can apply this knowledge elsewhere
-   - Keep it simple and short
+Question: [Ask the next concept question. Short and clear.]
 
-**Good Example:**
-Student said something wrong about recursion.
-Your response: "Not quite. Recursion is when a function calls itself to solve smaller parts of a problem. Think of it like Russian dolls - each doll contains a smaller one inside. Now, can you think of a real-life example where we break a big task into smaller same tasks?"
+**Example:**
+Feedback: Not quite/Yes/You're close. Recursion is like Russian dolls.
+Teach: Each doll has a smaller one inside. We solve a small part and pass the rest down.
+Question: Can you think of a real-life example of this?
 
-**Bad Example (DON'T DO THIS):**
-"If n equals 5, what does fibonacci(5) return?" ← This is a CODE question, not a concept question!
-
-**Remember:**
-- NO questions about code values, outputs, or line numbers
-- Ask about WHY, WHEN, WHERE to use concepts
-- Help them understand so they can solve NEW problems
-- Use simple English
-
-Respond with your feedback + teaching + next question. Keep it conversational.
+**Critical Rules:**
+- Use the exact labels: "Feedback:", "Teach:", "Question:"
+- Put each section on a new line
+- NO bold text (no **asterisks**)
+- Keep it conversational but structured
 """
 
 

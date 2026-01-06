@@ -359,9 +359,12 @@ async def _send_initial_question(session: VivaSession):
         # Send question text
         await session_manager.send_ai_response(session.session_id, question)
         
+        # Clean text for TTS
+        tts_text = _clean_text_for_tts(question)
+        
         # Generate and send audio
         audio_bytes = await tts_service.synthesize_async(
-            text=question,
+            text=tts_text,
             emotion="friendly",
             speed=1.0
         )
@@ -514,12 +517,15 @@ async def _generate_follow_up_question(session: VivaSession, difficulty: str = "
         session.current_question = question
         session.add_turn("AI", question)
         
-        # Send question text
+        # Send question text (with formatting for UI)
         await session_manager.send_ai_response(session_id, question)
+        
+        # Clean text for TTS (remove labels and markdown)
+        tts_text = _clean_text_for_tts(question)
         
         # Generate and send audio
         audio_bytes = await tts_service.synthesize_async(
-            text=question,
+            text=tts_text,
             emotion="encouraging" if difficulty == "easier" else "neutral",
             speed=1.0
         )
@@ -634,3 +640,33 @@ async def delete_session(session_id: str):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": f"Session {session_id} ended", "turns": len(session.conversation_history)}
+
+
+def _clean_text_for_tts(text: str) -> str:
+    """
+    Clean text for Text-to-Speech engine.
+    Removes:
+    - Markup labels (Feedback:, Teach:, Question:)
+    - Markdown artifacts (**bold**, *italic*)
+    - Extra whitespace
+    """
+    import re
+    
+    # Remove labels (case insensitive)
+    # Replaces "Label:" with just a slight pause or nothing
+    clean_text = re.sub(r'(Feedback|Teach|Question):\s*', '', text, flags=re.IGNORECASE)
+    
+    # Remove markdown bold/italic markers but keep text
+    clean_text = re.sub(r'\*\*|__', '', clean_text)
+    clean_text = re.sub(r'\*|_', '', clean_text)
+    
+    # Remove code hacks
+    clean_text = re.sub(r'`', '', clean_text)
+    
+    # Remove newlines for speech flow (replace with space)
+    clean_text = clean_text.replace('\n', ' ')
+    
+    # Normalize whitespace
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    
+    return clean_text

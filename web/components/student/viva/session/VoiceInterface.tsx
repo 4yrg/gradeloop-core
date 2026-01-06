@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Mic, Volume2 } from "lucide-react";
 
 interface VoiceInterfaceProps {
@@ -15,6 +15,17 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
     // Live typing effect state
     const [displayedText, setDisplayedText] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll when text updates
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            const { scrollHeight, clientHeight } = scrollContainerRef.current;
+            if (scrollHeight > clientHeight) {
+                scrollContainerRef.current.scrollTop = scrollHeight;
+            }
+        }
+    }, [displayedText]);
 
     // Typewriter effect for AI question
     useEffect(() => {
@@ -37,7 +48,7 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
                 setIsTyping(false);
                 clearInterval(interval);
             }
-        }, 70); // 50ms per character for slower typing
+        }, 50); // 50ms per character
 
         return () => clearInterval(interval);
     }, [currentQuestion]);
@@ -74,21 +85,23 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
                 </div>
             </div>
 
-            {/* AI Question Display - Live typing text centered */}
-            <div className="absolute inset-0 flex items-center justify-center px-8 pt-20 pb-24 pointer-events-none">
-                <div className="text-center max-w-3xl max-h-full overflow-y-auto">
-                    {currentQuestion ? (
-                        <p className={`font-medium leading-relaxed text-white transition-opacity duration-300 ${isAiSpeaking || isTyping ? 'opacity-100' : 'opacity-80'} ${currentQuestion.length > 150 ? 'text-lg md:text-xl' : currentQuestion.length > 80 ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl'}`}>
-                            {displayedText}
-                            {isTyping && (
-                                <span className="inline-block w-0.5 h-6 bg-white ml-1 animate-pulse" />
-                            )}
-                        </p>
-                    ) : (
-                        <p className="text-xl text-zinc-500 italic">
-                            {isAiSpeaking ? 'Preparing question...' : 'Waiting for AI...'}
-                        </p>
-                    )}
+            {/* AI Question Display - Live typing text centered with scroll */}
+            <div className="absolute inset-x-0 top-16 bottom-24 flex items-center justify-center px-6 md:px-12">
+                <div className="text-center max-w-3xl w-full h-full flex items-center justify-center overflow-hidden">
+                    <div className="max-h-full overflow-y-auto px-2 py-4 pointer-events-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+                        {currentQuestion ? (
+                            <p className={`font-medium leading-relaxed text-white transition-opacity duration-300 whitespace-pre-wrap ${isAiSpeaking || isTyping ? 'opacity-100' : 'opacity-80'} ${currentQuestion.length > 200 ? 'text-base md:text-lg' : currentQuestion.length > 150 ? 'text-lg md:text-xl' : currentQuestion.length > 80 ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl'}`}>
+                                {displayedText}
+                                {isTyping && (
+                                    <span className="inline-block w-0.5 h-5 bg-white ml-1 animate-pulse align-middle" />
+                                )}
+                            </p>
+                        ) : (
+                            <p className="text-xl text-zinc-500 italic">
+                                {isAiSpeaking ? 'Preparing question...' : 'Waiting for AI...'}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 
