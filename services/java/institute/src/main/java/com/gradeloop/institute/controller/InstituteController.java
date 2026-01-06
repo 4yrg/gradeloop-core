@@ -68,4 +68,9 @@ public class InstituteController {
         instituteService.deleteInstitute(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/by-user/{userId}")
+    public ResponseEntity<InstituteResponse> getInstituteByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.getInstituteByUserId(userId)));
+    }
 }

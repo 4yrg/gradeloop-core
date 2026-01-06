@@ -122,4 +122,11 @@ public class InstituteService {
         // Delete the institute (cascade will handle institute_admins)
         instituteRepository.deleteById(id);
     }
+
+    public Institute getInstituteByUserId(Long userId) {
+        InstituteAdmin admin = instituteAdminRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No institute found for user ID: " + userId));
+        return admin.getInstitute();
+    }
 }

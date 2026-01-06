@@ -2,14 +2,8 @@ import { Course, ClassGroup } from "../types";
 import { apiClient } from "@/api/client";
 
 export const coursesService = {
-    getCourses: async (): Promise<Course[]> => {
-        const response = await apiClient.get<Course[]>("/courses");
-        return response.data;
-    },
-
-    getCoursesForDegree: async (degreeId: string): Promise<Course[]> => {
-        // This might be redundant if degreesService has it, but useful for course-centric view
-        const response = await apiClient.get<Course[]>(`/degrees/${degreeId}/courses`);
+    getCourses: async (instituteId: string): Promise<Course[]> => {
+        const response = await apiClient.get<Course[]>(`/institutes/${instituteId}/courses`);
         return response.data;
     },
 
@@ -18,13 +12,13 @@ export const coursesService = {
         return response.data;
     },
 
-    createCourse: async (data: Omit<Course, "id">): Promise<Course> => {
-        const response = await apiClient.post<Course>("/courses", data);
+    createCourse: async (instituteId: string, data: Omit<Course, "id">): Promise<Course> => {
+        const response = await apiClient.post<Course>(`/institutes/${instituteId}/courses`, data);
         return response.data;
     },
 
     updateCourse: async (id: string, data: Partial<Course>): Promise<Course> => {
-        const response = await apiClient.put<Course>(`/courses/${id}`, data);
+        const response = await apiClient.patch<Course>(`/courses/${id}`, data);
         return response.data;
     },
 
@@ -32,25 +26,18 @@ export const coursesService = {
         await apiClient.delete(`/courses/${id}`);
     },
 
-    assignInstructors: async (courseId: string, instructorIds: string[]): Promise<void> => {
-        await apiClient.post(`/courses/${courseId}/instructors`, { instructorIds });
+    enrollClass: async (courseId: string, classId: string): Promise<Course> => {
+        const response = await apiClient.post<Course>(`/courses/${courseId}/classes/${classId}`);
+        return response.data;
     },
 
-    setModuleLeader: async (courseId: string, instructorId: string): Promise<void> => {
-        await apiClient.put(`/courses/${courseId}/module-leader`, { instructorId });
+    removeClass: async (courseId: string, classId: string): Promise<Course> => {
+        const response = await apiClient.delete<Course>(`/courses/${courseId}/classes/${classId}`);
+        return response.data;
     },
 
-    // Class Management
-    getClassesForCourse: async (courseId: string): Promise<ClassGroup[]> => {
-        // TODO: Implement backend endpoint
-        return [];
-    },
-
-    addClassesToCourse: async (courseId: string, classIds: string[]): Promise<void> => {
-        // TODO: Implement backend endpoint
-    },
-
-    removeClassFromCourse: async (courseId: string, classId: string): Promise<void> => {
-        // TODO: Implement backend endpoint
+    addInstructors: async (courseId: string, instructorIds: number[]): Promise<Course> => {
+        const response = await apiClient.post<Course>(`/courses/${courseId}/instructors`, instructorIds);
+        return response.data;
     }
 };

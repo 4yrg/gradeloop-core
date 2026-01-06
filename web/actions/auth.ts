@@ -78,31 +78,31 @@ export async function login(data: z.infer<typeof loginSchema>) {
             }
         }
 
-        // Fetch User Profile
-        // Ensure USER_SERVICE_URL is defined/reachable
-        const userServiceUrl = process.env.API_GATEWAY_URL ? `${process.env.API_GATEWAY_URL}/users` : "http://localhost:8001/users";
-        let userProfile = null;
-        try {
-            const profileRes = await axios.get(`${userServiceUrl}?email=${email}`);
-            if (profileRes.data && profileRes.data.length > 0) {
-                userProfile = profileRes.data[0];
+        // Fetch Institute ID for Institute Admins
+        let instituteId = null;
+        if (role === 'INSTITUTE_ADMIN') {
+            try {
+                // Use API Gateway URL to fetch from user-service
+                const gatewayUrl = process.env.API_GATEWAY_URL || "http://localhost:8000";
+
+                // Fetch institute admin from user-service
+                const adminRes = await axios.get(`${gatewayUrl}/users/institute-admins/by-email/${encodeURIComponent(email)}`);
+                instituteId = adminRes.data.instituteId;
+
+                console.log('Fetched institute ID from user-service:', instituteId);
+            } catch (err) {
+                console.error('Failed to fetch institute for admin:', err);
+                // Non-blocking - admin might not have been created in user-service yet
             }
-        } catch (err) {
-            console.error('Failed to fetch user profile:', err);
-            // Non-blocking? User might not have detailed profile yet.
         }
 
         // Construct the user object for session creation
-        // The session expects merged data
         user = {
+            id: response.data.userId?.toString(),
             role: role,
             email: responseEmail,
-            authUserId: userProfile?.authUserId,
-            userId: userProfile?.id,
-            firstName: userProfile?.fullName ? userProfile.fullName.split(' ')[0] : '', // Fallback split
-            lastName: userProfile?.fullName ? userProfile.fullName.split(' ').slice(1).join(' ') : '',
-            fullName: userProfile?.fullName || responseEmail.split('@')[0],
-            name: userProfile?.fullName || responseEmail.split('@')[0]
+            name: responseEmail.split('@')[0],
+            instituteId: instituteId
         }
 
         // Handle forced reset scenario - do not create full session or mark as partial?

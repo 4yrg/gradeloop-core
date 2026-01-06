@@ -30,6 +30,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final com.gradeloop.auth.repository.InstituteAdminRepository instituteAdminRepository;
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         System.out.println("Login info - Attempting login for: " + request.getEmail());
@@ -244,5 +245,26 @@ public class AuthService {
 
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    public java.util.Map<String, Object> getUserWithInstituteByEmail(String email) {
+        User user = getUserByEmail(email);
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole().name());
+
+        // If user is an institute admin, fetch their institute ID
+        if (user.getRole() == Role.INSTITUTE_ADMIN) {
+            instituteAdminRepository.findByUserId(user.getId())
+                    .ifPresent(admin -> response.put("instituteId", admin.getInstituteId().toString()));
+        }
+
+        return response;
     }
 }

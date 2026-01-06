@@ -1,11 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { degreesService } from "../api/degrees-service";
 import { Degree } from "../types";
+import { useAuthStore } from "../../../stores/auth.store";
 
 export const useDegrees = () => {
+    const { user } = useAuthStore();
+    const instituteId = user?.instituteId;
+
     return useQuery({
-        queryKey: ["degrees"],
-        queryFn: degreesService.getDegrees,
+        queryKey: ["degrees", instituteId],
+        queryFn: () => degreesService.getDegrees(instituteId!),
+        enabled: !!instituteId,
     });
 };
 
@@ -19,8 +24,11 @@ export const useDegree = (id: string) => {
 
 export const useCreateDegree = () => {
     const queryClient = useQueryClient();
+    const { user } = useAuthStore();
+    const instituteId = user?.instituteId;
+
     return useMutation({
-        mutationFn: degreesService.createDegree,
+        mutationFn: (data: Omit<Degree, "id">) => degreesService.createDegree(instituteId!, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["degrees"] });
         },

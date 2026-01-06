@@ -1,10 +1,10 @@
 import { apiClient } from "@/api/client";
 import { Degree } from "../types";
-import { Course } from "../types"; // valid if exported
+import { Course } from "../types";
 
 export const degreesService = {
-    getDegrees: async (): Promise<Degree[]> => {
-        const response = await apiClient.get<Degree[]>("/degrees");
+    getDegrees: async (instituteId: string): Promise<Degree[]> => {
+        const response = await apiClient.get<Degree[]>(`/institutes/${instituteId}/degrees`);
         return response.data;
     },
 
@@ -13,8 +13,8 @@ export const degreesService = {
         return response.data;
     },
 
-    createDegree: async (data: Omit<Degree, "id">): Promise<Degree> => {
-        const response = await apiClient.post<Degree>("/degrees", data);
+    createDegree: async (instituteId: string, data: Omit<Degree, "id">): Promise<Degree> => {
+        const response = await apiClient.post<Degree>(`/institutes/${instituteId}/degrees`, data);
         return response.data;
     },
 

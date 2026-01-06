@@ -101,4 +101,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/users/email/{email}")
+    public ResponseEntity<java.util.Map<String, Object>> getUserByEmail(@PathVariable String email) {
+        try {
+            var userWithInstitute = authService.getUserWithInstituteByEmail(email);
+            return ResponseEntity.ok(userWithInstitute);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

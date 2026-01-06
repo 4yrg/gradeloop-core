@@ -6,7 +6,7 @@ import com.gradeloop.institute.model.Degree;
 import com.gradeloop.institute.model.Institute;
 import com.gradeloop.institute.repository.DegreeRepository;
 import com.gradeloop.institute.repository.DegreeCourseRepository;
-import com.gradeloop.institute.repository.CourseRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
