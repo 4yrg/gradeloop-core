@@ -25,6 +25,9 @@ import {
     Award,
     BookOpen,
     Code2,
+    FileText,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,8 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
 // Types
@@ -184,6 +189,7 @@ export default function VivaPage({
     const [isMuted, setIsMuted] = useState(false);
     const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
+    const [showAssignmentInfo, setShowAssignmentInfo] = useState(false);
 
     // Refs
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -667,7 +673,50 @@ export default function VivaPage({
 
             {/* Main Content */}
             <div className="flex-1 flex overflow-hidden">
-                {/* Left Panel - Main Session */}
+                {/* Left Panel - Assignment Context */}
+                <div className="w-80 border-r bg-card flex flex-col shrink-0 overflow-hidden">
+                    <Tabs defaultValue="problem" className="flex flex-col h-full">
+                        <div className="p-3 border-b shrink-0">
+                            <TabsList className="w-full grid grid-cols-2">
+                                <TabsTrigger value="problem" className="text-xs">Problem</TabsTrigger>
+                                <TabsTrigger value="code" className="text-xs">Your Code</TabsTrigger>
+                            </TabsList>
+                        </div>
+                        <TabsContent value="problem" className="flex-1 m-0 overflow-hidden">
+                            <ScrollArea className="h-full">
+                                <div className="p-4 space-y-4">
+                                    <div>
+                                        <h3 className="font-semibold text-sm mb-2">{MOCK_ASSIGNMENT.title}</h3>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                            {MOCK_ASSIGNMENT.description}
+                                        </p>
+                                    </div>
+                                    <Separator />
+                                    <div>
+                                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Problem Statement</p>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                            {MOCK_ASSIGNMENT.problemStatement}
+                                        </p>
+                                    </div>
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+                        <TabsContent value="code" className="flex-1 m-0 overflow-hidden">
+                            <ScrollArea className="h-full">
+                                <div className="p-4">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Submitted Code</p>
+                                    <div className="rounded-lg border bg-zinc-950 p-3">
+                                        <pre className="text-[10px] font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                                            {MOCK_ASSIGNMENT.studentCode}
+                                        </pre>
+                                    </div>
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+
+                {/* Center Panel - Main Session */}
                 <div className="flex-1 flex flex-col p-6 overflow-hidden">
                     {/* IVAS Instructor Card */}
                     <Card className="bg-zinc-900 border-zinc-800 text-white overflow-hidden">
