@@ -58,4 +58,9 @@ public class StudentController {
     public ResponseEntity<CreateUserResponse> getStudent(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
+
+    @GetMapping("/batch")
+    public ResponseEntity<List<CreateUserResponse>> getStudentsByIds(@RequestParam List<Long> ids) {
+        return ResponseEntity.ok(studentService.getStudentsByIds(ids));
+    }
 }

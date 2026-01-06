@@ -18,6 +18,8 @@ import { Label } from "../../../components/ui/label";
 import { UserPlus, Upload } from "lucide-react";
 import { AddStudentModal } from "./add-student-modal";
 import { BulkImportModal } from "./bulk-import-modal";
+import { useUser } from "../../../hooks/use-user";
+import { peopleService } from "../api/people.api";
 
 interface ClassModalProps {
     open: boolean;
@@ -32,6 +34,7 @@ export function ClassModal({
     onSubmit,
     degreeId,
 }: ClassModalProps) {
+    const { user } = useUser();
     const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -47,7 +50,6 @@ export function ClassModal({
     });
 
     const handleSubmit = (data: ClassGroup) => {
-        // Optimistic count: selected existing + imported
         const totalCount = selectedStudentIds.length + importedStudents.length;
         onSubmit(
             { ...data, degreeId, studentCount: totalCount },
@@ -66,20 +68,30 @@ export function ClassModal({
     };
 
     const handleImportStudents = async (data: Partial<Person>[]) => {
-        setImportedStudents((prev) => [...prev, ...data]);
-        return Promise.resolve(); // BulkImportModal expects a promise
+        // Duplicate check: avoid adding those already in the system? 
+        // Or those already in the imported list?
+        // Let's filter out exact duplicates in the imported list first
+        const newStudents = data.filter(student =>
+            !importedStudents.some(existing => existing.email === student.email || (existing.fullName === student.fullName && student.fullName))
+        );
+
+        setImportedStudents((prev) => [...prev, ...newStudents]);
+        return Promise.resolve();
     };
 
-    // CSV Mapping
+    const handleDownloadTemplate = () => {
+        // Students template from people service
+        peopleService.downloadTemplate("student");
+    };
+
+    // CSV Mapping for Students
     const mapCSVRow = (row: string[]): Partial<Person> | null => {
-        // Expected: Student ID, First Name, Last Name, Email
-        if (row.length < 4) return null;
+        // Expected: Full Name, Email
+        if (row.length < 2) return null;
         return {
-            studentId: row[0],
-            firstName: row[1],
-            lastName: row[2],
-            email: row[3],
-            role: "student",
+            fullName: row[0],
+            email: row[1],
+            role: "student"
         };
     };
 
@@ -146,8 +158,9 @@ export function ClassModal({
                 open={isImportModalOpen}
                 onOpenChange={setIsImportModalOpen}
                 onImport={handleImportStudents}
+                onDownloadTemplate={handleDownloadTemplate}
                 entityName="Students"
-                templateHeaders={["Student ID", "First Name", "Last Name", "Email"]}
+                templateHeaders={["Full Name", "Email"]}
                 mapRow={mapCSVRow}
             />
         </Dialog>

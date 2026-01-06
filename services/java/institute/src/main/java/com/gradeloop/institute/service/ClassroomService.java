@@ -7,6 +7,7 @@ import com.gradeloop.institute.dto.UpdateClassroomRequest;
 import com.gradeloop.institute.model.Classroom;
 import com.gradeloop.institute.model.Institute;
 import com.gradeloop.institute.repository.ClassroomRepository;
+import com.gradeloop.institute.repository.DegreeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class ClassroomService {
 
     private final ClassroomRepository classroomRepository;
     private final InstituteService instituteService;
+    private final DegreeRepository degreeRepository;
     private final UserServiceClient userServiceClient;
 
     @Transactional
@@ -35,6 +37,8 @@ public class ClassroomService {
         Classroom classroom = Classroom.builder()
                 .name(request.getName())
                 .institute(institute)
+                .degree(request.getDegreeId() != null ? degreeRepository.findById(request.getDegreeId()).orElse(null)
+                        : null)
                 .studentIds(new ArrayList<>())
                 .build();
 
@@ -49,6 +53,10 @@ public class ClassroomService {
 
     public List<Classroom> getAllClassrooms(UUID instituteId) {
         return classroomRepository.findAllByInstituteId(instituteId);
+    }
+
+    public List<Classroom> getClassroomsByDegree(UUID degreeId) {
+        return classroomRepository.findAllByDegreeId(degreeId);
     }
 
     public Classroom getClassroom(UUID id) {
@@ -79,6 +87,13 @@ public class ClassroomService {
         classroom.setStudentIds(currentStudents);
         log.info("Added students to classroom id={}", id);
         return classroomRepository.save(classroom);
+    }
+
+    @Transactional
+    public List<Classroom> createClassroomsBulk(UUID instituteId, List<CreateClassroomRequest> requests) {
+        return requests.stream()
+                .map(request -> createClassroom(instituteId, request))
+                .collect(Collectors.toList());
     }
 
     @Transactional

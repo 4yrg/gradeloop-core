@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface ClassroomRepository extends JpaRepository<Classroom, UUID> {
     List<Classroom> findAllByInstituteId(UUID instituteId);
+
+    List<Classroom> findAllByDegreeId(UUID degreeId);
 }

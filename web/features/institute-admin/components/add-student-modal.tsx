@@ -55,7 +55,7 @@ export function AddStudentModal({
     const loadStudents = async () => {
         setLoading(true);
         try {
-            const data = await peopleService.getPeople();
+            const data = await peopleService.getPeople("student");
             setStudents(data);
         } catch (error) {
             console.error("Failed to load students", error);

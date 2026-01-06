@@ -44,6 +44,13 @@ export const peopleService = {
         return response.data;
     },
 
+    getStudentsByIds: async (ids: number[]): Promise<Person[]> => {
+        const response = await apiClient.get<Person[]>(`/users/students/batch`, {
+            params: { ids: ids.join(",") }
+        });
+        return response.data;
+    },
+
     downloadTemplate: (role: string) => {
         const endpoint = role === "student" ? "/users/students/template" : "/users/instructors/template";
         const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${endpoint}`;

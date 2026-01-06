@@ -181,4 +181,17 @@ public class StudentService {
                 .instituteId(student.getInstituteId())
                 .build();
     }
+
+    public List<CreateUserResponse> getStudentsByIds(List<Long> ids) {
+        return studentRepository.findAllById(ids).stream()
+                .map(student -> CreateUserResponse.builder()
+                        .id(student.getId())
+                        .userId(student.getAuthUserId())
+                        .email(student.getEmail())
+                        .fullName(student.getFullName())
+                        .role("student")
+                        .instituteId(student.getInstituteId())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

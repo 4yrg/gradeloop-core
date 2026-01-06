@@ -78,5 +78,6 @@ export const classGroupSchema = z.object({
     name: z.string().min(2, "Class name is required"), // e.g. "Class of 2025"
     degreeId: z.string().uuid(),
     studentCount: z.number().default(0),
+    studentIds: z.array(z.number()).optional(),
 });
 export type ClassGroup = z.infer<typeof classGroupSchema>;
