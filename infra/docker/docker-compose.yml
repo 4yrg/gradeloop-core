@@ -53,6 +53,23 @@ services:
     networks:
       - gradeloop-net
 
+  ivas-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ivas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ivas-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gradeloop-net
+
   db-manager:
     image: adminer
     restart: always
@@ -198,6 +215,32 @@ services:
         - action: rebuild
           path: ../../services/java/user/pom.xml
 
+  ivas-service:
+    build:
+      context: ../../services/java/ivas
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ivas-db:5432/ivas_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SERVER_PORT: 8084
+    ports:
+      - "8084:8084"
+    depends_on:
+      ivas-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/java/ivas/src
+        - action: rebuild
+          path: ../../services/java/ivas/pom.xml
+
   # ============================================================================
   # Keystroke Services
   # ============================================================================
@@ -260,6 +303,7 @@ volumes:
   auth-db-data:
   institute-db-data:
   user-db-data:
+  ivas-db-data:
   redis-data:
   rabbitmq-data:
   keystroke-models:
