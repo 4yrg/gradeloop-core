@@ -29,16 +29,26 @@ import {
     useSidebar,
 } from "../../ui/sidebar"
 
-const MOCK_USER = {
-    name: "Admin User",
-    email: "admin@gradeloop.com",
-    image: "",
-    role: "SYSTEM_ADMIN",
-};
+import { useUser } from "../../../hooks/use-user"
+import { logout } from "../../../actions/auth"
 
 export function UserMenu() {
     const { isMobile } = useSidebar()
-    const user = MOCK_USER
+    const { user, isLoading, error } = useUser()
+
+    if (isLoading) return <div className="p-4 text-center text-xs text-muted-foreground">Loading...</div>
+
+    // Fallback if user data fetch fails, so we can still show Logout
+    const safeUser = user || {
+        name: "Guest User",
+        email: "Session Error",
+        role: "UNKNOWN",
+        image: undefined
+    }
+
+    // Normalize role string (remove ROLE_ prefix if exists for display)
+    const roleStr = safeUser.role || 'UNKNOWN';
+    const displayRole = roleStr.replace('ROLE_', '').replace('_', ' ');
 
     return (
         <SidebarMenu>
@@ -50,14 +60,14 @@ export function UserMenu() {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarImage src={user.image} alt={user.name} />
+                                <AvatarImage src={safeUser.image} alt={safeUser.name || safeUser.email} />
                                 <AvatarFallback className="rounded-lg">
-                                    {user.name.charAt(0)}
+                                    {(safeUser.name || safeUser.email).charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">{user.name}</span>
-                                <span className="truncate text-xs">{user.role}</span>
+                                <span className="truncate font-semibold">{safeUser.name || safeUser.email}</span>
+                                <span className="truncate text-xs">{displayRole}</span>
                             </div>
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
@@ -71,14 +81,14 @@ export function UserMenu() {
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarImage src={user.image} alt={user.name} />
+                                    <AvatarImage src={safeUser.image} alt={safeUser.name || safeUser.email} />
                                     <AvatarFallback className="rounded-lg">
-                                        {user.name.charAt(0)}
+                                        {(safeUser.name || safeUser.email).charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">{user.name}</span>
-                                    <span className="truncate text-xs">{user.email}</span>
+                                    <span className="truncate font-semibold">{safeUser.name || safeUser.email}</span>
+                                    <span className="truncate text-xs">{safeUser.email}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
@@ -94,7 +104,10 @@ export function UserMenu() {
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500">
+                        <DropdownMenuItem className="text-red-500" onClick={async () => {
+                            await logout();
+                            window.location.href = "/login";
+                        }}>
                             <LogOut className="mr-2 size-4" />
                             Log out
                         </DropdownMenuItem>

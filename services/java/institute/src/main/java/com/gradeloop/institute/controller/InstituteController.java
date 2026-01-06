@@ -20,8 +20,18 @@ public class InstituteController {
     private final InstituteService instituteService;
 
     @PostMapping
-    public ResponseEntity<InstituteResponse> createInstitute(@RequestBody CreateInstituteRequest request) {
-        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.createInstitute(request)));
+    public ResponseEntity<InstituteResponse> createInstitute(
+            @RequestHeader(value = "X-User-Id", required = false) String userIdStr,
+            @RequestBody CreateInstituteRequest request) {
+        Long userId = null;
+        if (userIdStr != null) {
+            try {
+                userId = Long.parseLong(userIdStr);
+            } catch (NumberFormatException e) {
+                // Ignore invalid user ID format, proceed with null or handle error
+            }
+        }
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.createInstitute(request, userId)));
     }
 
     @GetMapping
@@ -57,5 +67,10 @@ public class InstituteController {
     public ResponseEntity<Void> deleteInstitute(@PathVariable UUID id) {
         instituteService.deleteInstitute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/by-user/{userId}")
+    public ResponseEntity<InstituteResponse> getInstituteByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(InstituteResponse.fromEntity(instituteService.getInstituteByUserId(userId)));
     }
 }

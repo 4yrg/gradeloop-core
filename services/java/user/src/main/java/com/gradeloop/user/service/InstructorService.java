@@ -26,91 +26,109 @@ public class InstructorService {
 
     @Transactional
     public CreateUserResponse createInstructor(CreateInstructorRequest request) {
-        CreateAuthUserResponse authUser = authServiceClient.createUser(request.getEmail(), "INSTRUCTOR");
-
-        Instructor instructor;
+        // 1. Check if instructor already exists
         if (instructorRepository.findByEmail(request.getEmail()).isPresent()) {
-            instructor = instructorRepository.findByEmail(request.getEmail()).get();
-        } else {
-            instructor = Instructor.builder()
-                    .email(request.getEmail())
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .instituteId(request.getInstituteId())
-                    .department(request.getDepartment())
-                    .authUserId(authUser.getUserId())
+            Instructor existingInstructor = instructorRepository.findByEmail(request.getEmail()).get();
+            return CreateUserResponse.builder()
+                    .id(existingInstructor.getId())
+                    .userId(existingInstructor.getId())
+                    .email(existingInstructor.getEmail())
+                    .fullName(existingInstructor.getFullName())
+                    .role("instructor")
+                    .instituteId(existingInstructor.getInstituteId())
+                    .department(existingInstructor.getDepartment())
                     .build();
+        }
+
+        // 2. Create Instructor Profile FIRST
+        Instructor instructor = Instructor.builder()
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .instituteId(request.getInstituteId())
+                .department(request.getDepartment())
+                .build();
+        instructor = instructorRepository.save(instructor);
+
+        // 3. Create Auth User with reference to instructor ID
+        CreateAuthUserResponse authUser = null;
+        try {
+            authUser = authServiceClient.createUser(request.getEmail(), "INSTRUCTOR", instructor.getId());
+            instructor.setAuthUserId(authUser.getAuthUserId());
             instructor = instructorRepository.save(instructor);
+        } catch (Exception e) {
+            // Rollback: Delete instructor if auth creation fails
+            instructorRepository.deleteById(instructor.getId());
+            throw new RuntimeException("Failed to create auth user: " + e.getMessage(), e);
         }
 
         return CreateUserResponse.builder()
                 .id(instructor.getId())
-                .userId(authUser.getUserId())
+                .userId(instructor.getId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
-                .tempPassword(authUser.getTempPassword())
+                .fullName(instructor.getFullName())
+                .role("instructor")
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 
     @Transactional
     public List<CreateUserResponse> createInstructorsBulk(List<CreateInstructorRequest> requests) {
-        List<CreateAuthUserRequest> authRequests = requests.stream()
-                .map(req -> CreateAuthUserRequest.builder()
-                        .email(req.getEmail())
-                        .role("INSTRUCTOR")
-                        .build())
-                .collect(Collectors.toList());
-
-        List<CreateAuthUserResponse> authResponses = authServiceClient.createUsersBulk(authRequests);
-
-        Map<String, CreateAuthUserResponse> authResponseMap = authResponses.stream()
-                .collect(Collectors.toMap(CreateAuthUserResponse::getEmail, Function.identity(),
-                        (existing, replacement) -> existing));
-
         List<CreateUserResponse> responses = new ArrayList<>();
 
+        // Process each request individually with proper rollback
         for (CreateInstructorRequest req : requests) {
             try {
-                CreateAuthUserResponse authUser = authResponseMap.get(req.getEmail());
-                if (authUser == null) {
+                // Check if instructor already exists
+                if (instructorRepository.findByEmail(req.getEmail()).isPresent()) {
+                    Instructor existingInstructor = instructorRepository.findByEmail(req.getEmail()).get();
                     responses.add(CreateUserResponse.builder()
-                            .email(req.getEmail())
-                            .error("Failed to create auth user")
+                            .id(existingInstructor.getId())
+                            .userId(existingInstructor.getId())
+                            .email(existingInstructor.getEmail())
+                            .fullName(existingInstructor.getFullName())
+                            .role("instructor")
+                            .instituteId(existingInstructor.getInstituteId())
+                            .department(existingInstructor.getDepartment())
                             .build());
                     continue;
                 }
 
-                Instructor instructor;
-                if (instructorRepository.findByEmail(req.getEmail()).isPresent()) {
-                    instructor = instructorRepository.findByEmail(req.getEmail()).get();
-                } else {
-                    instructor = Instructor.builder()
-                            .email(req.getEmail())
-                            .firstName(req.getFirstName())
-                            .lastName(req.getLastName())
-                            .instituteId(req.getInstituteId())
-                            .department(req.getDepartment())
-                            .authUserId(authUser.getUserId())
-                            .build();
-                    instructor = instructorRepository.save(instructor);
-                }
+                // Create Instructor Profile FIRST
+                Instructor instructor = Instructor.builder()
+                        .email(req.getEmail())
+                        .fullName(req.getFullName())
+                        .instituteId(req.getInstituteId())
+                        .department(req.getDepartment())
+                        .build();
+                instructor = instructorRepository.save(instructor);
 
-                responses.add(CreateUserResponse.builder()
-                        .id(instructor.getId())
-                        .userId(authUser.getUserId())
-                        .email(instructor.getEmail())
-                        .firstName(instructor.getFirstName())
-                        .lastName(instructor.getLastName())
-                        .tempPassword(authUser.getTempPassword())
-                        .instituteId(instructor.getInstituteId())
-                        .build());
+                // Create Auth User with reference to instructor ID
+                try {
+                    CreateAuthUserResponse authUser = authServiceClient.createUser(
+                            req.getEmail(), "INSTRUCTOR", instructor.getId());
+                    instructor.setAuthUserId(authUser.getAuthUserId());
+                    instructor = instructorRepository.save(instructor);
+
+                    responses.add(CreateUserResponse.builder()
+                            .id(instructor.getId())
+                            .userId(instructor.getId())
+                            .email(instructor.getEmail())
+                            .fullName(instructor.getFullName())
+                            .role("instructor")
+                            .instituteId(instructor.getInstituteId())
+                            .department(instructor.getDepartment())
+                            .build());
+                } catch (Exception e) {
+                    // Rollback: Delete instructor if auth creation fails
+                    instructorRepository.deleteById(instructor.getId());
+                    throw e;
+                }
 
             } catch (Exception e) {
                 responses.add(CreateUserResponse.builder()
                         .email(req.getEmail())
-                        .error("Error creating instructor profile: " + e.getMessage())
+                        .error("Error creating instructor: " + e.getMessage())
                         .build());
             }
         }
@@ -124,10 +142,10 @@ public class InstructorService {
                         .id(instructor.getId())
                         .userId(instructor.getAuthUserId())
                         .email(instructor.getEmail())
-                        .firstName(instructor.getFirstName())
-                        .lastName(instructor.getLastName())
+                        .fullName(instructor.getFullName())
                         .role("instructor")
                         .instituteId(instructor.getInstituteId())
+                        .department(instructor.getDepartment())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -138,10 +156,11 @@ public class InstructorService {
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
 
-        if (request.getFirstName() != null)
-            instructor.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)
-            instructor.setLastName(request.getLastName());
+        if (request.getFullName() != null)
+            instructor.setFullName(request.getFullName());
+
+        if (request.getDepartment() != null)
+            instructor.setDepartment(request.getDepartment());
 
         instructor = instructorRepository.save(instructor);
 
@@ -149,9 +168,9 @@ public class InstructorService {
                 .id(instructor.getId())
                 .userId(instructor.getAuthUserId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
+                .fullName(instructor.getFullName())
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 
@@ -168,10 +187,10 @@ public class InstructorService {
                 .id(instructor.getId())
                 .userId(instructor.getAuthUserId())
                 .email(instructor.getEmail())
-                .firstName(instructor.getFirstName())
-                .lastName(instructor.getLastName())
+                .fullName(instructor.getFullName())
                 .role("instructor")
                 .instituteId(instructor.getInstituteId())
+                .department(instructor.getDepartment())
                 .build();
     }
 }

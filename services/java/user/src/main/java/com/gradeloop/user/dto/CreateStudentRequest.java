@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateStudentRequest {
     private String email;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private String instituteId;
+    private String studentId;
 }

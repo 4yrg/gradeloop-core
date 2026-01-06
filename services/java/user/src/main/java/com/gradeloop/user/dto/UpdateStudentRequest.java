@@ -10,6 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateStudentRequest {
-    private String firstName;
-    private String lastName;
+    private String fullName;
 }

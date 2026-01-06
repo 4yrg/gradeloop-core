@@ -13,6 +13,7 @@ public class ClassroomResponse {
     private UUID id;
     private String name;
     private UUID instituteId;
+    private UUID degreeId;
     private List<Long> studentIds;
 
     public static ClassroomResponse fromEntity(Classroom classroom) {
@@ -20,6 +21,7 @@ public class ClassroomResponse {
                 .id(classroom.getId())
                 .name(classroom.getName())
                 .instituteId(classroom.getInstitute() != null ? classroom.getInstitute().getId() : null)
+                .degreeId(classroom.getDegree() != null ? classroom.getDegree().getId() : null)
                 .studentIds(classroom.getStudentIds())
                 .build();
     }
