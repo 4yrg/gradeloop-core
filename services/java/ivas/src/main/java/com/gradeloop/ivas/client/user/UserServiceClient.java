@@ -26,7 +26,7 @@ public class UserServiceClient {
      */
     public StudentDTO getStudent(Long studentId) {
         try {
-            String url = restClientConfig.getUserServiceUrl() + "/api/v1/students/" + studentId;
+            String url = restClientConfig.getUserServiceUrl() + "/users/students/" + studentId;
             log.info("Fetching student details from: {}", url);
 
             StudentDTO student = restTemplate.getForObject(url, StudentDTO.class);
@@ -58,7 +58,7 @@ public class UserServiceClient {
      */
     public InstructorDTO getInstructor(Long instructorId) {
         try {
-            String url = restClientConfig.getUserServiceUrl() + "/api/v1/instructors/" + instructorId;
+            String url = restClientConfig.getUserServiceUrl() + "/users/instructors/" + instructorId;
             log.info("Fetching instructor details from: {}", url);
 
             InstructorDTO instructor = restTemplate.getForObject(url, InstructorDTO.class);
