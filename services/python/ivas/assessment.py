@@ -554,88 +554,253 @@ class AdaptiveAssessmentEngine:
         
         return False
     
-    def generate_final_assessment(self) -> Dict[str, Any]:
-        """Generate comprehensive final assessment from session data"""
+    def generate_final_assessment(self, detailed_responses: List[Dict] = None) -> Dict[str, Any]:
+        """
+        Generate comprehensive final assessment using evidence-based scoring.
         
-        # Calculate overall score from multiple sources
-        # 1. Average response score
-        avg_score = 0.0
-        if self.response_history:
-            scores = [
-                {"none": 0, "minimal": 20, "partial": 50, "good": 80, "excellent": 100}
-                .get(r.understanding_level.value, 50)
-                for r in self.response_history
-            ]
-            avg_score = sum(scores) / len(scores)
+        New V2 Scoring System:
+        - Response Quality: 60 points (top 3 responses × 20 points each)
+        - Concept Mastery: 20 points (4 points per concept based on mastery level)
+        - Communication: 10 points (clarity and coherence)
+        - Engagement: 10 points (response rate and depth)
+        Total: 100 points
         
-        # 2. Concept mastery average
-        mastery_scores = list(self.bkt.knowledge_state.values())
-        avg_mastery = sum(mastery_scores) / len(mastery_scores) if mastery_scores else 0.5
+        Args:
+            detailed_responses: List of response dicts with rubric_scores and evidence
+        """
         
-        # 3. IRT ability estimate (convert to 0-100 scale)
-        ability_score = (self.irt.theta + 3) / 6 * 100  # -3 to +3 -> 0 to 100
-        ability_score = max(0, min(100, ability_score))
+        # Initialize score components
+        scores = {
+            "response_quality": 0,
+            "concept_mastery": 0,
+            "communication": 0,
+            "engagement": 0,
+            "breakdown": {}
+        }
         
-        # Combine scores (weighted average)
-        overall_score = int(
-            0.35 * avg_score + 
-            0.35 * (avg_mastery * 100) + 
-            0.30 * ability_score
-        )
-        overall_score = max(0, min(100, overall_score))
-        
-        # Determine competency level
-        if overall_score >= 85:
-            competency = CompetencyLevel.EXPERT
-        elif overall_score >= 70:
-            competency = CompetencyLevel.ADVANCED
-        elif overall_score >= 50:
-            competency = CompetencyLevel.INTERMEDIATE
+        # 1. RESPONSE QUALITY (60 points max)
+        # Use rubric scores from detailed assessments if available
+        response_scores = []
+        if detailed_responses:
+            for resp in detailed_responses:
+                rubric = resp.get("rubric_scores", {})
+                # Each rubric dimension is 0-5, total 20 per response
+                total = sum(rubric.values()) if rubric else 0
+                response_scores.append({
+                    "question": resp.get("question", ""),
+                    "score": total,
+                    "understanding_level": resp.get("understanding_level", "partial"),
+                    "evidence": resp.get("evidence", {})
+                })
         else:
-            competency = CompetencyLevel.BEGINNER
+            # Fallback: convert understanding levels to rubric-like scores
+            for r in self.response_history:
+                # Map understanding levels to 0-20 scale
+                level_scores = {
+                    "none": 0, "minimal": 5, "partial": 10, 
+                    "good": 15, "excellent": 20
+                }
+                score = level_scores.get(r.understanding_level.value, 10)
+                response_scores.append({
+                    "question": f"Q{len(response_scores)+1}",
+                    "score": score,
+                    "understanding_level": r.understanding_level.value,
+                    "evidence": {}
+                })
         
-        # Identify strengths and weaknesses
-        strengths = []
-        weaknesses = []
+        # Take top 3 responses (allows for nervousness/mistakes)
+        response_scores.sort(key=lambda x: x["score"], reverse=True)
+        top_3 = response_scores[:3] if len(response_scores) >= 3 else response_scores
         
-        for concept, mastery in self.bkt.knowledge_state.items():
-            if mastery >= 0.7:
-                strengths.append(f"Good understanding of {concept}")
-            elif mastery < 0.4:
-                weaknesses.append(f"Needs improvement in {concept}")
+        # Pad if less than 3 responses
+        while len(top_3) < 3 and response_scores:
+            top_3.append(response_scores[0])
         
-        # Count correct/incorrect responses
+        response_quality_score = sum(r["score"] for r in top_3)
+        scores["response_quality"] = min(60, response_quality_score)
+        scores["breakdown"]["top_responses"] = top_3
+        
+        # 2. CONCEPT MASTERY (20 points max)
+        concept_breakdown = []
+        mastery_scores = self.bkt.knowledge_state
+        
+        for concept, mastery in mastery_scores.items():
+            # Award points based on mastery level
+            if mastery >= 0.8:
+                points = 4  # Excellent mastery
+            elif mastery >= 0.6:
+                points = 3  # Good understanding
+            elif mastery >= 0.4:
+                points = 2  # Partial understanding
+            elif mastery >= 0.2:
+                points = 1  # Minimal understanding
+            else:
+                points = 0  # No understanding
+            
+            concept_breakdown.append({
+                "concept": concept,
+                "mastery_percentage": round(mastery * 100, 1),
+                "points": points,
+                "level": self._get_mastery_level(mastery)
+            })
+            scores["concept_mastery"] += points
+        
+        scores["concept_mastery"] = min(20, scores["concept_mastery"])
+        scores["breakdown"]["concepts"] = concept_breakdown
+        
+        # 3. COMMUNICATION (10 points max)
+        # Based on average confidence scores (proxy for clarity)
+        if self.response_history:
+            avg_confidence = sum(r.confidence_score for r in self.response_history) / len(self.response_history)
+            # Scale 0-1 to 0-10
+            communication_score = int(avg_confidence * 10)
+        else:
+            communication_score = 5  # Default if no responses
+        
+        scores["communication"] = min(10, communication_score)
+        scores["breakdown"]["communication_details"] = {
+            "average_clarity": round(avg_confidence * 10, 1) if self.response_history else 5.0,
+            "points_awarded": scores["communication"]
+        }
+        
+        # 4. ENGAGEMENT (10 points max)
+        total_responses = len(self.response_history)
+        expected_responses = self.question_count if self.question_count > 0 else 1
+        response_rate = min(1.0, total_responses / expected_responses)
+        engagement_score = int(response_rate * 10)
+        
+        scores["engagement"] = engagement_score
+        scores["breakdown"]["engagement_details"] = {
+            "responses_given": total_responses,
+            "questions_asked": self.question_count,
+            "response_rate_percent": round(response_rate * 100, 1),
+            "points_awarded": engagement_score
+        }
+        
+        # CALCULATE TOTAL SCORE
+        total_score = (
+            scores["response_quality"] +
+            scores["concept_mastery"] +
+            scores["communication"] +
+            scores["engagement"]
+        )
+        
+        # Determine grade and competency level
+        grade, competency = self._get_grade_and_level(total_score)
+        
+        # Count correct/incorrect for additional stats
         correct_count = sum(1 for r in self.response_history if r.is_correct)
         total_count = len(self.response_history)
         
+        # Build final assessment
         assessment = {
-            "overall_score": overall_score,
+            # Overall results
+            "overall_score": total_score,
+            "grade": grade,
             "competency_level": competency.value,
-            # Detailed scores
-            "response_score": round(avg_score, 1),
-            "mastery_score": round(avg_mastery * 100, 1),
-            "ability_score": round(ability_score, 1),
-            "ability_theta": round(self.irt.theta, 2),
-            "ability_percentile": self.irt.get_ability_percentile(),
+            
+            # Detailed score breakdown
+            "score_breakdown": {
+                "response_quality": {
+                    "score": scores["response_quality"],
+                    "max": 60,
+                    "percentage": round((scores["response_quality"] / 60) * 100, 1),
+                    "top_responses": scores["breakdown"]["top_responses"]
+                },
+                "concept_mastery": {
+                    "score": scores["concept_mastery"],
+                    "max": 20,
+                    "percentage": round((scores["concept_mastery"] / 20) * 100, 1) if scores["concept_mastery"] > 0 else 0,
+                    "concepts": scores["breakdown"]["concepts"]
+                },
+                "communication": {
+                    "score": scores["communication"],
+                    "max": 10,
+                    "percentage": round((scores["communication"] / 10) * 100, 1),
+                    "details": scores["breakdown"]["communication_details"]
+                },
+                "engagement": {
+                    "score": scores["engagement"],
+                    "max": 10,
+                    "percentage": round((scores["engagement"] / 10) * 100, 1),
+                    "details": scores["breakdown"]["engagement_details"]
+                }
+            },
+            
             # Performance summary
             "questions_answered": total_count,
             "correct_responses": correct_count,
-            "accuracy_rate": round(correct_count / total_count * 100, 1) if total_count > 0 else 0,
-            # Concept mastery
+            "accuracy_rate": round((correct_count / total_count * 100), 1) if total_count > 0 else 0,
+            
+            # Concept mastery details
             "concept_mastery": {
-                concept: round(mastery * 100, 1)
-                for concept, mastery in self.bkt.knowledge_state.items()
+                concept["concept"]: concept["mastery_percentage"]
+                for concept in concept_breakdown
             },
-            # Strengths and weaknesses
-            "strengths": strengths if strengths else ["Participated actively in the session"],
-            "weaknesses": weaknesses if weaknesses else ["Continue practicing to strengthen understanding"],
-            # Recommendations
+            
+            # IRT metrics (kept for compatibility)
+            "ability_theta": round(self.irt.theta, 2),
+            "ability_percentile": self.irt.get_ability_percentile(),
+            
+            # Placeholders for LLM-generated content
+            # These will be filled by the LLM using the FINAL_ASSESSMENT_PROMPT
+            "strengths": [],
+            "weaknesses": [],
+            "misconceptions": [],
             "recommendations": self._generate_recommendations(),
         }
         
-        logger.info(f"Final assessment: score={overall_score}, level={competency.value}")
+        logger.info(
+            f"Final assessment V2: score={total_score}/100, grade={grade}, "
+            f"breakdown=[Q:{scores['response_quality']}/60, "
+            f"C:{scores['concept_mastery']}/20, "
+            f"Comm:{scores['communication']}/10, "
+            f"Eng:{scores['engagement']}/10]"
+        )
         
         return assessment
+    
+    def _get_mastery_level(self, mastery: float) -> str:
+        """Convert mastery probability to level description"""
+        if mastery >= 0.8:
+            return "Excellent"
+        elif mastery >= 0.6:
+            return "Good"
+        elif mastery >= 0.4:
+            return "Partial"
+        elif mastery >= 0.2:
+            return "Minimal"
+        else:
+            return "None"
+    
+    def _get_grade_and_level(self, score: int) -> Tuple[str, CompetencyLevel]:
+        """Determine grade and competency level from total score"""
+        if score >= 93:
+            return ("A+", CompetencyLevel.EXPERT)
+        elif score >= 90:
+            return ("A", CompetencyLevel.EXPERT)
+        elif score >= 87:
+            return ("A-", CompetencyLevel.EXPERT)
+        elif score >= 83:
+            return ("B+", CompetencyLevel.ADVANCED)
+        elif score >= 80:
+            return ("B", CompetencyLevel.ADVANCED)
+        elif score >= 77:
+            return ("B-", CompetencyLevel.ADVANCED)
+        elif score >= 73:
+            return ("C+", CompetencyLevel.INTERMEDIATE)
+        elif score >= 70:
+            return ("C", CompetencyLevel.INTERMEDIATE)
+        elif score >= 67:
+            return ("C-", CompetencyLevel.INTERMEDIATE)
+        elif score >= 63:
+            return ("D+", CompetencyLevel.BEGINNER)
+        elif score >= 60:
+            return ("D", CompetencyLevel.BEGINNER)
+        elif score >= 50:
+            return ("D-", CompetencyLevel.BEGINNER)
+        else:
+            return ("F", CompetencyLevel.BEGINNER)
     
     def _generate_recommendations(self) -> List[str]:
         """Generate learning recommendations based on assessment"""
@@ -663,6 +828,156 @@ class AdaptiveAssessmentEngine:
                 recommendations.append("Work on explaining concepts more clearly and completely")
         
         return recommendations[:4]  # Limit to 4 recommendations
+
+
+def validate_assessment(assessment: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """
+    Validate assessment data for consistency and quality.
+    Prevents contradictory or nonsensical results.
+    
+    Returns:
+        (is_valid, list_of_errors)
+    """
+    errors = []
+    
+    # 1. Check score consistency
+    total_score = assessment.get("overall_score", 0)
+    breakdown = assessment.get("score_breakdown", {})
+    
+    if breakdown:
+        breakdown_sum = sum([
+            breakdown.get("response_quality", {}).get("score", 0),
+            breakdown.get("concept_mastery", {}).get("score", 0),
+            breakdown.get("communication", {}).get("score", 0),
+            breakdown.get("engagement", {}).get("score", 0)
+        ])
+        
+        if abs(total_score - breakdown_sum) > 1:
+            errors.append(
+                f"Score mismatch: total={total_score} but breakdown sum={breakdown_sum}. "
+                f"These must match exactly."
+            )
+    
+    # 2. Check grade matches score
+    grade = assessment.get("grade", "")
+    if total_score >= 90 and "A" not in grade:
+        errors.append(f"Score {total_score} should have grade A but got '{grade}'")
+    elif total_score < 50 and "F" not in grade:
+        errors.append(f"Score {total_score} should have grade F but got '{grade}'")
+    
+    # 3. Check competency level matches score
+    competency = assessment.get("competency_level", "")
+    if total_score >= 87:
+        if competency != "EXPERT":
+            errors.append(f"Score {total_score} should be EXPERT but got '{competency}'")
+    elif total_score >= 77:
+        if competency != "ADVANCED":
+            errors.append(f"Score {total_score} should be ADVANCED but got '{competency}'")
+    elif total_score >= 60:
+        if competency != "INTERMEDIATE":
+            errors.append(f"Score {total_score} should be INTERMEDIATE but got '{competency}'")
+    elif competency != "BEGINNER":
+        errors.append(f"Score {total_score} should be BEGINNER but got '{competency}'")
+    
+    # 4. Check for evidence in strengths and weaknesses
+    strengths = assessment.get("strengths", [])
+    for strength in strengths:
+        if isinstance(strength, dict):
+            if not strength.get("evidence"):
+                errors.append(
+                    f"Strength '{strength.get('description', 'Unknown')}' has no evidence. "
+                    f"Every claim must be supported."
+                )
+    
+    weaknesses = assessment.get("weaknesses", [])
+    for weakness in weaknesses:
+        if isinstance(weakness, dict):
+            if not weakness.get("evidence"):
+                errors.append(
+                    f"Weakness '{weakness.get('description', 'Unknown')}' has no evidence. "
+                    f"Every claim must be supported."
+                )
+    
+    # 5. Check for generic feedback patterns
+    generic_phrases = [
+        "participated actively",
+        "needs improvement",
+        "good job",
+        "well done",
+        "continue practicing"
+    ]
+    
+    instructor_comments = str(assessment.get("instructor_comments", "")).lower()
+    summary = str(assessment.get("overall_summary", "")).lower()
+    
+    for phrase in generic_phrases:
+        if phrase in instructor_comments and len(instructor_comments) < 100:
+            errors.append(
+                f"Instructor comments contain generic phrase '{phrase}' without specifics. "
+                f"Comments must be personalized and reference specific moments from conversation."
+            )
+        if phrase in summary and len(summary) < 80:
+            errors.append(
+                f"Summary contains generic phrase '{phrase}' without specifics."
+            )
+    
+    # 6. Check for misconceptions if score is low
+    misconceptions = assessment.get("misconceptions", [])
+    if total_score < 60 and not misconceptions:
+        errors.append(
+            f"Score is low ({total_score}/100) but no misconceptions identified. "
+            f"Must explain what student got wrong."
+        )
+    
+    # 7. Validate misconceptions have required fields
+    for misconception in misconceptions:
+        if isinstance(misconception, dict):
+            required_fields = ["student_said", "why_wrong", "correct_concept"]
+            for field in required_fields:
+                if not misconception.get(field):
+                    errors.append(
+                        f"Misconception '{misconception.get('misconception', 'Unknown')}' "
+                        f"missing required field '{field}'"
+                    )
+    
+    # 8. Check for contradictions between score and feedback
+    if total_score >= 80:
+        # High score should have more strengths than weaknesses
+        if len(weaknesses) > len(strengths):
+            errors.append(
+                f"Score is high ({total_score}/100) but has more weaknesses ({len(weaknesses)}) "
+                f"than strengths ({len(strengths)}). This is contradictory."
+            )
+    elif total_score < 50:
+        # Low score should have more weaknesses than strengths
+        if len(strengths) > len(weaknesses):
+            errors.append(
+                f"Score is low ({total_score}/100) but has more strengths ({len(strengths)}) "
+                f"than weaknesses ({len(weaknesses)}). This is contradictory."
+            )
+    
+    # 9. Check that concept mastery values are reasonable
+    concept_mastery = assessment.get("concept_mastery", {})
+    if concept_mastery:
+        avg_mastery = sum(concept_mastery.values()) / len(concept_mastery.values())
+        # Average concept mastery should roughly align with overall score
+        expected_score_range = (avg_mastery - 20, avg_mastery + 20)
+        if total_score < expected_score_range[0] or total_score > expected_score_range[1]:
+            logger.warning(
+                f"Score {total_score} seems inconsistent with average concept mastery "
+                f"{avg_mastery:.1f}% (expected {expected_score_range[0]}-{expected_score_range[1]})"
+            )
+    
+    is_valid = len(errors) == 0
+    
+    if not is_valid:
+        logger.error(f"Assessment validation failed with {len(errors)} errors:")
+        for error in errors:
+            logger.error(f"  - {error}")
+    else:
+        logger.info("Assessment validation passed")
+    
+    return (is_valid, errors)
 
 
 # Singleton instance

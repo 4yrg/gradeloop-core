@@ -159,11 +159,24 @@ class VivaSession:
             return self.assessment_engine.should_end_session()
         return len(self.conversation_history) >= 14  # 7 Q&A pairs
     
-    def get_final_assessment(self) -> Dict[str, Any]:
-        """Get final adaptive assessment for the session"""
+    def get_final_assessment(self, detailed_responses: List[Dict] = None) -> Dict[str, Any]:
+        """
+        Get final adaptive assessment for the session.
+        
+        Args:
+            detailed_responses: Optional list of response assessments with rubric scores
+        
+        Returns:
+            Dict with comprehensive assessment including score breakdown
+        """
         if self.assessment_engine:
-            return self.assessment_engine.generate_final_assessment()
-        return {"overall_score": 70, "competency_level": "INTERMEDIATE"}
+            return self.assessment_engine.generate_final_assessment(detailed_responses)
+        return {
+            "overall_score": 70,
+            "grade": "C",
+            "competency_level": "INTERMEDIATE",
+            "score_breakdown": {}
+        }
     
     def get_history_for_llm(self) -> List[Dict[str, str]]:
         """Get conversation history in LLM format"""

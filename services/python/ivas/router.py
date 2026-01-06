@@ -467,13 +467,21 @@ async def _process_student_turn(session: VivaSession):
         
         # Combine LLM assessment with adaptive metrics
         combined_assessment = {
-            **llm_assessment,
+            # Map snake_case to camelCase for frontend
+            "understandingLevel": llm_assessment.get("understanding_level", "partial"),
+            "clarity": llm_assessment.get("clarity", "clear"),
+            "confidenceScore": llm_assessment.get("confidence_score", 0.5),
+            "misconceptions": llm_assessment.get("misconceptions", []),
+            "strengths": llm_assessment.get("strengths", []),
+            "areasForImprovement": llm_assessment.get("areas_for_improvement", []),
+            "suggestedFollowUp": llm_assessment.get("suggested_follow_up", ""),
+            
             "adaptive": {
-                "question_number": adaptive_result.get("question_number", 0),
-                "concept_mastery": adaptive_result.get("concept_mastery", 0),
-                "ability_level": adaptive_result.get("ability_level", "INTERMEDIATE"),
-                "ability_percentile": adaptive_result.get("ability_percentile", 50),
-                "questions_remaining": adaptive_result.get("questions_remaining", 5),
+                "questionNumber": adaptive_result.get("question_number", 0),
+                "conceptMastery": adaptive_result.get("concept_mastery", 0),
+                "abilityLevel": adaptive_result.get("ability_level", "INTERMEDIATE"),
+                "abilityPercentile": adaptive_result.get("ability_percentile", 50),
+                "questionsRemaining": adaptive_result.get("questions_remaining", 5),
             }
         }
         
@@ -539,51 +547,97 @@ async def _generate_follow_up_question(session: VivaSession, difficulty: str = "
 
 
 async def _end_viva_session(session: VivaSession):
-    """End the viva session and send final assessment with adaptive metrics"""
+    """End the viva session and send final assessment with V2 evidence-based scoring"""
     session_id = session.session_id
     
     try:
-        # Generate final assessment
-        logger.info(f"Generating final assessment for session {session_id}")
+        logger.info(f"Generating final assessment V2 for session {session_id}")
         
-        # Get LLM-based final assessment
+        # Step 1: Calculate scores from rubric-based assessments (Evidence-based!)
+        # Collect all detailed response assessments if available
+        detailed_responses = []
+        for turn in session.conversation_history:
+            if turn.get("role") == "student" and turn.get("assessment"):
+                detailed_responses.append({
+                    "question": turn.get("question", ""),
+                    "response": turn.get("content", ""),
+                    "rubric_scores": turn["assessment"].get("rubric_scores", {}),
+                    "understanding_level": turn["assessment"].get("understanding_level", "partial"),
+                    "evidence": turn["assessment"].get("evidence", {})
+                })
+        
+        # Generate score breakdown using adaptive engine
+        adaptive_assessment = session.get_final_assessment(detailed_responses)
+        
+        # Step 2: Generate LLM narrative with score context
         llm_assessment = llm_service.generate_final_assessment(
             code=session.code,
-            conversation_history=session.get_history_for_llm()
+            conversation_history=session.get_history_for_llm(),
+            score_breakdown=adaptive_assessment  # Pass calculated scores to LLM
         )
         
-        # Get adaptive assessment (BKT + IRT)
-        adaptive_assessment = session.get_final_assessment()
-        
-        # Combine both assessments
-        # Use adaptive score as primary (it's based on actual measured performance)
-        # LLM provides qualitative analysis
+        # Step 3: Combine calculated scores + LLM narrative
         final_assessment = {
-            # Use adaptive engine's calculated score
-            "overall_score": adaptive_assessment.get("overall_score", llm_assessment.get("overall_score", 70)),
-            "competency_level": adaptive_assessment.get("competency_level", llm_assessment.get("competency_level", "INTERMEDIATE")),
+            # CALCULATED SCORES (accurate, transparent, evidence-based)
+            "overallScore": llm_assessment.get("overall_score", adaptive_assessment.get("overall_score", 70)),
+            "grade": llm_assessment.get("grade", adaptive_assessment.get("grade", "C")),
+            "competencyLevel": llm_assessment.get("competency_level", adaptive_assessment.get("competency_level", "INTERMEDIATE")),
             
-            # Adaptive metrics
-            "ability_theta": adaptive_assessment.get("ability_theta", 0),
-            "ability_percentile": adaptive_assessment.get("ability_percentile", 50),
-            "accuracy_rate": adaptive_assessment.get("accuracy_rate", 0),
+            # DETAILED SCORE BREAKDOWN (V2 - shows where every point came from)
+            "scoreBreakdown": llm_assessment.get("score_breakdown", adaptive_assessment.get("score_breakdown", {})),
             
-            # Concept mastery from BKT
-            "concept_mastery": adaptive_assessment.get("concept_mastery", {}),
+            # CONCEPT MASTERY (from BKT model)
+            "conceptMastery": llm_assessment.get("concept_mastery", adaptive_assessment.get("concept_mastery", {})),
             
-            # LLM qualitative analysis
+            # LLM-GENERATED NARRATIVE (specific, evidence-based)
+            "overallSummary": llm_assessment.get("overall_summary", ""),
+            "strengths": llm_assessment.get("strengths", []),
+            "weaknesses": llm_assessment.get("weaknesses", []),
             "misconceptions": llm_assessment.get("misconceptions", []),
-            "strengths": adaptive_assessment.get("strengths", llm_assessment.get("strengths", [])),
-            "weaknesses": adaptive_assessment.get("weaknesses", llm_assessment.get("weaknesses", [])),
-            "full_analysis": llm_assessment.get("full_analysis", ""),
-            "recommendations": adaptive_assessment.get("recommendations", []),
+            "conceptAnalysis": llm_assessment.get("concept_analysis", []),
+            "recommendations": llm_assessment.get("recommendations", []),
+            "instructorComments": llm_assessment.get("instructor_comments", ""),
+            "nextSteps": llm_assessment.get("next_steps", []),
+            "positiveNote": llm_assessment.get("positive_note", ""),
             
-            # Session metadata
-            "session_id": session_id,
-            "questions_answered": adaptive_assessment.get("questions_answered", 0),
-            "total_turns": len(session.conversation_history),
-            "duration_minutes": _calculate_session_duration(session),
+            # METRICS
+            "abilityTheta": adaptive_assessment.get("ability_theta", 0),
+            "abilityPercentile": adaptive_assessment.get("ability_percentile", 50),
+            "accuracyRate": llm_assessment.get("accuracy_rate", adaptive_assessment.get("accuracy_rate", 0)),
+            "questionsAnswered": llm_assessment.get("questions_answered", adaptive_assessment.get("questions_answered", 0)),
+            
+            # SESSION METADATA
+            "sessionId": session_id,
+            "totalTurns": len(session.conversation_history),
+            "durationMinutes": _calculate_session_duration(session),
         }
+        
+        # Step 4: VALIDATE assessment before sending (prevent contradictions!)
+        from assessment import validate_assessment
+        is_valid, errors = validate_assessment(final_assessment)
+        
+        if not is_valid:
+            logger.error(f"Assessment validation failed for session {session_id}:")
+            for error in errors:
+                logger.error(f"  - {error}")
+            
+            # Add validation errors to response
+            final_assessment["validation_errors"] = errors
+            final_assessment["validation_status"] = "FAILED"
+            
+            # If critical errors, use fallback
+            if any("score mismatch" in err.lower() or "contradictory" in err.lower() for err in errors):
+                logger.warning("Using fallback assessment due to critical validation errors")
+                # Use only calculated scores without LLM narrative
+                final_assessment.update({
+                    "overallScore": adaptive_assessment.get("overall_score", 70),
+                    "grade": adaptive_assessment.get("grade", "C"),
+                    "competencyLevel": adaptive_assessment.get("competency_level", "INTERMEDIATE"),
+                    "instructorComments": "Assessment completed using rubric-based scoring. See detailed breakdown for your results.",
+                })
+        else:
+            logger.info(f"Assessment validation passed for session {session_id}")
+            final_assessment["validation_status"] = "PASSED"
         
         # Send final assessment
         await session_manager.send_session_end(session_id, final_assessment)
@@ -591,10 +645,16 @@ async def _end_viva_session(session: VivaSession):
         # End session
         session_manager.end_session(session_id)
         
-        logger.info(f"Viva session ended: {session_id}, score: {final_assessment.get('overall_score')}, level: {final_assessment.get('competency_level')}")
+        logger.info(
+            f"Viva session ended V2: {session_id}, "
+            f"score: {final_assessment['overallScore']}/100, "
+            f"grade: {final_assessment['grade']}, "
+            f"level: {final_assessment['competencyLevel']}, "
+            f"validation: {final_assessment['validation_status']}"
+        )
         
     except Exception as e:
-        logger.error(f"Failed to end session: {e}")
+        logger.error(f"Failed to end session: {e}", exc_info=True)
         await session_manager.send_error(session_id, "Failed to generate final assessment")
 
 

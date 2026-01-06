@@ -592,28 +592,58 @@ class LLMService:
                 else:
                     raise ValueError("Could not parse JSON from response")
             
-            # Normalize and validate the assessment
+            # Normalize and validate the assessment (NEW V2 format with rubric)
             normalized = {
+                # Rubric scores (0-5 each, total 20)
+                "rubric_scores": assessment.get("rubric_scores", {
+                    "concept_identification": 3,
+                    "explanation_quality": 3,
+                    "understanding_depth": 2,
+                    "real_world_application": 2
+                }),
+                "total_points": assessment.get("total_points", 10),
+                # Understanding level derived from total points
                 "understanding_level": assessment.get("understanding_level", "partial"),
                 "clarity": assessment.get("clarity", "clear"),
                 "confidence_score": float(assessment.get("confidence_score", 0.5)),
+                # Evidence for each rubric dimension
+                "evidence": assessment.get("evidence", {}),
+                "reasoning": assessment.get("reasoning", {}),
+                # Specific feedback
                 "misconceptions": assessment.get("misconceptions", []),
                 "strengths": assessment.get("strengths", []),
                 "areas_for_improvement": assessment.get("areas_for_improvement", []),
                 "suggested_follow_up": assessment.get("suggested_follow_up", "Can you elaborate on that?"),
             }
             
-            logger.info(f"Assessment complete: {normalized['understanding_level']}, confidence: {normalized['confidence_score']}")
+            # Calculate total_points from rubric if not provided
+            if "rubric_scores" in assessment and "total_points" not in assessment:
+                normalized["total_points"] = sum(normalized["rubric_scores"].values())
+            
+            logger.info(
+                f"Assessment V2 complete: {normalized['understanding_level']}, "
+                f"rubric={normalized['total_points']}/20, "
+                f"confidence={normalized['confidence_score']:.2f}"
+            )
             
             return normalized
             
         except Exception as e:
             logger.error(f"Assessment failed: {e}")
-            # Return a fallback assessment
+            # Return a fallback assessment with rubric structure
             return {
+                "rubric_scores": {
+                    "concept_identification": 2,
+                    "explanation_quality": 2,
+                    "understanding_depth": 2,
+                    "real_world_application": 2
+                },
+                "total_points": 8,
                 "understanding_level": "partial",
                 "clarity": "clear",
                 "confidence_score": 0.5,
+                "evidence": {},
+                "reasoning": {},
                 "misconceptions": [],
                 "strengths": ["Attempted to answer the question"],
                 "areas_for_improvement": ["Could not fully assess due to error"],
@@ -625,6 +655,7 @@ class LLMService:
         self,
         code: str,
         conversation_history: List[Dict[str, str]],
+        score_breakdown: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
         Generate a final comprehensive assessment of the viva session.
@@ -632,9 +663,10 @@ class LLMService:
         Args:
             code: Student's code submission
             conversation_history: Complete conversation from the session
+            score_breakdown: Pre-calculated score breakdown from assessment engine
         
         Returns:
-            Dict with final assessment details
+            Dict with final assessment details including LLM-generated narrative
         """
         self.initialize()
         
@@ -646,16 +678,36 @@ class LLMService:
             for turn in conversation_history
         ])
         
+        # Format score breakdown for prompt
+        breakdown_text = ""
+        if score_breakdown:
+            breakdown_text = f"""
+CALCULATED SCORES (from rubric-based assessment):
+- Overall Score: {score_breakdown.get('overall_score', 0)}/100
+- Grade: {score_breakdown.get('grade', 'N/A')}
+- Competency Level: {score_breakdown.get('competency_level', 'BEGINNER')}
+
+Score Breakdown:
+- Response Quality: {score_breakdown.get('score_breakdown', {}).get('response_quality', {}).get('score', 0)}/60
+- Concept Mastery: {score_breakdown.get('score_breakdown', {}).get('concept_mastery', {}).get('score', 0)}/20
+- Communication: {score_breakdown.get('score_breakdown', {}).get('communication', {}).get('score', 0)}/10
+- Engagement: {score_breakdown.get('score_breakdown', {}).get('engagement', {}).get('score', 0)}/10
+
+Concept Mastery Details:
+{json.dumps(score_breakdown.get('concept_mastery', {}), indent=2)}
+"""
+        
         user_prompt = FINAL_ASSESSMENT_PROMPT.format(
             code=code,
-            conversation=conversation_text
+            conversation=conversation_text,
+            score_breakdown=breakdown_text or "No breakdown available"
         )
         
         try:
-            logger.info("Generating final assessment...")
+            logger.info("Generating final assessment with LLM...")
             
             messages = [
-                {"role": "system", "content": "You are an expert programming instructor providing a final assessment. Always respond in valid JSON format."},
+                {"role": "system", "content": "You are an expert programming instructor providing evidence-based final assessments. You MUST reference specific questions (Q1, Q2, etc.) and quote student responses. Always respond in valid JSON format."},
                 {"role": "user", "content": user_prompt}
             ]
             
@@ -664,7 +716,7 @@ class LLMService:
                 messages=messages,
                 options={
                     "temperature": 0.3,
-                    "num_predict": 1024,
+                    "num_predict": 1536,  # Increased for detailed feedback
                 },
                 format="json"
             )
@@ -672,39 +724,68 @@ class LLMService:
             result_text = response["message"]["content"].strip()
             
             try:
-                assessment = json.loads(result_text)
+                llm_assessment = json.loads(result_text)
             except json.JSONDecodeError:
                 import re
                 json_match = re.search(r'\{[\s\S]*\}', result_text)
                 if json_match:
-                    assessment = json.loads(json_match.group())
+                    llm_assessment = json.loads(json_match.group())
                 else:
                     raise ValueError("Could not parse JSON from response")
             
-            normalized = {
-                "overall_score": int(assessment.get("overall_score", 70)),
-                "competency_level": assessment.get("competency_level", "INTERMEDIATE"),
-                "misconceptions": assessment.get("misconceptions", []),
-                "strengths": assessment.get("strengths", []),
-                "weaknesses": assessment.get("weaknesses", []),
-                "full_analysis": assessment.get("full_analysis", "Assessment completed."),
+            # Build comprehensive assessment combining calculated scores + LLM narrative
+            final_assessment = {
+                # Use calculated scores (accurate, evidence-based)
+                "overall_score": score_breakdown.get("overall_score", 70) if score_breakdown else 70,
+                "grade": score_breakdown.get("grade", "C") if score_breakdown else "C",
+                "competency_level": score_breakdown.get("competency_level", "INTERMEDIATE") if score_breakdown else "INTERMEDIATE",
+                "score_breakdown": score_breakdown.get("score_breakdown", {}) if score_breakdown else {},
+                
+                # Use LLM-generated narrative (context and explanation)
+                "overall_summary": llm_assessment.get("overall_summary", "Assessment completed"),
+                "strengths": llm_assessment.get("strengths", []),
+                "weaknesses": llm_assessment.get("weaknesses", []),
+                "misconceptions": llm_assessment.get("misconceptions", []),
+                "concept_analysis": llm_assessment.get("concept_analysis", []),
+                "recommendations": llm_assessment.get("recommendations", []),
+                "instructor_comments": llm_assessment.get("instructor_comments", ""),
+                "next_steps": llm_assessment.get("next_steps", []),
+                "positive_note": llm_assessment.get("positive_note", ""),
+                
+                # Additional metrics from score_breakdown
+                "concept_mastery": score_breakdown.get("concept_mastery", {}) if score_breakdown else {},
+                "questions_answered": score_breakdown.get("questions_answered", 0) if score_breakdown else 0,
+                "accuracy_rate": score_breakdown.get("accuracy_rate", 0) if score_breakdown else 0,
             }
             
-            logger.info(f"Final assessment complete: score={normalized['overall_score']}, level={normalized['competency_level']}")
+            logger.info(
+                f"Final assessment V2 complete: score={final_assessment['overall_score']}/100, "
+                f"grade={final_assessment['grade']}, level={final_assessment['competency_level']}"
+            )
             
-            return normalized
+            return final_assessment
             
         except Exception as e:
-            logger.error(f"Final assessment failed: {e}")
-            return {
-                "overall_score": 70,
-                "competency_level": "INTERMEDIATE",
-                "misconceptions": [],
-                "strengths": ["Participated in viva session"],
-                "weaknesses": ["Assessment could not be fully completed"],
-                "full_analysis": f"Assessment partially completed. Error: {str(e)}",
-                "error": str(e)
-            }
+            logger.error(f"Final assessment LLM generation failed: {e}")
+            # Return calculated scores with minimal narrative
+            if score_breakdown:
+                return {
+                    **score_breakdown,
+                    "overall_summary": "Assessment completed based on rubric scores.",
+                    "instructor_comments": "Your performance was evaluated using a structured rubric. Review the detailed breakdown to understand your results.",
+                    "error": str(e)
+                }
+            else:
+                return {
+                    "overall_score": 70,
+                    "grade": "C",
+                    "competency_level": "INTERMEDIATE",
+                    "misconceptions": [],
+                    "strengths": ["Participated in viva session"],
+                    "weaknesses": ["Assessment could not be fully completed"],
+                    "overall_summary": f"Assessment partially completed. Error: {str(e)}",
+                    "error": str(e)
+                }
     
     @property
     def is_available(self) -> bool:
