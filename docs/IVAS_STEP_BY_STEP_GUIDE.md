@@ -1,65 +1,243 @@
 # IVAS Implementation - Complete Step-by-Step Guide
 
 > **Last Updated:** January 6, 2026  
-> **Status:** Frontend Foundation + Backend Structure Complete
+> **Current Status:** Foundation Complete | Ready for Phase 2
 
 ---
 
-## 📊 Overall Progress Overview
+## 📊 Overall Progress
 
-### ✅ Completed (Foundation Phase)
-- Frontend UI Components & Pages
-- Backend Project Structure
-- Database Models
-- Basic API Endpoints
-
-### 🚧 In Progress
-- WebSocket Implementation
-- Audio Processing Pipeline
-
-### ⏳ Pending
-- AI/ML Services (Python)
-- Full Integration & Testing
-- Production Deployment
+| Phase | Status | Priority |
+|-------|--------|----------|
+| **Phase 1: Foundation** | ✅ Complete | - |
+| **Phase 2: Service Integration** | 🔴 Next | Critical |
+| **Phase 3: WebSocket** | 🔴 Pending | Critical |
+| **Phase 4: Python AI Service** | 🔴 Pending | Critical |
+| **Phase 5: Audio Pipeline** | 🔴 Pending | Critical |
+| **Phase 6: Complete Flow** | ⏳ Pending | High |
+| **Phase 7: Testing & Deployment** | ⏳ Pending | High |
 
 ---
 
-## 🎯 Implementation Roadmap
+## 🎯 What Works Now
 
-### **PHASE 1: Foundation Setup** ✅ COMPLETED
+### ✅ Backend (Java/Spring Boot)
+- ✅ IVAS service running on port 8084
+- ✅ 9 database models (VivaSession, VivaConfiguration, etc.)
+- ✅ All JPA repositories
+- ✅ 4 REST controllers with basic endpoints
+- ✅ 4 service classes (Configuration, Rubric, Dashboard, Session)
+- ✅ Security configuration
+- ✅ PostgreSQL database schema
 
-#### 1.1 Development Environment ✅
-- ✅ Spring Boot IVAS service project created
-- ✅ Next.js frontend structure set up
-- ✅ PostgreSQL database configured
-- ✅ Project dependencies installed
+### ✅ Frontend (Next.js/React)
+- ✅ Student pages (landing, session, results)
+- ✅ Instructor pages (dashboard, configure, rubric, analytics)
+- ✅ All React components (VoiceInterface, QuestionDisplay, etc.)
+- ✅ UI working with mock data
 
-#### 1.2 Database Schema ✅
-- ✅ Entity models created:
-  - `VivaConfiguration`
-  - `VivaSession`
-  - `VivaQuestion`
-  - `VivaConcept`
-  - `VivaRubric`
-  - `VivaQuestionTemplate`
-  - `VivaMisconception`
-  - `VivaTranscript`
-  - `VivaConceptMastery`
-- ✅ Repositories implemented
-- ✅ Database relationships defined
+### 🔴 What's Missing (CRITICAL)
+- 🔴 Service clients (User, Institute services) - **DO FIRST**
+- 🔴 WebSocket handler (empty directory)
+- 🔴 Python AI service (not created)
+- 🔴 Audio processing service
+- 🔴 Question management service
+- 🔴 Grading service
 
-#### 1.3 Basic Backend Structure ✅
-- ✅ Controllers created:
-  - `VivaConfigurationController`
-  - `VivaRubricController`
-  - `VivaDashboardController`
-  - `VivaSessionController`
-- ✅ Services implemented:
-  - `VivaConfigurationService`
-  - `VivaRubricService`
-  - `VivaDashboardService`
-- ✅ DTOs defined for all API requests/responses
-- ✅ Security configuration set up
+---
+
+## 🔥 Next Steps (In Order)
+
+### **STEP 1: Service Integration** 🔴 START HERE
+**Duration:** 2-3 days | **Priority:** Critical
+
+Create REST clients to communicate with other services:
+
+```java
+// services/java/ivas/src/main/java/com/gradeloop/ivas/client/
+
+1. Create UserServiceClient.java
+   - getStudent(Long studentId)
+   - getInstructor(Long instructorId)
+   
+2. Create InstituteServiceClient.java
+   - getAssignment(UUID assignmentId)
+   - getCourse(UUID courseId)
+   
+3. Update VivaSessionService.java
+   - Fetch student info when starting session
+   - Fetch assignment details
+```
+
+**Dependencies:** ✅ User Service (port 8082) & Institute Service (port 8083) already running
+
+---
+
+### **STEP 2: WebSocket Implementation** 🔴 CRITICAL
+**Duration:** 4-5 days | **Priority:** Critical
+
+Enable real-time communication for audio streaming:
+
+```java
+// Backend
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── websocket/
+│   ├── VivaWebSocketHandler.java   // Handle messages
+│   ├── WebSocketSessionManager.java // Track connections
+│   └── dto/WebSocketMessage.java   // Message protocol
+├── config/
+│   └── WebSocketConfig.java        // Configuration
+
+// Frontend
+web/hooks/use-viva-websocket.ts    // WebSocket client hook
+```
+
+**Endpoint:** `ws://localhost:8084/ws/viva/sessions/{sessionId}`
+
+---
+
+### **STEP 3: Python AI Service** 🔴 CRITICAL
+**Duration:** 7-10 days | **Priority:** Critical
+
+Create FastAPI service for AI/ML operations:
+
+```bash
+services/python/ivas-ai/
+├── app/
+│   ├── main.py                    # FastAPI app
+│   ├── api/
+│   │   ├── stt.py                # Speech-to-Text (Whisper)
+│   │   ├── tts.py                # Text-to-Speech (OpenAI)
+│   │   ├── nlp.py                # Response evaluation (GPT-4)
+│   │   └── irt.py                # Adaptive questions (PyIRT)
+│   └── services/
+│       ├── whisper_service.py
+│       ├── openai_service.py
+│       ├── nlp_service.py
+│       └── irt_service.py
+├── requirements.txt
+└── Dockerfile
+```
+
+**Key APIs:**
+- `POST /api/v1/ai/stt/transcribe` - Audio → Text
+- `POST /api/v1/ai/tts/synthesize` - Text → Audio
+- `POST /api/v1/ai/nlp/evaluate` - Grade response
+- `POST /api/v1/ai/irt/next-question` - Select next question
+
+---
+
+### **STEP 4: Audio Processing** 🔴 CRITICAL
+**Duration:** 3-4 days | **Priority:** Critical
+
+```java
+// Backend
+services/java/ivas/src/main/java/com/gradeloop/ivas/service/
+└── AudioProcessingService.java
+    - receiveAudioChunk()
+    - assembleAudioChunks()
+    - queueForTranscription()
+    - saveAudioRecording()
+
+// Frontend
+web/hooks/use-audio-recorder.ts
+    - startRecording()
+    - stopRecording()
+    - sendAudioChunk()
+```
+
+---
+
+### **STEP 5: Complete Session Flow** ⏳ HIGH
+**Duration:** 4-5 days | **Priority:** High
+
+```java
+services/java/ivas/src/main/java/com/gradeloop/ivas/service/
+
+1. QuestionManagementService.java
+   - selectNextQuestion()
+   - recordQuestionAsked()
+   - saveStudentResponse()
+
+2. GradingService.java
+   - calculateSessionScore()
+   - updateConceptMastery()
+   - generateResults()
+
+3. Enhanced VivaSessionService.java
+   - pauseSession()
+   - resumeSession()
+   - handleSessionTimeout()
+```
+
+---
+
+### **STEP 6: Integration Testing** ⏳ HIGH
+**Duration:** 3-4 days | **Priority:** High
+
+Test complete flow:
+1. Student starts session
+2. AI asks question (voice)
+3. Student responds (voice)
+4. Real-time transcription
+5. AI evaluates response
+6. AI asks next question
+7. Session completes with score
+
+---
+
+### **STEP 7: Production Deployment** ⏳ MEDIUM
+**Duration:** 2-3 days | **Priority:** Medium
+
+- Docker configuration
+- Environment variables
+- Kong API Gateway routes
+- Monitoring & logging
+
+---
+
+## 🔗 Module Dependencies
+
+### IVAS Needs Data From:
+
+| Service | Status | What IVAS Needs | Workaround |
+|---------|--------|----------------|------------|
+| **Auth Service** | ✅ Built (8081) | JWT validation | Already integrated |
+| **User Service** | ✅ Built (8082) | Student/instructor info | Need to create client |
+| **Institute Service** | ✅ Built (8083) | Assignment/course details | Need to create client |
+| **Submission Service** | ❌ Not built | Submitted code | Use template code snippets |
+
+### Solution for Missing Submission Service:
+Store code snippets directly in `VivaQuestionTemplate` table until submission service is ready.
+
+---
+
+## ✅ PHASE 1: Foundation (COMPLETED)
+
+### 1.1 Database Models ✅
+Created all 9 entities:
+- ✅ VivaConfiguration, VivaSession, VivaQuestion
+- ✅ VivaConcept, VivaRubric, VivaQuestionTemplate
+- ✅ VivaMisconception, VivaTranscript, VivaConceptMastery
+- ✅ All JPA repositories with custom queries
+
+### 1.2 Backend Services ✅
+Created 4 service classes:
+- ✅ VivaConfigurationService - CRUD for configurations
+- ✅ VivaRubricService - Manage rubrics & concepts
+- ✅ VivaDashboardService - Dashboard statistics
+- ✅ VivaSessionService - Basic session management
+
+### 1.3 REST Controllers ✅
+Created 4 controllers with basic endpoints:
+- ✅ VivaConfigurationController
+- ✅ VivaRubricController
+- ✅ VivaDashboardController
+- ✅ VivaSessionController
+
+### 1.4 DTOs & Security ✅
+- ✅ All request/response DTOs created
+- ✅ Security configuration with JWT
 
 #### 1.4 Frontend UI Components ✅
 **Student Pages:**
@@ -69,107 +247,180 @@
   - Navigation buttons
 - ✅ Results Page (`/student/.../viva/results/page.tsx`)
   - Score display
-  - Competency breakdown
-  - Transcript viewer
+### 1.5 Frontend UI ✅
+**Student Pages:**
+- ✅ Landing page with status display
+- ✅ Live session page with voice interface
+- ✅ Results page with scores & transcript
 
 **Student Components:**
-- ✅ `VivaStatusCard` - Status display
-- ✅ `StartVivaButton` - Session starter
-- ✅ `ConceptsTestedList` - Concepts overview
-- ✅ `SystemCheckWidget` - Microphone/camera check
-- ✅ `VoiceInterface` - Real-time voice UI
-- ✅ `QuestionDisplay` - Question renderer
-- ✅ `SessionSidebar` - History sidebar
-- ✅ `TopBar` - Timer & controls
-- ✅ `ControlBar` - Audio controls
+- ✅ All 9 React components created (VoiceInterface, QuestionDisplay, TopBar, etc.)
 
 **Instructor Pages:**
-- ✅ Dashboard (`/instructor/.../viva/page.tsx`)
-  - Statistics overview
-  - Session list
-  - Quick actions
-- ✅ Configuration (`/instructor/.../viva/configure/page.tsx`)
-  - Settings editor
-  - Trigger configuration
-- ✅ Rubric Editor (`/instructor/.../viva/rubric/page.tsx`)
-  - Concept management
-  - Question templates
-  - Misconception definitions
-- ✅ Session Review (`/instructor/.../viva/sessions/[sessionId]/page.tsx`)
-  - Student session details
-  - Transcript viewer
-  - Manual override options
-- ✅ Analytics (`/instructor/.../viva/analytics/page.tsx`)
-  - Performance charts
-  - Trend analysis
+- ✅ Dashboard with statistics
+- ✅ Configuration editor
+- ✅ Rubric editor
+- ✅ Session review page
+- ✅ Analytics page
+
+**Status:** Frontend fully designed and ready for backend integration
 
 ---
 
-## 🔥 PHASE 2: Core Backend Services [HIGH PRIORITY]
+## 🔴 PHASE 2: Service Integration (START HERE)
 
-### 2.1 Session Management Service 🚧 IN PROGRESS
-**Priority:** CRITICAL | **Estimated Time:** 3-4 days
+### Priority: CRITICAL | Duration: 2-3 days
 
-#### What to Build:
+**Goal:** Connect IVAS with User and Institute services
+
+### Files to Create:
+
+```
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── client/
+│   ├── user/
+│   │   ├── UserServiceClient.java          🔴 CREATE
+│   │   └── dto/
+│   │       ├── StudentDTO.java             🔴 CREATE
+│   │       └── InstructorDTO.java          🔴 CREATE
+│   └── institute/
+│       ├── InstituteServiceClient.java     🔴 CREATE
+│       └── dto/
+│           ├── AssignmentDTO.java          🔴 CREATE
+│           └── CourseDTO.java              🔴 CREATE
+└── config/
+    └── RestClientConfig.java               🔴 CREATE
+```
+
+### Implementation Steps:
+
+#### Step 1: Create REST Client Configuration
 ```java
-// services/java/ivas/src/main/java/com/gradeloop/ivas/service/VivaSessionService.java
-
-@Service
-public class VivaSessionService {
+// RestClientConfig.java
+@Configuration
+public class RestClientConfig {
+    @Value("${user.service.url}")
+    private String userServiceUrl;
     
-    // ✅ Basic session creation (likely exists)
-    public VivaSession createSession(Long assignmentId, Long studentId);
+    @Value("${institute.service.url}")
+    private String instituteServiceUrl;
     
-    // ⏳ TO IMPLEMENT:
-    public VivaSession startSession(Long sessionId);
-    public VivaSession endSession(Long sessionId);
-    public VivaSession pauseSession(Long sessionId);
-    public VivaSession resumeSession(Long sessionId);
-    public SessionResponse getSessionDetails(Long sessionId);
-    public void updateSessionStatus(Long sessionId, String status);
-    public boolean validateSessionEligibility(Long studentId, Long assignmentId);
-    public void handleSessionTimeout(Long sessionId);
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 }
 ```
 
-#### Implementation Steps:
-1. **Complete session lifecycle management**
-   - Implement start, pause, resume, end methods
-   - Add session state validation
-   - Implement timer logic
-   
-2. **Add session validation**
-   - Check student eligibility
-   - Validate attempt limits
-   - Check configuration requirements
-   
-3. **Implement auto-save**
-   - Periodic session state persistence
-   - Recovery mechanism for disconnections
+#### Step 2: Create UserServiceClient
+```java
+// UserServiceClient.java
+@Service
+public class UserServiceClient {
+    private final RestTemplate restTemplate;
+    private final String userServiceUrl;
+    
+    public StudentDTO getStudent(Long studentId) {
+        String url = userServiceUrl + "/api/v1/students/" + studentId;
+        return restTemplate.getForObject(url, StudentDTO.class);
+    }
+    
+    public InstructorDTO getInstructor(Long instructorId) {
+        String url = userServiceUrl + "/api/v1/instructors/" + instructorId;
+        return restTemplate.getForObject(url, InstructorDTO.class);
+    }
+}
+```
 
-#### API Endpoints to Complete:
-- ✅ `POST /api/v1/viva/sessions/start`
-- ⏳ `POST /api/v1/viva/sessions/{sessionId}/pause`
-- ⏳ `POST /api/v1/viva/sessions/{sessionId}/resume`
-- ⏳ `POST /api/v1/viva/sessions/{sessionId}/end`
-- ⏳ `GET /api/v1/viva/sessions/{sessionId}`
+#### Step 3: Create InstituteServiceClient
+```java
+// InstituteServiceClient.java
+@Service
+public class InstituteServiceClient {
+    private final RestTemplate restTemplate;
+    private final String instituteServiceUrl;
+    
+    public AssignmentDTO getAssignment(UUID assignmentId) {
+        String url = instituteServiceUrl + "/api/v1/assignments/" + assignmentId;
+        return restTemplate.getForObject(url, AssignmentDTO.class);
+    }
+    
+    public CourseDTO getCourse(UUID courseId) {
+        String url = instituteServiceUrl + "/api/v1/courses/" + courseId;
+        return restTemplate.getForObject(url, CourseDTO.class);
+    }
+}
+```
+
+#### Step 4: Update VivaSessionService
+```java
+// Add to VivaSessionService.java
+private final UserServiceClient userClient;
+private final InstituteServiceClient instituteClient;
+
+public VivaSession startSession(UUID assignmentId, Long studentId) {
+    // Fetch student details
+    StudentDTO student = userClient.getStudent(studentId);
+    
+    // Fetch assignment details
+    AssignmentDTO assignment = instituteClient.getAssignment(assignmentId);
+    
+    // Continue with session creation...
+}
+```
+
+#### Step 5: Update application.properties
+```properties
+user.service.url=http://localhost:8082
+institute.service.url=http://localhost:8083
+```
+
+**Testing:**
+1. Start User Service (port 8082)
+2. Start Institute Service (port 8083)
+3. Start IVAS Service (port 8084)
+4. Test session creation - should fetch student/assignment data
 
 ---
 
-### 2.2 WebSocket Handler [HIGH PRIORITY] 🚧
-**Priority:** CRITICAL | **Estimated Time:** 4-5 days
+## 🔴 PHASE 3: WebSocket Implementation
 
-#### What to Build:
+### Priority: CRITICAL | Duration: 4-5 days
+
+**Goal:** Enable real-time bidirectional communication for audio streaming
+
+### Files to Create:
+
+```
+services/java/ivas/src/main/java/com/gradeloop/ivas/
+├── websocket/
+│   ├── VivaWebSocketHandler.java          🔴 CREATE
+│   ├── WebSocketSessionManager.java       🔴 CREATE
+│   └── dto/
+│       ├── WebSocketMessage.java          🔴 CREATE
+│       └── MessageType.java               🔴 CREATE
+└── config/
+    └── WebSocketConfig.java               🔴 CREATE
+```
+
+### Implementation Steps:
+
+#### Step 1: Create WebSocket Configuration
 ```java
-// services/java/ivas/src/main/java/com/gradeloop/ivas/websocket/VivaWebSocketHandler.java
-
-@Component
-public class VivaWebSocketHandler extends TextWebSocketHandler {
+// WebSocketConfig.java
+@Configuration
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
+    
+    @Autowired
+    private VivaWebSocketHandler vivaWebSocketHandler;
     
     @Override
-    public void afterConnectionEstablished(WebSocketSession session);
-    
-    @Override
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        registry.addHandler(vivaWebSocketHandler, "/ws/viva/sessions/{sessionId}")
+                .setAllowedOrigins("*");
+    }
+}
     protected void handleTextMessage(WebSocketSession session, TextMessage message);
     
     @Override
@@ -1501,40 +1752,64 @@ NEXT_PUBLIC_WS_URL=ws://localhost:8080
 
 ---
 
-## 🎓 Learning Resources
+## 📚 Learning Resources
 
-- **WebSocket:** [Spring WebSocket Docs](https://spring.io/guides/gs/messaging-stomp-websocket/)
-- **Whisper:** [OpenAI Whisper GitHub](https://github.com/openai/whisper)
-- **FastAPI:** [FastAPI Docs](https://fastapi.tiangolo.com/)
-- **IRT:** [PyIRT Library](https://github.com/eribean/pyirt)
-- **Web Audio API:** [MDN Web Audio](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
-
----
-
-## ✨ Summary
-
-**What We Have:** 
-- Complete frontend UI ✅
-- Backend structure & basic APIs ✅
-- Database models ✅
-
-**What We Need:**
-- WebSocket for real-time communication 🔥
-- Python AI services (STT, TTS, NLP) 🔥
-- Audio processing pipeline 🔥
-- Complete integration 🔥
-
-**Estimated Time to MVP:** 15-20 days with focused development
-
-**Success Criteria:**
-1. Student can start a viva session
-2. AI asks questions via voice
-3. Student responds via microphone
-4. Transcription appears in real-time
-5. AI evaluates and asks next question
-6. Session completes with score
-7. Instructor can review results
+- [Spring WebSocket Docs](https://spring.io/guides/gs/messaging-stomp-websocket/)
+- [OpenAI Whisper GitHub](https://github.com/openai/whisper)
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+- [PyIRT Library](https://github.com/eribean/pyirt)
+- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 
 ---
 
-**Let's build an amazing IVAS system! 🚀**
+## Quick Reference Summary
+
+### ✅ What's Done
+1. ✅ **Database:** 9 models, all repositories
+2. ✅ **Backend:** 4 services, 4 controllers, all DTOs
+3. ✅ **Frontend:** All student & instructor pages + components
+4. ✅ **Security:** JWT integration with Auth service
+
+### 🔴 What's Next (Priority Order)
+1. **Service Integration** (Week 1) - Connect User & Institute services
+2. **WebSocket** (Week 2) - Real-time communication
+3. **Python AI Service** (Week 3-4) - STT, TTS, NLP, IRT
+4. **Audio Pipeline** (Week 4) - Audio processing
+5. **Complete Flow** (Week 5) - Question management & grading
+6. **Testing** (Week 6) - End-to-end testing
+
+### 🚀 How to Start Development
+
+```bash
+# 1. Start PostgreSQL
+cd infra/docker && docker compose up -d postgres
+
+# 2. Start existing services
+cd services/java/auth && ./mvnw spring-boot:run       # Port 8081
+cd services/java/user && ./mvnw spring-boot:run       # Port 8082
+cd services/java/institute && ./mvnw spring-boot:run  # Port 8083
+
+# 3. Start IVAS service
+cd services/java/ivas && ./mvnw spring-boot:run       # Port 8084
+
+# 4. Start frontend
+cd web && pnpm dev                                     # Port 3000
+```
+
+### 📊 MVP Success Criteria
+- [ ] Student starts session (fetches real data from services)
+- [ ] WebSocket connection works
+- [ ] AI asks question via voice (TTS)
+- [ ] Student responds via microphone
+- [ ] Real-time transcription appears (STT)
+- [ ] AI evaluates response (NLP with GPT-4)
+- [ ] AI selects next question adaptively (IRT)
+- [ ] Session completes with final score
+- [ ] Instructor reviews transcript & results
+
+**Timeline to MVP:** 5-6 weeks of focused work
+
+---
+
+**Last Updated:** January 6, 2026  
+**Status:** Foundation Complete ✅ | Ready for Phase 2 🚀
