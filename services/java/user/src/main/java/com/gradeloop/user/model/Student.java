@@ -27,5 +27,8 @@ public class Student {
     @Column(nullable = false)
     private String instituteId;
 
+    @Column(unique = true)
+    private String studentId;
+
     private Long authUserId;
 }

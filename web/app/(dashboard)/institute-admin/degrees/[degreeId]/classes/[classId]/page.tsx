@@ -119,11 +119,12 @@ export default function ClassDetailPage() {
 
     // CSV Mapping
     const mapCSVRow = (row: string[]): Partial<Person> | null => {
-        // Expected: Full Name, Email
+        // Expected: Full Name, Email, Student ID
         if (row.length < 2) return null;
         return {
             fullName: row[0],
             email: row[1],
+            studentId: row[2] || "",
             role: "student",
         };
     };
@@ -199,7 +200,7 @@ export default function ClassDetailPage() {
                 onImport={handleImportStudents}
                 onDownloadTemplate={() => peopleService.downloadTemplate("student")}
                 entityName="Students"
-                templateHeaders={["Full Name", "Email"]}
+                templateHeaders={["Full Name", "Email", "Student ID"]}
                 mapRow={mapCSVRow}
             />
         </div>

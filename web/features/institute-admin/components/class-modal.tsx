@@ -86,11 +86,12 @@ export function ClassModal({
 
     // CSV Mapping for Students
     const mapCSVRow = (row: string[]): Partial<Person> | null => {
-        // Expected: Full Name, Email
+        // Expected: Full Name, Email, Student ID
         if (row.length < 2) return null;
         return {
             fullName: row[0],
             email: row[1],
+            studentId: row[2] || "",
             role: "student"
         };
     };
@@ -160,7 +161,7 @@ export function ClassModal({
                 onImport={handleImportStudents}
                 onDownloadTemplate={handleDownloadTemplate}
                 entityName="Students"
-                templateHeaders={["Full Name", "Email"]}
+                templateHeaders={["Full Name", "Email", "Student ID"]}
                 mapRow={mapCSVRow}
             />
         </Dialog>

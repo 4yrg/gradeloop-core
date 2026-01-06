@@ -36,6 +36,7 @@ public class StudentService {
                     .fullName(existingStudent.getFullName())
                     .role("student")
                     .instituteId(existingStudent.getInstituteId())
+                    .studentId(existingStudent.getStudentId())
                     .build();
         }
 
@@ -44,6 +45,7 @@ public class StudentService {
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .instituteId(request.getInstituteId())
+                .studentId(request.getStudentId())
                 .build();
         student = studentRepository.save(student);
 
@@ -66,6 +68,7 @@ public class StudentService {
                 .fullName(student.getFullName())
                 .role("student")
                 .instituteId(student.getInstituteId())
+                .studentId(student.getStudentId())
                 .build();
     }
 
@@ -86,6 +89,7 @@ public class StudentService {
                             .fullName(existingStudent.getFullName())
                             .role("student")
                             .instituteId(existingStudent.getInstituteId())
+                            .studentId(existingStudent.getStudentId())
                             .build());
                     continue;
                 }
@@ -95,6 +99,7 @@ public class StudentService {
                         .email(req.getEmail())
                         .fullName(req.getFullName())
                         .instituteId(req.getInstituteId())
+                        .studentId(req.getStudentId())
                         .build();
                 student = studentRepository.save(student);
 
@@ -112,6 +117,7 @@ public class StudentService {
                             .fullName(student.getFullName())
                             .role("student")
                             .instituteId(student.getInstituteId())
+                            .studentId(student.getStudentId())
                             .build());
                 } catch (Exception e) {
                     // Rollback: Delete student if auth creation fails
@@ -139,6 +145,7 @@ public class StudentService {
                         .fullName(student.getFullName())
                         .role("student")
                         .instituteId(student.getInstituteId())
+                        .studentId(student.getStudentId())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -159,6 +166,7 @@ public class StudentService {
                 .email(student.getEmail())
                 .fullName(student.getFullName())
                 .instituteId(student.getInstituteId())
+                .studentId(student.getStudentId())
                 .build();
     }
 
@@ -179,6 +187,7 @@ public class StudentService {
                 .fullName(student.getFullName())
                 .role("student")
                 .instituteId(student.getInstituteId())
+                .studentId(student.getStudentId())
                 .build();
     }
 
@@ -191,6 +200,7 @@ public class StudentService {
                         .fullName(student.getFullName())
                         .role("student")
                         .instituteId(student.getInstituteId())
+                        .studentId(student.getStudentId())
                         .build())
                 .collect(Collectors.toList());
     }

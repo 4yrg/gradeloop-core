@@ -135,9 +135,16 @@ export function AddStudentModal({
                                                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                                 />
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium leading-none">
-                                                        {student.fullName}
-                                                    </p>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-sm font-medium leading-none">
+                                                            {student.fullName}
+                                                        </p>
+                                                        {student.studentId && (
+                                                            <span className="text-[10px] bg-secondary px-1 rounded text-secondary-foreground">
+                                                                {student.studentId}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         {student.email}
                                                     </p>

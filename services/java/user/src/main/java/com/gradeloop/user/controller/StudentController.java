@@ -30,7 +30,7 @@ public class StudentController {
 
     @GetMapping("/template")
     public ResponseEntity<String> getTemplate() {
-        String template = "fullName,email\nJohn Doe,john.student@example.com";
+        String template = "fullName,email,studentId\nJohn Doe,john.student@example.com,STU12345";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students_template.csv")
                 .header(HttpHeaders.CONTENT_TYPE, "text/csv")

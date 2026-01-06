@@ -108,6 +108,17 @@ export function PersonModal({
                         )}
                     </div>
 
+                    {selectedRole === "student" && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="studentId">Student ID</Label>
+                            <Input
+                                id="studentId"
+                                {...form.register("studentId")}
+                                placeholder="STU12345"
+                            />
+                        </div>
+                    )}
+
                     {selectedRole === "instructor" && (
                         <div className="grid gap-2">
                             <Label htmlFor="department">Department</Label>

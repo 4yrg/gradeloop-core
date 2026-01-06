@@ -18,5 +18,6 @@ public class CreateUserResponse {
     private String role;
     private String instituteId;
     private String department;
+    private String studentId;
     private String error; // For bulk error reporting
 }

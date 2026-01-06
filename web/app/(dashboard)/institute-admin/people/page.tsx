@@ -102,6 +102,7 @@ export default function PeoplePage() {
             return {
                 fullName: row[0],
                 email: row[1],
+                studentId: row[2] || "",
                 instituteId: instituteId,
                 role: "student"
             } as Person;
@@ -181,7 +182,7 @@ export default function PeoplePage() {
                 onImport={handleBulkImport}
                 entityName={activeTab === 'student' ? "Students" : "Instructors"}
                 templateHeaders={activeTab === 'student'
-                    ? ["Full Name", "Email"]
+                    ? ["Full Name", "Email", "Student ID"]
                     : ["Full Name", "Email", "Department"]
                 }
                 mapRow={mapCsvRowToPerson}
