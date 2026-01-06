@@ -19,6 +19,7 @@ redis==5.0.1
 # Utilities
 python-dotenv==1.0.0
 python-multipart==0.0.6
+requests==2.31.0
 
 # CORS
 python-jose[cryptography]==3.3.0
