@@ -1,35 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "../../../../components/ui/button";
 import { SemestersList } from "../../../../features/institute-admin/components/semesters-list";
 import { SemesterModal } from "../../../../features/institute-admin/components/semester-modal";
-import { semestersService } from "../../../../features/institute-admin/api/semesters-service";
 import { Semester } from "../../../../features/institute-admin/types";
+import {
+    useSemesters,
+    useCreateSemester,
+    useUpdateSemester,
+    useDeleteSemester,
+    useSetActiveSemester
+} from "../../../../features/institute-admin/hooks/use-semesters";
 
 export default function SemestersPage() {
-    const [semesters, setSemesters] = useState<Semester[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
 
-    useEffect(() => {
-        loadSemesters();
-    }, []);
+    // Data fetching
+    const { data: semesters = [], isLoading } = useSemesters();
 
-    const loadSemesters = async () => {
-        try {
-            setLoading(true);
-            const data = await semestersService.getSemesters();
-            // Sort by year descending, then term logic if needed
-            setSemesters(data.sort((a, b) => b.year - a.year));
-        } catch (error) {
-            console.error("Failed to load semesters", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Mutations
+    const createMutation = useCreateSemester();
+    const updateMutation = useUpdateSemester();
+    const deleteMutation = useDeleteSemester();
+    const setActiveMutation = useSetActiveSemester();
 
     const handleCreate = () => {
         setEditingSemester(null);
@@ -43,34 +40,55 @@ export default function SemestersPage() {
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this semester?")) {
-            await semestersService.deleteSemester(id);
-            setSemesters((prev) => prev.filter((s) => s.id !== id));
+            deleteMutation.mutate(id, {
+                onSuccess: () => {
+                    toast.success("Semester deleted successfully");
+                },
+                onError: (error) => {
+                    console.error("Failed to delete semester", error);
+                    toast.error("Failed to delete semester");
+                }
+            });
         }
     };
 
     const handleSetActive = async (id: string) => {
-        await semestersService.setActiveSemester(id);
-        // Optimistic update
-        setSemesters((prev) => prev.map(s => ({
-            ...s,
-            isActive: s.id === id
-        })));
+        setActiveMutation.mutate(id, {
+            onSuccess: () => {
+                toast.success("Semester activated successfully");
+            },
+            onError: (error) => {
+                console.error("Failed to activate semester", error);
+                toast.error("Failed to activate semester");
+            }
+        });
     };
 
     const handleSubmit = async (data: Semester) => {
-        try {
-            if (editingSemester && editingSemester.id) {
-                const updated = await semestersService.updateSemester(editingSemester.id, data);
-                setSemesters((prev) =>
-                    prev.map((s) => (s.id === updated.id ? updated : s))
-                );
-            } else {
-                const created = await semestersService.createSemester(data);
-                setSemesters((prev) => [created, ...prev]);
-            }
-            setIsModalOpen(false);
-        } catch (error) {
-            console.error("Failed to save semester", error);
+        if (editingSemester && editingSemester.id) {
+            updateMutation.mutate({ id: editingSemester.id, data }, {
+                onSuccess: () => {
+                    toast.success("Semester updated successfully");
+                    setIsModalOpen(false);
+                },
+                onError: (error) => {
+                    console.error("Failed to update semester", error);
+                    toast.error("Failed to update semester");
+                }
+            });
+        } else {
+            // Remove id for creation if present (though Omit in service handles typings, runtime object might have it if not careful)
+            const { id, ...createData } = data;
+            createMutation.mutate(createData, {
+                onSuccess: () => {
+                    toast.success("Semester created successfully");
+                    setIsModalOpen(false);
+                },
+                onError: (error) => {
+                    console.error("Failed to create semester", error);
+                    toast.error("Failed to create semester");
+                }
+            });
         }
     };
 
@@ -89,7 +107,7 @@ export default function SemestersPage() {
                 </Button>
             </div>
 
-            {loading ? (
+            {isLoading ? (
                 <div className="p-8 text-center text-muted-foreground">Loading semesters...</div>
             ) : (
                 <SemestersList

@@ -11,19 +11,33 @@ services:
     url: http://institute-service:5000
     routes:
       - name: institute-routes
+        strip_path: false
         paths:
           - /institutes
+          - /semesters
+          - /degrees
+          - /classes
+          - /courses
   - name: user-service
     url: http://user-service:5000
     routes:
       - name: user-routes
+        strip_path: false
         paths:
           - /users
+  - name: keystroke-service
+    url: http://keystroke-service:8003
+    routes:
+      - name: keystroke-routes
+        strip_path: false
+        paths:
+          - /api/keystroke
 plugins:
   - name: cors
     config:
       origins:
-        - "*"
+        - "http://localhost:3000"
+        - "http://localhost:3001"
       methods:
         - GET
         - POST
@@ -31,9 +45,18 @@ plugins:
         - PATCH
         - DELETE
         - OPTIONS
+        - HEAD
       headers:
-        - "*"
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - X-Auth-Token
+        - Authorization
       exposed_headers:
-        - "*"
+        - X-Auth-Token
       credentials: true
       max_age: 3600
+      preflight_continue: false

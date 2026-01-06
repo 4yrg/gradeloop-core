@@ -1,0 +1,76 @@
+# Keystroke Dynamics Authentication Service
+
+Behavioral biometrics microservice for continuous student authentication using keystroke dynamics.
+
+## Features
+
+- **User Enrollment**: Create behavioral biometric templates from typing patterns
+- **Verification**: Verify user identity based on typing patterns
+- **Identification**: Identify users from typing patterns (1:N matching)
+- **Continuous Monitoring**: Real-time session monitoring with risk assessment
+- **WebSocket Support**: Real-time updates for monitoring sessions
+
+## Technology Stack
+
+- **Framework**: FastAPI
+- **ML Model**: TypeNet (LSTM-based keystroke dynamics)
+- **Device**: CPU (can be configured for GPU)
+
+## API Endpoints
+
+### Health Check
+- `GET /health` - Service health status
+- `GET /` - Service information
+
+### Keystroke Authentication
+- `POST /api/keystroke/capture` - Capture keystroke events
+- `POST /api/keystroke/enroll` - Enroll a new user
+- `POST /api/keystroke/verify` - Verify user identity
+- `POST /api/keystroke/identify` - Identify user from typing pattern
+- `POST /api/keystroke/monitor` - Monitor active session
+- `GET /api/keystroke/session/status/{user_id}/{session_id}` - Get session status
+- `DELETE /api/keystroke/session/{user_id}/{session_id}` - End session
+- `GET /api/keystroke/users/enrolled` - List enrolled users
+
+### WebSocket
+- `WS /ws/monitor/{user_id}/{session_id}` - Real-time monitoring
+
+## Running Locally
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the service
+python main.py
+```
+
+The service will be available at `http://localhost:8080`
+
+## Running with Docker
+
+```bash
+# Build the image
+docker build -t keystroke-service .
+
+# Run the container
+docker run -p 8080:8080 keystroke-service
+```
+
+## Environment Variables
+
+- `PORT`: Service port (default: 8080)
+- `DEVICE`: Computing device - 'cpu' or 'cuda' (default: cpu)
+
+## Data Requirements
+
+- **Enrollment**: Minimum 150 keystrokes (2-3 typing sequences)
+- **Verification**: Minimum 70 keystrokes (1 sequence)
+- **Monitoring**: Continuous capture, analysis every 150 keystrokes
+
+## Model Information
+
+The service uses TypeNet, a pre-trained LSTM model for keystroke dynamics:
+- Input: Sequences of 70 keystrokes with 5 features each (HL, IL, PL, RL, KeyCode)
+- Output: 128-dimensional embedding for similarity comparison
+- Templates stored in `models/user_templates.pkl`

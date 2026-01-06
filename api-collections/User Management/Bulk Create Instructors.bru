@@ -1,0 +1,30 @@
+meta {
+  name: Bulk Create Instructors
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{GRADELOOP_API_URL}}/users/instructors/bulk
+  body: json
+  auth: none
+}
+
+body:json {
+  [
+    {
+      "firstName": "Albert",
+      "lastName": "Einstein",
+      "email": "albert.prof@example.com",
+      "instituteId": "inst-123",
+      "department": "Physics"
+    },
+    {
+      "firstName": "Isaac",
+      "lastName": "Newton",
+      "email": "isaac.prof@example.com",
+      "instituteId": "inst-123",
+      "department": "Mathematics"
+    }
+  ]
+}

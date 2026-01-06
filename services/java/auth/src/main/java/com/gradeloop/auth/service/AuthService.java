@@ -1,9 +1,13 @@
 package com.gradeloop.auth.service;
 
 import com.gradeloop.auth.dto.AuthResponse;
+import com.gradeloop.auth.dto.CreateUserRequest;
+import com.gradeloop.auth.dto.CreateUserResponse;
 import com.gradeloop.auth.dto.LoginRequest;
+import com.gradeloop.auth.model.PasswordResetToken;
 import com.gradeloop.auth.model.Role;
 import com.gradeloop.auth.model.User;
+import com.gradeloop.auth.repository.PasswordResetTokenRepository;
 import com.gradeloop.auth.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -24,7 +28,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    // private final EmailService emailService; // To be implemented
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         System.out.println("Login info - Attempting login for: " + request.getEmail());
@@ -71,8 +76,6 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-
-        // TODO: Send email with tempPassword
         System.out.println("Created Admin: " + email + ", Temp Password: " + tempPassword);
     }
 
@@ -93,5 +96,87 @@ public class AuthService {
         sb.append("Password Match (").append(rawPassword).append(" vs Hash): ").append(match).append("\n");
 
         return sb.toString();
+    }
+
+    public String forgotPassword(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            throw new RuntimeException("User not found with email: " + email);
+        }
+
+        // Generate token
+        String token = UUID.randomUUID().toString();
+        // Hash token
+        String tokenHash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(token);
+
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .tokenHash(tokenHash)
+                .user(user)
+                .expiryDate(java.time.LocalDateTime.now().plusMinutes(15))
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        emailService.sendResetLink(email, token);
+        return token;
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        String tokenHash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(token);
+
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired password reset token"));
+
+        if (resetToken.isUsed() || resetToken.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("Invalid or expired password reset token");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setTemporaryPassword(false); // Reset temp password flag if it was set
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+    }
+
+    public CreateUserResponse createInternalUser(CreateUserRequest request) {
+        java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            return CreateUserResponse.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .tempPassword(null)
+                    .build();
+        }
+
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(tempPassword))
+                .role(request.getRole())
+                .isTemporaryPassword(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        return CreateUserResponse.builder()
+                .userId(savedUser.getId())
+                .email(savedUser.getEmail())
+                .tempPassword(tempPassword)
+                .build();
+    }
+
+    public java.util.List<CreateUserResponse> createInternalUsersBulk(java.util.List<CreateUserRequest> requests) {
+        return requests.stream()
+                .map(this::createInternalUser)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
     }
 }
