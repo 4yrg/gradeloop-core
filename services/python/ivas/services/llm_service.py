@@ -39,7 +39,7 @@ class LLMService:
                 prompt=prompt,
                 options={
                     "temperature": temperature,
-                    "num_predict": 300,  # Limit response length
+                    "num_predict": 500,  # Increased for better responses
                 }
             )
             return response['response'].strip()
@@ -64,27 +64,37 @@ class LLMService:
         Returns:
             The first question text
         """
-        prompt = f"""You are conducting a voice-based viva (oral examination) assessment for a programming assignment.
+        prompt = f"""You are an expert computer science educator conducting a viva voce (oral examination) to assess a student's CONCEPTUAL UNDERSTANDING, not their ability to read code.
 
 Assignment: {assignment_title}
 Description: {assignment_description}
 
-Student's Code:
-```
-{student_code}
-```
+The student has submitted code for this assignment. Your job is to test if they truly understand the underlying concepts.
 
-Generate ONE clear, simple question to start the viva. The question should:
-- Test understanding of the main concept or algorithm
-- Be open-ended but focused
-- Be suitable for verbal response
-- Not be too complex (this is question 1 of 5)
+Generate ONE question that tests CONCEPTUAL understanding. The question should:
+- Test understanding of the underlying algorithm/data structure concepts (e.g., "Why do AVL trees need balancing?", "What problem does this solve?")
+- NOT ask them to explain their specific code line by line
+- Be answerable by someone who understands the concept even without seeing the code
+- Be clear and suitable for a verbal response
+- Start simple (this is question 1 of 5)
+
+Good examples:
+- "What is the main advantage of using an AVL tree over a regular binary search tree?"
+- "Can you explain what 'balance factor' means in the context of self-balancing trees?"
+- "Why is O(log n) time complexity important for search operations?"
+
+Bad examples (DO NOT ask these):
+- "Can you explain what your insert function does?"
+- "Walk me through your code line by line"
+- "What does line 15 of your code do?"
 
 Return ONLY the question text, nothing else."""
 
         question = self._call_ollama(prompt, temperature=0.7)
         # Clean up any markdown or extra formatting
         question = question.replace("**", "").replace("Question:", "").strip()
+        # Remove any quotes that might wrap the question
+        question = question.strip('"\'')
         return question
     
     def generate_next_question(
@@ -111,26 +121,40 @@ Return ONLY the question text, nothing else."""
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Assessment: {entry.understanding_level} (Score: {entry.score}/100)\n"
         
-        prompt = f"""You are conducting a viva assessment. Here's the conversation so far:
+        prompt = f"""You are an expert computer science educator conducting a viva voce examination.
 
+Previous conversation:
 {history_text}
 
 Latest Answer: {current_answer}
 
-This is question {question_number} of 5. Based on the student's understanding shown so far:
-- If they answered well with good understanding, ask a DEEPER or more ADVANCED question
-- If they struggled or showed gaps, ask a SIMPLER or CLARIFYING question
-- Adapt the difficulty to their demonstrated level
+This is question {question_number} of 5. Generate the next CONCEPTUAL question.
 
-Generate the next question. Return ONLY the question text, nothing else."""
+Rules:
+1. Test understanding of CONCEPTS, not code reading ability
+2. Adapt difficulty based on previous performance:
+   - If student showed good understanding (score >= 70): Ask deeper conceptual questions (time complexity analysis, trade-offs, edge cases, comparisons with alternatives)
+   - If student struggled (score < 50): Ask simpler foundational questions to identify gaps
+3. DO NOT ask them to explain code line by line
+4. DO NOT repeat similar questions
+
+Question progression examples:
+- Q1: Basic concept ("What is an AVL tree?")
+- Q2: Purpose/advantage ("Why use it over alternatives?")
+- Q3: Core mechanism ("How does balancing work conceptually?")
+- Q4: Analysis ("What's the time complexity and why?")
+- Q5: Application/edge cases ("When would you choose this over a hash table?")
+
+Return ONLY the question text, nothing else."""
 
         question = self._call_ollama(prompt, temperature=0.7)
         question = question.replace("**", "").replace(f"Question {question_number}:", "").strip()
+        question = question.strip('"\'')
         return question
     
     def assess_answer(self, question: str, answer: str) -> Dict[str, any]:
         """
-        Assess a student's answer to a question
+        Assess a student's answer to a question with STRICT scoring
         
         Args:
             question: The question that was asked
@@ -139,42 +163,75 @@ Generate the next question. Return ONLY the question text, nothing else."""
         Returns:
             Dictionary with 'understanding_level' and 'score'
         """
-        prompt = f"""You are assessing a student's answer in a viva examination.
+        prompt = f"""You are a STRICT examiner assessing a student's verbal answer in an oral examination.
 
-Question: {question}
+Question Asked: {question}
 
-Student's Answer: {answer}
+Student's Answer: "{answer}"
 
-Evaluate the answer and provide:
-1. Understanding level: Choose ONE of: excellent, good, partial, minimal, none
-2. Score: A number from 0 to 100
+IMPORTANT SCORING RULES - BE STRICT:
 
-Criteria:
-- excellent (90-100): Comprehensive, accurate, demonstrates deep understanding
-- good (70-89): Mostly correct, shows solid understanding with minor gaps
-- partial (50-69): Some correct elements but significant gaps or misconceptions
-- minimal (25-49): Very limited understanding, mostly incorrect
-- none (0-24): Completely off-topic or no meaningful content
+1. First, check if the answer is VALID:
+   - Is it on-topic and attempts to answer the question?
+   - Is it in appropriate academic language?
+   - Does it contain actual technical content?
 
-Format your response EXACTLY as:
+2. If the answer is INVALID (off-topic, inappropriate, nonsense, or refuses to answer), score it as:
+   LEVEL: none
+   SCORE: 0
+
+3. If the answer is valid, score based on ACCURACY and DEPTH:
+   - excellent (85-100): Comprehensive, accurate, shows deep understanding with examples or nuance
+   - good (65-84): Mostly correct, demonstrates solid understanding, minor gaps acceptable
+   - partial (40-64): Some correct elements but missing key concepts or has misconceptions
+   - minimal (15-39): Very limited correct content, major gaps or errors
+   - none (0-14): Completely wrong, irrelevant, inappropriate, or empty
+
+CRITICAL: 
+- An answer like "I don't know" = SCORE: 5
+- An answer with profanity or refusing to engage = SCORE: 0
+- An answer that mentions some keywords but is vague = SCORE: 20-40
+- Only give 80+ for genuinely good explanations with accurate content
+
+Analyze the answer carefully, then respond EXACTLY in this format:
+ANALYSIS: [1-2 sentence analysis of the answer quality]
 LEVEL: [level]
 SCORE: [number]"""
 
-        response = self._call_ollama(prompt, temperature=0.3)
+        response = self._call_ollama(prompt, temperature=0.2)  # Lower temperature for consistent scoring
         
         # Parse the response
         level_match = re.search(r'LEVEL:\s*(\w+)', response, re.IGNORECASE)
         score_match = re.search(r'SCORE:\s*(\d+)', response, re.IGNORECASE)
         
-        understanding_level = level_match.group(1).lower() if level_match else "partial"
-        score = int(score_match.group(1)) if score_match else 50
+        understanding_level = level_match.group(1).lower() if level_match else "none"
+        score = int(score_match.group(1)) if score_match else 0
         
         # Ensure valid values
         valid_levels = ["excellent", "good", "partial", "minimal", "none"]
         if understanding_level not in valid_levels:
-            understanding_level = "partial"
+            understanding_level = "none"
         
         score = max(0, min(100, score))  # Clamp between 0-100
+        
+        # Additional validation: check for obviously bad answers
+        answer_lower = answer.lower().strip()
+        bad_indicators = [
+            "i don't know", "idk", "no idea", "fuck", "shit", "100%", 
+            "give me", "i want", "pass me", "just give", "whatever"
+        ]
+        
+        if any(indicator in answer_lower for indicator in bad_indicators):
+            # Override with low score if LLM was too lenient
+            if score > 20:
+                score = min(score, 15)
+                understanding_level = "none"
+        
+        # Check for very short non-answers
+        if len(answer.split()) < 5:
+            score = min(score, 25)
+            if understanding_level in ["excellent", "good"]:
+                understanding_level = "minimal"
         
         return {
             "understanding_level": understanding_level,
@@ -209,61 +266,56 @@ SCORE: [number]"""
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Score: {entry.score}/100 ({entry.understanding_level})\n"
         
-        prompt = f"""You are completing a viva assessment report.
+        prompt = f"""You are completing a viva voce assessment report for a student.
 
 Assignment: {assignment_title}
-Average Score: {avg_score}/100
+Calculated Average Score: {avg_score}/100
 
-Complete Conversation:
+Complete Viva Conversation:
 {history_text}
 
-Based on this viva assessment, generate a comprehensive report with:
+Based on the student's responses during this oral examination, generate an honest assessment report.
 
-1. COMPETENCY LEVEL: Choose ONE of: EXPERT, ADVANCED, INTERMEDIATE, BEGINNER
-   - EXPERT (90-100): Exceptional understanding, insightful responses
-   - ADVANCED (75-89): Strong grasp with minor gaps
-   - INTERMEDIATE (50-74): Moderate understanding with notable gaps
-   - BEGINNER (0-49): Limited understanding, needs significant improvement
+COMPETENCY LEVEL (based on average score):
+- EXPERT (85-100): Exceptional understanding demonstrated
+- ADVANCED (65-84): Strong grasp of concepts
+- INTERMEDIATE (40-64): Moderate understanding with gaps
+- BEGINNER (0-39): Limited understanding, needs improvement
 
-2. STRENGTHS: List 2-3 specific strengths with evidence from their answers
-
-3. WEAKNESSES: List 2-3 specific weaknesses or areas for improvement
-
-4. RECOMMENDATIONS: List 2-3 actionable recommendations for improvement
+Be HONEST and SPECIFIC in your assessment. If the student gave poor or inappropriate answers, reflect that clearly.
 
 Format your response EXACTLY as:
-COMPETENCY: [level]
+COMPETENCY: [EXPERT/ADVANCED/INTERMEDIATE/BEGINNER]
 STRENGTHS:
-- [strength 1]
-- [strength 2]
-- [strength 3]
+- [specific strength based on their answers, or "Limited engagement with questions" if applicable]
+- [another strength or "N/A"]
 WEAKNESSES:
-- [weakness 1]
-- [weakness 2]
-- [weakness 3]
+- [specific weakness based on their answers]
+- [another weakness]
 RECOMMENDATIONS:
-- [recommendation 1]
-- [recommendation 2]
-- [recommendation 3]"""
+- [actionable recommendation]
+- [another recommendation]"""
 
         response = self._call_ollama(prompt, temperature=0.3)
         
         # Parse the response
         competency_match = re.search(r'COMPETENCY:\s*(\w+)', response, re.IGNORECASE)
-        competency = competency_match.group(1).upper() if competency_match else "INTERMEDIATE"
+        competency = competency_match.group(1).upper() if competency_match else "BEGINNER"
         
-        # Validate competency level
+        # Validate and override competency based on actual score
         valid_levels = ["EXPERT", "ADVANCED", "INTERMEDIATE", "BEGINNER"]
         if competency not in valid_levels:
-            # Infer from score
-            if avg_score >= 90:
-                competency = "EXPERT"
-            elif avg_score >= 75:
-                competency = "ADVANCED"
-            elif avg_score >= 50:
-                competency = "INTERMEDIATE"
-            else:
-                competency = "BEGINNER"
+            competency = "BEGINNER"
+        
+        # Force competency to match score ranges (don't let LLM be too generous)
+        if avg_score >= 85:
+            competency = "EXPERT"
+        elif avg_score >= 65:
+            competency = "ADVANCED"
+        elif avg_score >= 40:
+            competency = "INTERMEDIATE"
+        else:
+            competency = "BEGINNER"
         
         # Extract lists
         def extract_list(section_name: str, text: str) -> List[str]:
@@ -279,13 +331,24 @@ RECOMMENDATIONS:
         weaknesses = extract_list("WEAKNESSES", response)
         recommendations = extract_list("RECOMMENDATIONS", response)
         
-        # Ensure we have at least some content
+        # Ensure we have content, with honest defaults for poor performance
         if not strengths:
-            strengths = ["Completed the viva assessment"]
+            if avg_score >= 50:
+                strengths = ["Participated in the viva assessment"]
+            else:
+                strengths = ["Completed the assessment process"]
+                
         if not weaknesses:
-            weaknesses = ["Areas for improvement to be discussed"]
+            if avg_score < 50:
+                weaknesses = ["Did not demonstrate understanding of core concepts", "Responses lacked technical depth"]
+            else:
+                weaknesses = ["Some areas need further review"]
+                
         if not recommendations:
-            recommendations = ["Review course materials and practice more problems"]
+            if avg_score < 50:
+                recommendations = ["Review fundamental concepts thoroughly", "Practice explaining technical concepts verbally", "Seek help from instructors or tutors"]
+            else:
+                recommendations = ["Continue practicing and deepening understanding"]
         
         return {
             "session_id": "",  # Will be filled by caller
