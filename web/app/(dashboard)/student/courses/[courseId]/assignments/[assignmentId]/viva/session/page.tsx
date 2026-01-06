@@ -73,7 +73,6 @@ export default function VivaSessionPage({
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    ivas.endSession();
                     return 0;
                 }
                 return prev - 1;
@@ -83,13 +82,18 @@ export default function VivaSessionPage({
         return () => clearInterval(timer);
     }, [sessionStarted, ivas.state]);
 
-    // Auto-start session on mount
+    // End session when time runs out
     useEffect(() => {
-        if (!sessionStarted && ivas.state === 'idle') {
-            setSessionStarted(true);
-            ivas.startSession();
+        if (timeLeft === 0 && ivas.state !== 'ended') {
+            ivas.endSession();
         }
-    }, [sessionStarted, ivas.state, ivas.startSession]);
+    }, [timeLeft, ivas.state, ivas.endSession]);
+
+    // Handle starting the session (requires user interaction for audio)
+    const handleStartSession = useCallback(() => {
+        setSessionStarted(true);
+        ivas.startSession();
+    }, [ivas]);
 
     // Handle end session
     const handleEndSession = useCallback(() => {
@@ -115,6 +119,37 @@ export default function VivaSessionPage({
             }
         }
     }, [audioCapture, ivas]);
+
+    // Idle state - show start button (required for browser audio autoplay policy)
+    if (ivas.state === 'idle' && !sessionStarted) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background">
+                <div className="text-center space-y-6">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold">Viva Session</h1>
+                        <p className="text-muted-foreground">AI-Powered Concept Assessment</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-6 max-w-md space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            You will be asked conceptual questions about your code.
+                            The AI will assess your understanding through a voice conversation.
+                        </p>
+                        <ul className="text-sm text-left space-y-2 text-muted-foreground">
+                            <li>• Duration: ~10 minutes</li>
+                            <li>• Questions: 5-7 conceptual questions</li>
+                            <li>• Microphone required</li>
+                        </ul>
+                    </div>
+                    <button
+                        onClick={handleStartSession}
+                        className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors text-lg"
+                    >
+                        Start Viva Session
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     // Loading state
     if (ivas.state === 'connecting') {
@@ -204,7 +239,7 @@ export default function VivaSessionPage({
                 </div>
 
                 {/* Sidebar */}
-                <SessionSidebar 
+                <SessionSidebar
                     history={ivas.conversationHistory}
                     assessment={ivas.finalAssessment}
                     isProcessing={ivas.state === 'processing'}

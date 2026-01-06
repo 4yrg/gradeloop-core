@@ -18,7 +18,7 @@ import type {
 // Types
 // =============================================================================
 
-export type SessionState = 
+export type SessionState =
   | 'idle'           // Not started
   | 'connecting'     // Connecting to WebSocket
   | 'ready'          // Connected, waiting for interaction
@@ -115,13 +115,14 @@ export function useIvas(options: UseIvasOptions = {}) {
    */
   const startSession = useCallback(async (sessionId?: string) => {
     const sid = sessionId || `viva-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     setState(prev => ({ ...prev, state: 'connecting', sessionId: sid, error: null }));
 
     const callbacks: IvasWSCallbacks = {
       onConnected: (data: WSConnectionEstablished) => {
         console.log('[useIvas] Connected:', data);
-        setState(prev => ({ ...prev, state: 'ready' }));
+        // Set to ai_speaking since initial question is sent immediately after connection
+        setState(prev => ({ ...prev, state: 'ai_speaking' }));
       },
 
       onAIResponse: (response: string) => {
@@ -199,7 +200,7 @@ export function useIvas(options: UseIvasOptions = {}) {
     ws.connect(sid, callbacks, {
       studentId,
       assignmentId,
-      code: encodeURIComponent(code),
+      code,  // Don't double-encode - IvasWebSocket builds URL with query params
       topic,
     });
   }, [code, topic, studentId, assignmentId, onSessionEnd, onError, state.state]);
@@ -269,7 +270,9 @@ export function useIvas(options: UseIvasOptions = {}) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
-      const audioBlob = new Blob([byteArray], { type: 'audio/wav' });
+
+      // Edge TTS outputs MP3 - use directly (smaller and faster)
+      const audioBlob = new Blob([byteArray], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
 
       // Create and play audio
@@ -281,7 +284,7 @@ export function useIvas(options: UseIvasOptions = {}) {
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         setState(prev => ({ ...prev, isAudioPlaying: false, state: 'ready' }));
-        
+
         // Play next in queue
         const next = audioQueueRef.current.shift();
         if (next) {

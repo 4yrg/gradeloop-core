@@ -266,11 +266,9 @@ class TTSService:
             
             audio_bytes = audio_data.getvalue()
             
-            # Convert MP3 to WAV for consistent output format
-            wav_bytes = self._mp3_to_wav(audio_bytes)
-            
-            logger.info(f"TTS synthesis complete: {len(wav_bytes)} bytes")
-            return wav_bytes
+            # Edge TTS outputs MP3 - return directly (smaller and faster than WAV)
+            logger.info(f"TTS synthesis complete: {len(audio_bytes)} bytes (MP3)")
+            return audio_bytes
             
         except Exception as e:
             logger.error(f"TTS synthesis failed: {e}")

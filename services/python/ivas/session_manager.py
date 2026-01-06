@@ -10,6 +10,7 @@ import asyncio
 import logging
 import json
 import base64
+import urllib.parse
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -47,7 +48,7 @@ class VivaSession:
     status: str = "active"  # active, paused, completed, error
     current_question: Optional[str] = None
     assessment_scores: List[Dict[str, Any]] = field(default_factory=list)
-    audio_buffer: bytes = b""
+    audio_chunks: List[bytes] = field(default_factory=list)  # Store chunks as list to preserve WebM structure
     
     def add_turn(self, speaker: str, text: str, audio_duration: float = None):
         """Add a conversation turn"""
@@ -126,11 +127,13 @@ class SessionManager:
             session.status = "active"
             logger.info(f"Resumed session: {session_id}")
         else:
+            # Decode URL-encoded code parameter
+            decoded_code = urllib.parse.unquote(code) if code else ""
             session = VivaSession(
                 session_id=session_id,
                 student_id=student_id,
                 assignment_id=assignment_id,
-                code=code,
+                code=decoded_code,
                 topic=topic,
                 websocket=websocket
             )
@@ -239,17 +242,18 @@ class SessionManager:
         })
     
     def add_audio_chunk(self, session_id: str, audio_bytes: bytes):
-        """Add audio chunk to session buffer"""
+        """Add audio chunk to session buffer (stored as list for WebM format)"""
         session = self.active_sessions.get(session_id)
         if session:
-            session.audio_buffer += audio_bytes
+            session.audio_chunks.append(audio_bytes)
     
     def get_and_clear_audio_buffer(self, session_id: str) -> bytes:
-        """Get accumulated audio and clear buffer"""
+        """Get accumulated audio chunks joined together and clear buffer"""
         session = self.active_sessions.get(session_id)
         if session:
-            audio = session.audio_buffer
-            session.audio_buffer = b""
+            # Join all chunks - for WebM, chunks are already properly structured
+            audio = b"".join(session.audio_chunks)
+            session.audio_chunks = []
             return audio
         return b""
     
