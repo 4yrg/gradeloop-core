@@ -7,7 +7,7 @@ export default function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     // Define public routes (allowlist)
-    const publicRoutes = ['/', '/login', '/forgot-password', '/reset-password']
+    const publicRoutes = ['/', '/login', '/forgot-password', '/reset-password', '/enroll', '/recognize'] // Add other public routes as needed
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
 
     // 1. Redirect unauthenticated users trying to access protected pages (non-public) to login
