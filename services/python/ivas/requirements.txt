@@ -10,3 +10,7 @@ python-dotenv>=1.0.0
 # ASR - Automatic Speech Recognition (Step 5)
 openai-whisper
 numpy>=1.24.0
+
+# TTS - Text-to-Speech (Step 6)
+edge-tts
+pydub
