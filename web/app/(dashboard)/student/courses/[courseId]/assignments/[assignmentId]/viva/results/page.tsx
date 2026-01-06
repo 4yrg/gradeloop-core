@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {
     ArrowLeft,
@@ -22,17 +22,51 @@ import {
     Mic,
     PlayCircle
 } from "lucide-react";
-import { Button } from "../../../../../../../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../../../../components/ui/card";
-import { Badge } from "../../../../../../../../../components/ui/badge";
-import { Separator } from "../../../../../../../../../components/ui/separator";
-import { Progress } from "../../../../../../../../../components/ui/progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../../../../../../components/ui/collapsible";
-import { Input } from "../../../../../../../../../components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
-import { useState } from "react";
+import type { FinalAssessment } from "@/types/ivas";
 
-// Mock data for the results
+// Helper to convert IVAS FinalAssessment to display format
+function mapIvasToResults(assessment: FinalAssessment) {
+    const getGrade = (score: number) => {
+        if (score >= 90) return "A";
+        if (score >= 80) return "B+";
+        if (score >= 70) return "B";
+        if (score >= 60) return "C+";
+        if (score >= 50) return "C";
+        return "F";
+    };
+
+    return {
+        overallScore: assessment.overallScore,
+        grade: getGrade(assessment.overallScore),
+        competencyLevel: assessment.competencyLevel?.replace('_', ' ') || "Unknown",
+        passFail: assessment.overallScore >= 50 ? "Pass" : "Fail",
+        assessmentDate: new Date().toISOString(),
+        conceptMastery: assessment.strengths?.map((s, i) => ({
+            concept: s.substring(0, 30) + (s.length > 30 ? '...' : ''),
+            score: Math.max(70, assessment.overallScore - (i * 5)),
+            mastery: Math.max(60, assessment.overallScore - (i * 10)),
+        })) || [],
+        strengths: assessment.strengths || [],
+        weaknesses: assessment.weaknesses || [],
+        misconceptions: assessment.misconceptions?.map(m => ({
+            misconception: m,
+            explanation: "Review this concept for better understanding",
+            resource: "Check course materials"
+        })) || [],
+        transcript: [], // Would need to be passed separately
+        instructorFeedback: assessment.fullAnalysis || ""
+    };
+}
+
+// Mock data for fallback
 const mockResults = {
     overallScore: 85,
     grade: "B+",
@@ -346,6 +380,24 @@ export default function VivaResultsPage({
     params: Promise<{ courseId: string; assignmentId: string }>
 }) {
     const { courseId, assignmentId } = use(params);
+    const [results, setResults] = useState(mockResults);
+    const [isFromSession, setIsFromSession] = useState(false);
+
+    // Check for real assessment data from completed session
+    useEffect(() => {
+        const stored = sessionStorage.getItem(`viva-result-${assignmentId}`);
+        if (stored) {
+            try {
+                const assessment = JSON.parse(stored) as FinalAssessment;
+                setResults(mapIvasToResults(assessment));
+                setIsFromSession(true);
+                // Clear after loading
+                sessionStorage.removeItem(`viva-result-${assignmentId}`);
+            } catch (e) {
+                console.error('Failed to parse stored assessment:', e);
+            }
+        }
+    }, [assignmentId]);
 
     return (
         <div className="flex flex-col gap-8 pb-20 max-w-6xl mx-auto w-full px-4 pt-6">
@@ -360,7 +412,11 @@ export default function VivaResultsPage({
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Assessment Results</h1>
-                        <p className="text-muted-foreground">Detailed breakdown of your viva performance</p>
+                        <p className="text-muted-foreground">
+                            {isFromSession 
+                                ? "Your viva session has been completed" 
+                                : "Detailed breakdown of your viva performance"}
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm">
@@ -405,28 +461,28 @@ export default function VivaResultsPage({
             </Card>
 
             {/* Results Header */}
-            <ResultsHeader results={mockResults} />
+            <ResultsHeader results={results} />
 
             {/* Concept Mastery Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ConceptMasteryChart data={mockResults.conceptMastery} />
-                <ConceptMasteryGrid data={mockResults.conceptMastery} />
+                <ConceptMasteryChart data={results.conceptMastery} />
+                <ConceptMasteryGrid data={results.conceptMastery} />
             </div>
 
             {/* Strengths and Weaknesses */}
-            <StrengthsWeaknessesList strengths={mockResults.strengths} weaknesses={mockResults.weaknesses} />
+            <StrengthsWeaknessesList strengths={results.strengths} weaknesses={results.weaknesses} />
 
             {/* Misconceptions */}
-            {mockResults.misconceptions.length > 0 && (
-                <MisconceptionsCard misconceptions={mockResults.misconceptions} />
+            {results.misconceptions.length > 0 && (
+                <MisconceptionsCard misconceptions={results.misconceptions} />
             )}
 
             {/* Conversation Transcript */}
-            <TranscriptViewer transcript={mockResults.transcript} />
+            <TranscriptViewer transcript={results.transcript} />
 
             {/* Instructor Feedback */}
-            {mockResults.instructorFeedback && (
-                <FeedbackSection feedback={mockResults.instructorFeedback} />
+            {results.instructorFeedback && (
+                <FeedbackSection feedback={results.instructorFeedback} />
             )}
 
             {/* Action Items */}

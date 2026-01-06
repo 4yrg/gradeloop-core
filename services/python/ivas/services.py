@@ -85,17 +85,44 @@ class ASRService:
             }
         
         # Save audio to temp file (whisper requires file path)
+        # Use .webm extension since frontend sends WebM/Opus encoded audio
         temp_file = None
+        wav_file = None
         try:
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            # First save as webm (the actual format from browser)
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
             temp_file.write(audio_bytes)
             temp_file.close()
+            
+            # Convert to wav using ffmpeg for better compatibility
+            wav_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            wav_file.close()
+            
+            import subprocess
+            try:
+                result = subprocess.run([
+                    'ffmpeg', '-y', '-i', temp_file.name,
+                    '-ar', '16000',  # 16kHz sample rate for speech recognition
+                    '-ac', '1',      # Mono audio
+                    '-f', 'wav',
+                    wav_file.name
+                ], capture_output=True, text=True, timeout=30)
+                
+                if result.returncode != 0:
+                    logger.warning(f"FFmpeg conversion warning: {result.stderr[:500]}")
+                    # Try using original file if conversion fails
+                    audio_file_path = temp_file.name
+                else:
+                    audio_file_path = wav_file.name
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                logger.warning(f"FFmpeg not available or timed out: {e}, using original file")
+                audio_file_path = temp_file.name
             
             logger.info(f"Transcribing {len(audio_bytes)} bytes of audio...")
             
             # Perform transcription using openai-whisper
             result = self.model.transcribe(
-                temp_file.name,
+                audio_file_path,
                 language=language,
                 fp16=False,  # Use FP32 for CPU compatibility
             )
@@ -130,9 +157,11 @@ class ASRService:
             logger.error(f"Transcription failed: {e}")
             raise RuntimeError(f"Transcription failed: {e}")
         finally:
-            # Clean up temp file
+            # Clean up temp files
             if temp_file and os.path.exists(temp_file.name):
                 os.unlink(temp_file.name)
+            if wav_file and os.path.exists(wav_file.name):
+                os.unlink(wav_file.name)
     
     @property
     def is_available(self) -> bool:

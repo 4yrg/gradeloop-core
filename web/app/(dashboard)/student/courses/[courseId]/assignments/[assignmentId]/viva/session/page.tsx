@@ -1,13 +1,28 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { TopBar } from "../../../../../../../../../components/student/viva/session/TopBar";
-import { QuestionDisplay } from "../../../../../../../../../components/student/viva/session/QuestionDisplay";
-import { VoiceInterface } from "../../../../../../../../../components/student/viva/session/VoiceInterface";
-import { ControlBar } from "../../../../../../../../../components/student/viva/session/ControlBar";
-import { SessionSidebar } from "../../../../../../../../../components/student/viva/session/SessionSidebar";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../../../../../../../../components/ui/resizable";
+import { TopBar } from "@/components/student/viva/session/TopBar";
+import { QuestionDisplay } from "@/components/student/viva/session/QuestionDisplay";
+import { VoiceInterface } from "@/components/student/viva/session/VoiceInterface";
+import { ControlBar } from "@/components/student/viva/session/ControlBar";
+import { SessionSidebar } from "@/components/student/viva/session/SessionSidebar";
+import { useIvas } from "@/hooks/use-ivas";
+import { useAudioCapture } from "@/hooks/use-audio-capture";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, AlertCircle, Wifi, WifiOff } from "lucide-react";
+
+// Mock code for now - in real app, this would come from the assignment
+const MOCK_CODE = `
+def fibonacci(n):
+    """Calculate the nth Fibonacci number."""
+    if n <= 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+`;
 
 export default function VivaSessionPage({
     params
@@ -17,92 +32,139 @@ export default function VivaSessionPage({
     const { courseId, assignmentId } = use(params);
     const router = useRouter();
 
-    // State
-    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-    const [isUserSpeaking, setIsUserSpeaking] = useState(false);
-    const [transcription, setTranscription] = useState("");
+    // Session duration (10 minutes)
+    const [timeLeft, setTimeLeft] = useState(600);
+    const [sessionStarted, setSessionStarted] = useState(false);
 
-    // Mock Data
-    const questions = [
-        {
-            text: "Explain how you would balance this AVL tree after inserting the node 15.",
-            code: "      20\n     /  \\\n   10    30\n  /  \\\n 5    12\n       \\ \n        15 (Inserted)",
-            concepts: ["AVL Trees", "Rotations"]
+    // IVAS Hook - connects to WebSocket and manages session
+    const ivas = useIvas({
+        code: MOCK_CODE,
+        topic: "Recursion and Data Structures",
+        studentId: "current-user", // TODO: Get from auth
+        assignmentId: assignmentId,
+        onSessionEnd: (assessment) => {
+            console.log("Session ended with assessment:", assessment);
+            // Store assessment in session storage for results page
+            sessionStorage.setItem(`viva-result-${assignmentId}`, JSON.stringify(assessment));
+            router.push(`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`);
         },
-        {
-            text: "What is the worst-case time complexity of this function?",
-            code: "function search(root, key) {\n  if (!root || root.key === key) return root;\n  return search(root.key < key ? root.right : root.left, key);\n}",
-            concepts: ["Big O", "Recursion"]
+        onError: (error) => {
+            console.error("IVAS Error:", error);
         },
-        {
-            text: "Describe the memory implications of using a recursive approach here.",
-            concepts: ["Stack Memory", "Space Complexity"]
-        }
-    ];
+    });
 
-    // Timer Logic
+    // Audio Capture Hook
+    const audioCapture = useAudioCapture({
+        onAudioChunk: (chunk) => {
+            // Convert ArrayBuffer to base64 and send
+            const base64 = arrayBufferToBase64(chunk);
+            ivas.sendAudioChunk(base64);
+        },
+        onStop: (blob) => {
+            console.log("Recording stopped, blob size:", blob.size);
+        },
+    });
+
+    // Timer Effect
     useEffect(() => {
+        if (!sessionStarted || ivas.state === 'ended') return;
+
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
+                    ivas.endSession();
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
+
         return () => clearInterval(timer);
-    }, []);
+    }, [sessionStarted, ivas.state]);
 
-    // Simulation of interaction loop (Mock)
+    // Auto-start session on mount
     useEffect(() => {
-        // Start with AI speaking
-        if (currentQuestionIndex === 0 && timeLeft === 599) {
-            setIsAiSpeaking(true);
-            setTimeout(() => setIsAiSpeaking(false), 3000);
+        if (!sessionStarted && ivas.state === 'idle') {
+            setSessionStarted(true);
+            ivas.startSession();
         }
-    }, [currentQuestionIndex, timeLeft]);
+    }, [sessionStarted, ivas.state, ivas.startSession]);
 
-    const handleEndSession = () => {
-        router.push(`/student/courses/${courseId}/assignments/${assignmentId}/viva/results`);
-    };
+    // Handle end session
+    const handleEndSession = useCallback(() => {
+        if (audioCapture.isRecording) {
+            audioCapture.stopRecording();
+        }
+        ivas.endSession();
+    }, [audioCapture, ivas]);
 
-    const handleNextQuestion = () => {
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-            setTranscription("");
-            // Simulate AI asking new question
-            setIsAiSpeaking(true);
-            setTimeout(() => setIsAiSpeaking(false), 2000);
+    // Handle microphone toggle
+    const handleToggleMic = useCallback(async () => {
+        if (audioCapture.isRecording) {
+            audioCapture.stopRecording();
+            ivas.stopSpeaking();
         } else {
-            handleEndSession();
-        }
-    };
-
-    // Keyboard shortcut for Next (Dev only)
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowRight' && e.shiftKey) {
-                handleNextQuestion();
+            // Request permission if needed
+            if (audioCapture.hasPermission === null) {
+                await audioCapture.requestPermission();
             }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentQuestionIndex]);
+            if (audioCapture.hasPermission !== false) {
+                ivas.startSpeaking();
+                audioCapture.startRecording();
+            }
+        }
+    }, [audioCapture, ivas]);
 
+    // Loading state
+    if (ivas.state === 'connecting') {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg text-muted-foreground">Connecting to IVAS...</p>
+                <p className="text-sm text-muted-foreground mt-2">Setting up your viva session</p>
+            </div>
+        );
+    }
+
+    // Error state
+    if (ivas.state === 'error' && ivas.error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background p-4">
+                <Alert variant="destructive" className="max-w-md">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        <p className="font-medium">Connection Error</p>
+                        <p className="text-sm mt-1">{ivas.error}</p>
+                        <button
+                            onClick={() => ivas.startSession()}
+                            className="mt-4 text-sm underline"
+                        >
+                            Try Again
+                        </button>
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
             {/* Top Bar */}
             <TopBar
                 timeLeft={timeLeft}
-                currentQuestionIndex={currentQuestionIndex}
-                totalQuestions={questions.length}
+                currentQuestionIndex={ivas.questionNumber}
+                totalQuestions={5} // Estimated
                 onEndSession={handleEndSession}
             />
+
+            {/* Connection Status Banner */}
+            {!ivas.isConnected && ivas.state !== 'idle' && ivas.state !== 'ended' && (
+                <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 flex items-center justify-center gap-2 text-yellow-600 dark:text-yellow-400">
+                    <WifiOff className="h-4 w-4" />
+                    <span className="text-sm">Connection lost. Attempting to reconnect...</span>
+                </div>
+            )}
 
             {/* Main Content Area */}
             <div className="flex-1 flex overflow-hidden">
@@ -112,32 +174,52 @@ export default function VivaSessionPage({
                         {/* Question Zone */}
                         <div className="flex-1 flex items-center">
                             <QuestionDisplay
-                                question={questions[currentQuestionIndex].text}
-                                codeSnippet={questions[currentQuestionIndex].code}
-                                concepts={questions[currentQuestionIndex].concepts}
+                                question={ivas.currentQuestion || "Preparing your first question..."}
+                                codeSnippet={MOCK_CODE}
+                                concepts={["Recursion", "Data Structures"]}
                             />
                         </div>
 
                         {/* Interactive Zone */}
                         <div className="w-full">
                             <VoiceInterface
-                                isAiSpeaking={isAiSpeaking}
-                                isUserSpeaking={isUserSpeaking}
-                                transcription={transcription}
+                                isAiSpeaking={ivas.state === 'ai_speaking' || ivas.isAudioPlaying}
+                                isUserSpeaking={audioCapture.isRecording}
+                                transcription={ivas.userTranscript || ""}
+                                audioLevel={audioCapture.audioLevel}
                             />
                         </div>
                     </div>
 
                     {/* Controls */}
                     <ControlBar
-                        isMuted={isMuted}
-                        onToggleMute={() => setIsMuted(!isMuted)}
+                        isMuted={!audioCapture.isRecording}
+                        onToggleMute={handleToggleMic}
+                        isProcessing={ivas.state === 'processing'}
+                        isAiSpeaking={ivas.state === 'ai_speaking' || ivas.isAudioPlaying}
+                        isRecording={audioCapture.isRecording}
+                        audioLevel={audioCapture.audioLevel}
+                        onEndSession={handleEndSession}
                     />
                 </div>
 
-                {/* Sidebar (Collapsible in real app, static for now as per design) */}
-                <SessionSidebar history={[]} />
+                {/* Sidebar */}
+                <SessionSidebar 
+                    history={ivas.conversationHistory}
+                    assessment={ivas.finalAssessment}
+                    isProcessing={ivas.state === 'processing'}
+                />
             </div>
         </div>
     );
+}
+
+// Helper function
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
