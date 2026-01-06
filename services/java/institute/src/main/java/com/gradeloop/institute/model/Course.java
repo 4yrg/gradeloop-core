@@ -41,10 +41,33 @@ public class Course {
     @ElementCollection
     @CollectionTable(name = "course_instructors", joinColumns = @JoinColumn(name = "course_id"))
     @Column(name = "instructor_id")
+    @Builder.Default
     private List<Long> instructorIds = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "course_classrooms", joinColumns = @JoinColumn(name = "course_id"))
     @Column(name = "classroom_id")
+    @Builder.Default
     private List<UUID> classroomIds = new ArrayList<>();
+
+    // Audit Fields
+    @Column(updatable = false)
+    private Long createdBy;
+
+    @Column(updatable = false, nullable = false)
+    private java.time.LocalDateTime createdAt;
+
+    private Long updatedBy;
+
+    private java.time.LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = java.time.LocalDateTime.now();
+    }
 }

@@ -5,7 +5,7 @@ import { Person } from "../types";
 export const usePeople = (role?: string) => {
     return useQuery({
         queryKey: ["people", role],
-        queryFn: () => peopleService.getUsers(role),
+        queryFn: () => peopleService.getPeople(role),
     });
 };
 
@@ -22,8 +22,8 @@ export const useCreatePerson = () => {
 export const useUpdatePerson = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: Partial<Person> }) =>
-            peopleService.updatePerson(id, data),
+        mutationFn: ({ id, role, data }: { id: string; role: string; data: Partial<Person> }) =>
+            peopleService.updatePerson(id, role, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["people"] });
         },
@@ -33,7 +33,19 @@ export const useUpdatePerson = () => {
 export const useDeletePerson = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: peopleService.deletePerson,
+        mutationFn: ({ id, role }: { id: string; role: string }) =>
+            peopleService.deletePerson(id, role),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["people"] });
+        },
+    });
+};
+
+export const useBulkCreatePeople = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ role, data }: { role: string; data: any[] }) =>
+            peopleService.bulkCreatePeople(role, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["people"] });
         },

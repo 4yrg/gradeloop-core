@@ -26,9 +26,10 @@ public class InstituteService {
     private final InstituteRepository instituteRepository;
     private final InstituteAdminRepository instituteAdminRepository;
     private final AuthServiceClient authServiceClient;
+    private final com.gradeloop.institute.client.UserServiceClient userServiceClient;
 
     @Transactional
-    public Institute createInstitute(CreateInstituteRequest request) {
+    public Institute createInstitute(CreateInstituteRequest request, Long createdBy) {
         if (instituteRepository.existsByCode(request.getCode())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Institute with code " + request.getCode() + " already exists");
@@ -39,6 +40,7 @@ public class InstituteService {
                 .code(request.getCode())
                 .domain(request.getDomain())
                 .contactEmail(request.getContactEmail())
+                .createdBy(createdBy)
                 .build();
 
         Institute savedInstitute = instituteRepository.save(institute);
@@ -49,9 +51,21 @@ public class InstituteService {
                 CreateAuthUserResponse authUser = authServiceClient.createInstituteAdmin(adminReq.getEmail(),
                         adminReq.getName());
 
+                // Create institute admin entry in user-service
+                try {
+                    userServiceClient.createInstituteAdmin(
+                            adminReq.getEmail(),
+                            adminReq.getName(),
+                            savedInstitute.getId().toString(),
+                            authUser.getAuthUserId(),
+                            adminReq.getRole() != null ? adminReq.getRole().toString() : "OWNER");
+                } catch (Exception e) {
+                    System.err.println("Failed to create institute admin in user-service: " + e.getMessage());
+                }
+
                 return InstituteAdmin.builder()
                         .institute(savedInstitute)
-                        .userId(authUser.getUserId())
+                        .userId(authUser.getAuthUserId())
                         .role(adminReq.getRole() != null ? adminReq.getRole() : InstituteAdminRole.OWNER)
                         .build();
             }).collect(Collectors.toList());
@@ -120,5 +134,12 @@ public class InstituteService {
 
         // Delete the institute (cascade will handle institute_admins)
         instituteRepository.deleteById(id);
+    }
+
+    public Institute getInstituteByUserId(Long userId) {
+        InstituteAdmin admin = instituteAdminRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No institute found for user ID: " + userId));
+        return admin.getInstitute();
     }
 }

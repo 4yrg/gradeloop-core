@@ -1,5 +1,6 @@
 package com.gradeloop.institute.controller;
 
+import com.gradeloop.institute.dto.CourseResponse;
 import com.gradeloop.institute.dto.CreateSemesterRequest;
 import com.gradeloop.institute.dto.SemesterResponse;
 import com.gradeloop.institute.dto.UpdateSemesterRequest;
@@ -54,5 +55,24 @@ public class SemesterController {
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<SemesterResponse> deactivateSemester(@PathVariable UUID id) {
         return ResponseEntity.ok(semesterService.deactivateSemester(id));
+    }
+
+    @PostMapping("/{id}/courses/{courseId}")
+    public ResponseEntity<Void> addCourseToSemester(@PathVariable UUID id, @PathVariable UUID courseId) {
+        semesterService.addCourseToSemester(id, courseId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/courses/{courseId}")
+    public ResponseEntity<Void> removeCourseFromSemester(@PathVariable UUID id, @PathVariable UUID courseId) {
+        semesterService.removeCourseFromSemester(id, courseId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/courses")
+    public ResponseEntity<List<CourseResponse>> getCoursesForSemester(@PathVariable UUID id) {
+        return ResponseEntity.ok(semesterService.getCoursesForSemester(id).stream()
+                .map(CourseResponse::fromEntity)
+                .collect(java.util.stream.Collectors.toList()));
     }
 }

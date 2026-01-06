@@ -35,7 +35,6 @@ export function DegreeModal({
             name: "",
             code: "",
             description: "",
-            requiredCredits: 0,
         },
     });
 
@@ -81,15 +80,17 @@ export function DegreeModal({
                             )}
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="credits">Credits</Label>
+                            <Label htmlFor="credits">Credits *</Label>
                             <Input
                                 id="credits"
                                 type="number"
-                                {...form.register("requiredCredits", { valueAsNumber: true })}
+                                min="1"
+                                required
+                                {...form.register("credits", { valueAsNumber: true })}
                                 placeholder="120"
                             />
-                            {form.formState.errors.requiredCredits && (
-                                <p className="text-sm text-red-500">{form.formState.errors.requiredCredits.message}</p>
+                            {form.formState.errors.credits && (
+                                <p className="text-sm text-red-500">{form.formState.errors.credits.message}</p>
                             )}
                         </div>
                     </div>

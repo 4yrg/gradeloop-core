@@ -6,27 +6,38 @@ import { toast } from "sonner";
 import { Button } from "../../../../components/ui/button";
 import { SemestersList } from "../../../../features/institute-admin/components/semesters-list";
 import { SemesterModal } from "../../../../features/institute-admin/components/semester-modal";
+import { ManageCoursesDialog } from "../../../../features/institute-admin/components/manage-courses-dialog";
 import { Semester } from "../../../../features/institute-admin/types";
 import {
     useSemesters,
     useCreateSemester,
     useUpdateSemester,
     useDeleteSemester,
-    useSetActiveSemester
+    useSetActiveSemester,
+    useSemesterCourses,
+    useAddCourseToSemester,
+    useRemoveCourseFromSemester
 } from "../../../../features/institute-admin/hooks/use-semesters";
+import { useCourses } from "../../../../features/institute-admin/hooks/use-courses";
 
 export default function SemestersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isManageCoursesOpen, setIsManageCoursesOpen] = useState(false);
     const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
+    const [managingSemester, setManagingSemester] = useState<Semester | null>(null);
 
     // Data fetching
     const { data: semesters = [], isLoading } = useSemesters();
+    const { data: courses = [] } = useCourses();
+    const { data: semesterCourses = [] } = useSemesterCourses(managingSemester?.id || null);
 
     // Mutations
     const createMutation = useCreateSemester();
     const updateMutation = useUpdateSemester();
     const deleteMutation = useDeleteSemester();
     const setActiveMutation = useSetActiveSemester();
+    const addCourseMutation = useAddCourseToSemester();
+    const removeCourseMutation = useRemoveCourseFromSemester();
 
     const handleCreate = () => {
         setEditingSemester(null);
@@ -77,7 +88,6 @@ export default function SemestersPage() {
                 }
             });
         } else {
-            // Remove id for creation if present (though Omit in service handles typings, runtime object might have it if not careful)
             const { id, ...createData } = data;
             createMutation.mutate(createData, {
                 onSuccess: () => {
@@ -89,6 +99,31 @@ export default function SemestersPage() {
                     toast.error("Failed to create semester");
                 }
             });
+        }
+    };
+
+    const handleManageCourses = (semester: Semester) => {
+        setManagingSemester(semester);
+        setIsManageCoursesOpen(true);
+    };
+
+    const handleSaveCourses = async (selectedIds: string[]) => {
+        if (!managingSemester || !managingSemester.id) return;
+
+        const currentIds = semesterCourses.map((c: any) => c.id);
+        const toAdd = selectedIds.filter(id => !currentIds.includes(id));
+        const toRemove = currentIds.filter((id: string) => !selectedIds.includes(id) && id);
+
+        try {
+            await Promise.all([
+                ...toAdd.map(id => addCourseMutation.mutateAsync({ semesterId: managingSemester.id!, courseId: id })),
+                ...toRemove.map(id => removeCourseMutation.mutateAsync({ semesterId: managingSemester.id!, courseId: id! }))
+            ]);
+            toast.success("Courses updated successfully");
+            setIsManageCoursesOpen(false);
+        } catch (error) {
+            console.error("Failed to update courses", error);
+            toast.error("Failed to update courses");
         }
     };
 
@@ -115,6 +150,7 @@ export default function SemestersPage() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onSetActive={handleSetActive}
+                    onManageCourses={handleManageCourses}
                 />
             )}
 
@@ -125,6 +161,17 @@ export default function SemestersPage() {
                 initialData={editingSemester}
                 key={editingSemester ? editingSemester.id : "new"}
             />
+
+            {managingSemester && (
+                <ManageCoursesDialog
+                    open={isManageCoursesOpen}
+                    onOpenChange={setIsManageCoursesOpen}
+                    title={`Manage Courses for ${managingSemester.name}`}
+                    availableCourses={courses}
+                    initialSelectedIds={semesterCourses.map((c: any) => c.id || "")}
+                    onSave={handleSaveCourses}
+                />
+            )}
         </div>
     );
 }

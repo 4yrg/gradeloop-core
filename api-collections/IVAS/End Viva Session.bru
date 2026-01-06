@@ -1,0 +1,41 @@
+meta {
+  name: End Viva Session
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{IVAS_BASE_URL}}/api/v1/viva/sessions/{{SESSION_ID}}/end
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+vars:pre-request {
+  IVAS_BASE_URL: http://localhost:8084
+}
+
+docs {
+  # End Viva Session
+  
+  Manually ends a viva session. Triggers final assessment generation.
+  
+  ## Path Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | sessionId | string | UUID of the viva session |
+  
+  ## Expected Response (200 OK)
+  ```json
+  {
+    "sessionId": "uuid",
+    "status": "COMPLETED",
+    "endedAt": "2026-01-06T10:15:00Z",
+    "score": 85,
+    "competencyLevel": "INTERMEDIATE"
+  }
+  ```
+}

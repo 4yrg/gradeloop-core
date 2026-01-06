@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.gradeloop.auth.client.InstituteAdminResponse;
+
 import java.util.UUID;
 
 @Service
@@ -30,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final com.gradeloop.auth.client.UserServiceClient userServiceClient;
 
     public AuthResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         System.out.println("Login info - Attempting login for: " + request.getEmail());
@@ -45,11 +48,51 @@ public class AuthService {
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
             System.out.println("Login info - User found with role: " + user.getRole());
 
+            // Fetch user profile from user-service if userDbId exists
+            String fullName = null;
+            String instituteId = null;
+
+            // For institute admins, fetch institute ID from user-service
+            if (user.getRole() == Role.INSTITUTE_ADMIN) {
+                try {
+                    InstituteAdminResponse adminInfo = userServiceClient
+                            .getInstituteAdminByAuthUserId(user.getId());
+                    instituteId = adminInfo.getInstituteId();
+                    fullName = adminInfo.getFullName();
+                    session.setAttribute("instituteId", instituteId);
+                    System.out.println("Login info - Institute admin logged in. Institute ID: " + instituteId);
+                } catch (Exception e) {
+                    System.out.println("Warning: Failed to fetch institute admin info: " + e.getMessage());
+                }
+            }
+
+            // Fetch user profile from user-service if userDbId exists (for other roles)
+            if (user.getUserDbId() != null && user.getRole() != Role.INSTITUTE_ADMIN) {
+                try {
+                    com.gradeloop.auth.client.UserProfileResponse profile = userServiceClient
+                            .getUserProfile(user.getUserDbId());
+                    fullName = profile.getFullName();
+                    instituteId = profile.getInstituteId();
+                } catch (Exception e) {
+                    System.out.println("Warning: Failed to fetch user profile: " + e.getMessage());
+                    // Continue without profile data
+                }
+            }
+
+            // Store institute ID in session if available
+            if (instituteId != null) {
+                session.setAttribute("instituteId", instituteId);
+            }
+
             return AuthResponse.builder()
                     .message("Login successful")
                     .role(user.getRole().name())
                     .token(session.getId())
                     .email(user.getEmail())
+                    .forceReset(user.isTemporaryPassword())
+                    .name(fullName)
+                    .userId(user.getUserDbId())
+                    .instituteId(instituteId)
                     .build();
         } catch (Exception e) {
             System.out.println("Login info - Authentication failed: " + e.getMessage());
@@ -71,12 +114,18 @@ public class AuthService {
         User user = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(tempPassword))
+                .tempPassword(tempPassword)
                 .role(Role.SYSTEM_ADMIN)
                 .isTemporaryPassword(true)
                 .build();
 
         userRepository.save(user);
-        System.out.println("Created Admin: " + email + ", Temp Password: " + tempPassword);
+        userRepository.save(user);
+
+        String token = generateResetToken(user);
+        emailService.sendWelcomeLink(email, token);
+
+        System.out.println("Created Admin: " + email + ". Sent Welcome Link.");
     }
 
     public String debugVerify(String email, String rawPassword) {
@@ -142,14 +191,36 @@ public class AuthService {
         passwordResetTokenRepository.save(resetToken);
     }
 
+    private String generateResetToken(User user) {
+        // Generate token
+        String token = UUID.randomUUID().toString();
+        // Hash token
+        String tokenHash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(token);
+
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .tokenHash(tokenHash)
+                .user(user)
+                .expiryDate(java.time.LocalDateTime.now().plusHours(24)) // 24 hours for welcome/reset
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+        return token;
+    }
+
+    public void sendWelcomeReset(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        String token = generateResetToken(user);
+        emailService.sendWelcomeLink(email, token);
+    }
+
     public CreateUserResponse createInternalUser(CreateUserRequest request) {
         java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             return CreateUserResponse.builder()
-                    .userId(user.getId())
+                    .authUserId(user.getId())
                     .email(user.getEmail())
-                    .tempPassword(null)
                     .build();
         }
 
@@ -158,15 +229,19 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(tempPassword))
                 .role(request.getRole())
+                .userDbId(request.getUserDbId())
+                .tempPassword(tempPassword)
                 .isTemporaryPassword(true)
                 .build();
 
         User savedUser = userRepository.save(user);
 
+        String token = generateResetToken(savedUser);
+        emailService.sendWelcomeLink(savedUser.getEmail(), token);
+
         return CreateUserResponse.builder()
-                .userId(savedUser.getId())
+                .authUserId(savedUser.getId())
                 .email(savedUser.getEmail())
-                .tempPassword(tempPassword)
                 .build();
     }
 
@@ -176,7 +251,69 @@ public class AuthService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    public void changePassword(String currentPassword, String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        System.out.println("Change Password Request for: " + email);
+        System.out.println(
+                "Authentication Class: " + (authentication != null ? authentication.getClass().getName() : "null"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    System.out.println("User not found for email: " + email);
+                    return new RuntimeException("User not found");
+                });
+
+        // If user has a temporary password, we allow changing it without verifying the
+        // current one again
+        // (Assuming they are authenticated, which they are to reach here)
+        // If NOT temporary, we strictly require current password
+        if (!user.isTemporaryPassword()) {
+            if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword())) {
+                System.out.println("Password mismatch or missing for user: " + email);
+                throw new RuntimeException("Invalid current password");
+            }
+        }
+        // If isTemporaryPassword is true, we allow ignoring currentPassword
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setTemporaryPassword(false);
+        user.setTempPassword(null); // Clear plain temp password
+        userRepository.save(user);
+        System.out.println("Password changed successfully for: " + email);
+    }
+
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    public com.gradeloop.auth.client.UserProfileResponse getUserProfile(Long userDbId) {
+        return userServiceClient.getUserProfile(userDbId);
+    }
+
+    public java.util.Map<String, Object> getUserWithInstituteByEmail(String email) {
+        User user = getUserByEmail(email);
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole().name());
+
+        // If user is an institute admin, fetch their institute ID from user-service
+        if (user.getRole() == Role.INSTITUTE_ADMIN) {
+            try {
+                InstituteAdminResponse adminInfo = userServiceClient
+                        .getInstituteAdminByAuthUserId(user.getId());
+                response.put("instituteId", adminInfo.getInstituteId());
+            } catch (Exception e) {
+                System.out.println("Warning: Failed to fetch institute ID: " + e.getMessage());
+            }
+        }
+
+        return response;
     }
 }

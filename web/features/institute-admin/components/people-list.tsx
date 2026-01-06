@@ -40,7 +40,9 @@ export function PeopleList({ data, onEdit, onDelete }: PeopleListProps) {
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Role</TableHead>
-                        <TableHead>Student ID</TableHead>
+                        <TableHead>
+                            {data.some(p => p.role === 'instructor') ? 'Department' : 'Student ID'}
+                        </TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -55,7 +57,7 @@ export function PeopleList({ data, onEdit, onDelete }: PeopleListProps) {
                         data.map((person) => (
                             <TableRow key={person.id}>
                                 <TableCell className="font-medium">
-                                    {person.lastName}, {person.firstName}
+                                    {person.fullName}
                                 </TableCell>
                                 <TableCell>{person.email}</TableCell>
                                 <TableCell>
@@ -64,7 +66,7 @@ export function PeopleList({ data, onEdit, onDelete }: PeopleListProps) {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    {person.studentId || "-"}
+                                    {person.role === 'student' ? (person.studentId || "-") : (person.department || "-")}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">

@@ -6,10 +6,13 @@ import { ArrowLeft, UserPlus, Upload, Settings } from "lucide-react";
 import { Button } from "../../../../../../../components/ui/button";
 import { Separator } from "../../../../../../../components/ui/separator";
 import { classesService } from "../../../../../../../features/institute-admin/api/classes-service";
+import { peopleService } from "../../../../../../../features/institute-admin/api/people.api";
 import { ClassGroup, Person } from "../../../../../../../features/institute-admin/types";
 import { StudentListTable } from "../../../../../../../features/institute-admin/components/student-list-table";
 import { AddStudentModal } from "../../../../../../../features/institute-admin/components/add-student-modal";
 import { BulkImportModal } from "../../../../../../../features/institute-admin/components/bulk-import-modal";
+import { useUser } from "../../../../../../../hooks/use-user";
+import { toast } from "sonner";
 
 export default function ClassDetailPage() {
     const params = useParams();
@@ -61,7 +64,8 @@ export default function ClassDetailPage() {
 
     const handleAddStudents = async (studentIds: string[]) => {
         try {
-            await classesService.addStudentsToClass(classId, studentIds);
+            const numericIds = studentIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+            await classesService.addStudentsToClass(classId, numericIds);
             loadData();
             setIsAddModalOpen(false);
         } catch (error) {
@@ -69,13 +73,39 @@ export default function ClassDetailPage() {
         }
     };
 
+    const { user } = useUser();
     const handleImportStudents = async (data: Partial<Person>[]) => {
+        if (!user?.instituteId) {
+            toast.error("User not found");
+            return;
+        }
+
         try {
-            await classesService.importStudents(classId, data);
+            // 1. Bulk create students (backend handles existence check)
+            const studentsToCreate = data.map(s => ({
+                ...s,
+                instituteId: user.instituteId,
+                role: "student" as const
+            }));
+
+            const createdResults = await peopleService.bulkCreatePeople("student", studentsToCreate);
+            const studentIds = createdResults
+                .filter(res => res.id)
+                .map(res => Number(res.id));
+
+            if (studentIds.length > 0) {
+                // 2. Assign to class
+                await classesService.addStudentsToClass(classId, studentIds);
+                toast.success(`Successfully imported ${studentIds.length} students`);
+            } else {
+                toast.info("No new students were added");
+            }
+
             loadData();
             setIsImportModalOpen(false);
         } catch (error) {
             console.error("Failed to import students", error);
+            toast.error("Failed to import students");
         }
     };
 
@@ -89,13 +119,12 @@ export default function ClassDetailPage() {
 
     // CSV Mapping
     const mapCSVRow = (row: string[]): Partial<Person> | null => {
-        // Expected: Student ID, First Name, Last Name, Email
-        if (row.length < 4) return null;
+        // Expected: Full Name, Email, Student ID
+        if (row.length < 2) return null;
         return {
-            studentId: row[0],
-            firstName: row[1],
-            lastName: row[2],
-            email: row[3],
+            fullName: row[0],
+            email: row[1],
+            studentId: row[2] || "",
             role: "student",
         };
     };
@@ -169,8 +198,9 @@ export default function ClassDetailPage() {
                 open={isImportModalOpen}
                 onOpenChange={setIsImportModalOpen}
                 onImport={handleImportStudents}
+                onDownloadTemplate={() => peopleService.downloadTemplate("student")}
                 entityName="Students"
-                templateHeaders={["Student ID", "First Name", "Last Name", "Email"]}
+                templateHeaders={["Full Name", "Email", "Student ID"]}
                 mapRow={mapCSVRow}
             />
         </div>

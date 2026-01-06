@@ -1,0 +1,64 @@
+meta {
+  name: List Assignment Sessions
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{IVAS_BASE_URL}}/api/v1/viva/assignments/{{ASSIGNMENT_ID}}/sessions?page=0&size=20&status=
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 20
+  status: 
+}
+
+auth:bearer {
+  token: {{ACCESS_TOKEN}}
+}
+
+vars:pre-request {
+  IVAS_BASE_URL: http://localhost:8084
+}
+
+docs {
+  # List Assignment Sessions
+  
+  Retrieves all viva sessions for a specific assignment with pagination.
+  
+  ## Path Parameters
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | assignmentId | string | UUID of the assignment |
+  
+  ## Query Parameters
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | page | int | 0 | Page number (0-indexed) |
+  | size | int | 20 | Number of items per page |
+  | status | string | - | Filter by status: NOT_STARTED, IN_PROGRESS, COMPLETED, ABANDONED |
+  
+  ## Expected Response (200 OK)
+  ```json
+  {
+    "content": [
+      {
+        "sessionId": "uuid",
+        "studentId": "uuid",
+        "status": "COMPLETED",
+        "score": 85,
+        "competencyLevel": "INTERMEDIATE",
+        "startedAt": "2026-01-06T10:00:00Z",
+        "endedAt": "2026-01-06T10:15:00Z"
+      }
+    ],
+    "totalElements": 45,
+    "totalPages": 3,
+    "number": 0,
+    "size": 20
+  }
+  ```
+}
