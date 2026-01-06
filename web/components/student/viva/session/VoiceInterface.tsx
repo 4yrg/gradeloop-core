@@ -37,7 +37,7 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
                 setIsTyping(false);
                 clearInterval(interval);
             }
-        }, 30); // 30ms per character
+        }, 50); // 50ms per character for slower typing
 
         return () => clearInterval(interval);
     }, [currentQuestion]);
