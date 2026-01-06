@@ -25,6 +25,7 @@ export type SessionState =
   | 'ai_speaking'    // AI is asking question / responding
   | 'user_speaking'  // User is answering
   | 'processing'     // Processing user's answer
+  | 'ending'         // Session is ending (waiting for final assessment)
   | 'ended'          // Session completed
   | 'error';         // Error state
 
@@ -210,6 +211,7 @@ export function useIvas(options: UseIvasOptions = {}) {
    */
   const endSession = useCallback(() => {
     if (wsRef.current?.isConnected) {
+      setState(prev => ({ ...prev, state: 'ending' }));
       wsRef.current.endSession();
     }
   }, []);

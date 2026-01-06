@@ -174,6 +174,17 @@ export default function VivaSessionPage({
         );
     }
 
+    // Ending session state
+    if (ivas.state === 'ending') {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg text-muted-foreground">Ending viva session...</p>
+                <p className="text-sm text-muted-foreground mt-2">Generating your final assessment</p>
+            </div>
+        );
+    }
+
     // Error state
     if (ivas.state === 'error' && ivas.error) {
         return (
@@ -203,6 +214,7 @@ export default function VivaSessionPage({
                 currentQuestionIndex={ivas.questionNumber}
                 totalQuestions={5} // Estimated
                 onEndSession={handleEndSession}
+                isEnding={ivas.state === 'ending'}
             />
 
             {/* Connection Status Banner */}
@@ -247,6 +259,7 @@ export default function VivaSessionPage({
                         isRecording={audioCapture.isRecording}
                         audioLevel={audioCapture.audioLevel}
                         onEndSession={handleEndSession}
+                        isEnding={ivas.state === 'ending'}
                     />
                 </div>
 

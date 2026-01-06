@@ -20,9 +20,10 @@ interface TopBarProps {
     currentQuestionIndex: number;
     totalQuestions: number;
     onEndSession: () => void;
+    isEnding?: boolean;
 }
 
-export function TopBar({ timeLeft, currentQuestionIndex, totalQuestions, onEndSession }: TopBarProps) {
+export function TopBar({ timeLeft, currentQuestionIndex, totalQuestions, onEndSession, isEnding = false }: TopBarProps) {
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -45,9 +46,14 @@ export function TopBar({ timeLeft, currentQuestionIndex, totalQuestions, onEndSe
 
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-muted-foreground hover:text-destructive"
+                        disabled={isEnding}
+                    >
                         <LogOut className="mr-2 h-4 w-4" />
-                        End Session
+                        {isEnding ? "Ending..." : "End Session"}
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

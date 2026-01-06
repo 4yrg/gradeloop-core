@@ -356,19 +356,18 @@ async def _send_initial_question(session: VivaSession):
         session.current_question = question
         session.add_turn("AI", question)
         
-        # Send question text
+        # Send question text immediately
         await session_manager.send_ai_response(session.session_id, question)
         
         # Clean text for TTS
         tts_text = _clean_text_for_tts(question)
         
-        # Generate and send audio
-        audio_bytes = await tts_service.synthesize_async(
-            text=tts_text,
-            emotion="friendly",
-            speed=1.0
-        )
-        await session_manager.send_ai_audio(session.session_id, audio_bytes)
+        # Generate and send audio asynchronously (don't block)
+        asyncio.create_task(_generate_and_send_audio(
+            session.session_id, 
+            tts_text, 
+            "friendly"
+        ))
         
         logger.info(f"Sent initial question for session {session.session_id}")
         
@@ -525,25 +524,39 @@ async def _generate_follow_up_question(session: VivaSession, difficulty: str = "
         session.current_question = question
         session.add_turn("AI", question)
         
-        # Send question text (with formatting for UI)
+        # Send question text immediately (with formatting for UI)
         await session_manager.send_ai_response(session_id, question)
         
         # Clean text for TTS (remove labels and markdown)
         tts_text = _clean_text_for_tts(question)
         
-        # Generate and send audio
-        audio_bytes = await tts_service.synthesize_async(
-            text=tts_text,
-            emotion="encouraging" if difficulty == "easier" else "neutral",
-            speed=1.0
-        )
-        await session_manager.send_ai_audio(session_id, audio_bytes)
+        # Generate and send audio asynchronously (don't block)
+        # This allows the UI to display the question while audio is being generated
+        asyncio.create_task(_generate_and_send_audio(
+            session_id, 
+            tts_text, 
+            "encouraging" if difficulty == "easier" else "neutral"
+        ))
         
         logger.info(f"Sent follow-up question for session {session_id}")
         
     except Exception as e:
         logger.error(f"Failed to generate follow-up: {e}")
         await session_manager.send_error(session_id, "Failed to generate question")
+
+
+async def _generate_and_send_audio(session_id: str, text: str, emotion: str = "neutral"):
+    """Generate TTS audio and send to client (runs in background)"""
+    try:
+        audio_bytes = await tts_service.synthesize_async(
+            text=text,
+            emotion=emotion,
+            speed=1.0
+        )
+        await session_manager.send_ai_audio(session_id, audio_bytes)
+        logger.info(f"Sent audio for session {session_id}")
+    except Exception as e:
+        logger.error(f"Failed to generate/send audio: {e}")
 
 
 async def _end_viva_session(session: VivaSession):
@@ -554,16 +567,27 @@ async def _end_viva_session(session: VivaSession):
         logger.info(f"Generating final assessment V2 for session {session_id}")
         
         # Step 1: Calculate scores from rubric-based assessments (Evidence-based!)
-        # Collect all detailed response assessments if available
+        # Collect all detailed response assessments from assessment_scores
         detailed_responses = []
-        for turn in session.conversation_history:
-            if turn.get("role") == "student" and turn.get("assessment"):
+        
+        # Match conversation turns with their assessments
+        # Conversation history alternates: AI question, STUDENT response, AI question, STUDENT response...
+        ai_turns = [turn for turn in session.conversation_history if turn.speaker == "AI"]
+        student_turns = [turn for turn in session.conversation_history if turn.speaker == "STUDENT"]
+        
+        # Pair questions, student responses, and their assessments
+        for i, assessment_data in enumerate(session.assessment_scores):
+            if i < len(student_turns):
+                student_turn = student_turns[i]
+                # AI question comes before student response
+                question_text = ai_turns[i].text if i < len(ai_turns) else ""
+                
                 detailed_responses.append({
-                    "question": turn.get("question", ""),
-                    "response": turn.get("content", ""),
-                    "rubric_scores": turn["assessment"].get("rubric_scores", {}),
-                    "understanding_level": turn["assessment"].get("understanding_level", "partial"),
-                    "evidence": turn["assessment"].get("evidence", {})
+                    "question": question_text,
+                    "response": student_turn.text,
+                    "rubric_scores": assessment_data.get("rubric_scores", {}),
+                    "understanding_level": assessment_data.get("understanding_level", "partial"),
+                    "evidence": assessment_data.get("evidence", {})
                 })
         
         # Generate score breakdown using adaptive engine

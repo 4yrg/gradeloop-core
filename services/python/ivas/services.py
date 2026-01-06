@@ -201,6 +201,8 @@ class TTSService:
         """
         self.model_name = model_name or settings.TTS_MODEL
         self._initialized = False
+        self._cache = {}  # Simple cache for repeated phrases
+        self._cache_max_size = 50  # Limit cache size
         logger.info(f"TTS Service created with voice: {self.model_name}")
     
     def initialize(self):
@@ -252,6 +254,12 @@ class TTSService:
         # Adjust rate based on speed
         rate = f"{int((speed - 1) * 100):+d}%"
         
+        # Check cache
+        cache_key = f"{text}:{voice}:{rate}"
+        if cache_key in self._cache:
+            logger.info(f"TTS cache hit for: '{text[:50]}...'")
+            return self._cache[cache_key]
+        
         logger.info(f"TTS synthesizing: '{text[:50]}...' with voice={voice}, rate={rate}")
         
         try:
@@ -265,6 +273,15 @@ class TTSService:
                     audio_data.write(chunk["data"])
             
             audio_bytes = audio_data.getvalue()
+            
+            # Cache the result (if cache not full)
+            if len(self._cache) < self._cache_max_size:
+                self._cache[cache_key] = audio_bytes
+            elif len(self._cache) >= self._cache_max_size:
+                # Remove oldest entry (simple FIFO)
+                first_key = next(iter(self._cache))
+                del self._cache[first_key]
+                self._cache[cache_key] = audio_bytes
             
             # Edge TTS outputs MP3 - return directly (smaller and faster than WAV)
             logger.info(f"TTS synthesis complete: {len(audio_bytes)} bytes (MP3)")
@@ -477,7 +494,7 @@ class LLMService:
                 options={
                     "temperature": 0.7,
                     "top_p": 0.9,
-                    "num_predict": 256,
+                    "num_predict": 128,  # Reduced from 256 - questions should be concise
                 }
             )
             
@@ -573,7 +590,7 @@ class LLMService:
                 options={
                     "temperature": 0.3,  # Lower temperature for more consistent assessment
                     "top_p": 0.9,
-                    "num_predict": 512,
+                    "num_predict": 256,  # Reduced from 512 - JSON response should be concise
                 },
                 format="json"
             )

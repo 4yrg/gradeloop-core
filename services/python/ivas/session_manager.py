@@ -311,8 +311,20 @@ class SessionManager:
         session = self.active_sessions.get(session_id)
         if session and session.websocket:
             try:
+                # Check if WebSocket is still open before sending
+                if hasattr(session.websocket, 'client_state') and session.websocket.client_state.name != 'CONNECTED':
+                    logger.warning(f"WebSocket not connected for {session_id}, state: {session.websocket.client_state.name}")
+                    return
+                    
                 await session.websocket.send_json(message)
                 logger.debug(f"Sent message to {session_id}: {message.get('type')}")
+            except RuntimeError as e:
+                # Handle "Cannot call send once a close message has been sent" silently
+                if "close message" in str(e).lower():
+                    logger.debug(f"WebSocket already closed for {session_id}, skipping message: {message.get('type')}")
+                else:
+                    logger.error(f"Runtime error sending to {session_id}: {e}")
+                session.status = "error"
             except Exception as e:
                 logger.error(f"Failed to send message to {session_id}: {e}")
                 session.status = "error"

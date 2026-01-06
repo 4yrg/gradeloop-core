@@ -18,6 +18,7 @@ interface ControlBarProps {
     isRecording?: boolean;
     audioLevel?: number; // 0-1
     onEndSession?: () => void;
+    isEnding?: boolean;
     vadEnabled?: boolean;
     onToggleVad?: () => void;
 }
@@ -30,6 +31,7 @@ export function ControlBar({
     isRecording = false,
     audioLevel = 0,
     onEndSession,
+    isEnding = false,
     vadEnabled = true,
     onToggleVad
 }: ControlBarProps) {
@@ -118,13 +120,14 @@ export function ControlBar({
                                     size="sm"
                                     onClick={onEndSession}
                                     className="gap-1.5"
+                                    disabled={isEnding}
                                 >
                                     <StopCircle className="h-4 w-4" />
-                                    End
+                                    {isEnding ? "Ending..." : "End"}
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>End viva session</p>
+                                <p>{isEnding ? "Ending session..." : "End viva session"}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
