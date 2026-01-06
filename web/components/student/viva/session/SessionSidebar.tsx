@@ -26,7 +26,7 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
     const qaPairs = useMemo<QAPair[]>(() => {
         const pairs: QAPair[] = [];
         let currentQuestion: string | null = null;
-        
+
         for (const turn of history) {
             if (turn.speaker === 'AI') {
                 currentQuestion = turn.text;
@@ -40,19 +40,19 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
                 currentQuestion = null;
             }
         }
-        
+
         return pairs;
     }, [history]);
-    
+
     // Extract concepts from assessment if available
     const conceptsCovered = assessment?.strengths || [];
-    
+
     // Get status icon based on assessment
     const getStatusIcon = (pair: QAPair) => {
         if (!pair.assessment) {
             return <CheckCircle2 className="h-3 w-3 text-green-500" />;
         }
-        
+
         const score = pair.assessment.confidenceScore || 0;
         if (score >= 0.8) {
             return <CheckCircle2 className="h-3 w-3 text-green-500" />;
@@ -61,10 +61,10 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
         }
         return <AlertCircle className="h-3 w-3 text-red-500" />;
     };
-    
+
     const getStatusText = (pair: QAPair) => {
         if (!pair.assessment) return { text: "Recorded", color: "text-green-600" };
-        
+
         const level = pair.assessment.understandingLevel;
         if (level === 'excellent' || level === 'good') return { text: "Strong", color: "text-green-600" };
         if (level === 'partial') return { text: "Partial", color: "text-yellow-600" };
@@ -114,7 +114,7 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
                                             Q{i + 1}
                                         </Badge>
                                     </div>
-                                    <p className="text-xs text-muted-foreground bg-muted p-2 rounded line-clamp-3">
+                                    <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
                                         "{pair.response}"
                                     </p>
                                     <div className="flex items-center justify-between">
@@ -161,7 +161,7 @@ export function SessionSidebar({ history, assessment, isProcessing = false }: Se
                         </div>
                     )}
                 </div>
-                
+
                 {assessment && (
                     <div className="mt-4 pt-3 border-t">
                         <div className="flex items-center justify-between text-sm">
