@@ -15,13 +15,15 @@ from schemas import (
     AssessResponseResponse,
     HealthCheckResponse,
 )
-from services import ASRService
+from services import ASRService, TTSService, LLMService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Initialize ASR service (lazy loading - model loaded on first use)
+# Initialize services (lazy loading - models loaded on first use)
 asr_service = ASRService()
+tts_service = TTSService()
+llm_service = LLMService()
 
 
 @router.get("/health", response_model=HealthCheckResponse)
@@ -34,8 +36,8 @@ async def health_check():
         status="healthy",
         services={
             "asr": {"status": "available" if asr_service.is_available else "unavailable", "model": f"whisper-{asr_service.model_size}"},
-            "tts": {"status": "available", "model": "xtts-v2"},
-            "llm": {"status": "available", "model": "llama3.1:8b"},
+            "tts": {"status": "available" if tts_service.is_available else "unavailable", "model": "edge-tts"},
+            "llm": {"status": "available" if llm_service.is_available else "unavailable", "model": llm_service.model},
         },
     )
 
@@ -94,7 +96,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
 @router.post("/synthesize")
 async def synthesize_speech(request: SynthesizeRequest):
     """
-    Synthesize speech from text using Coqui TTS.
+    Synthesize speech from text using Edge TTS.
     
     Args:
         request: Text to synthesize and voice settings
@@ -108,32 +110,42 @@ async def synthesize_speech(request: SynthesizeRequest):
             detail="Text cannot be empty."
         )
     
-    # TODO: Implement actual TTS in Step 6
-    # For now, return a placeholder response
-    # Return empty WAV header as placeholder
-    wav_header = bytes([
-        0x52, 0x49, 0x46, 0x46,  # "RIFF"
-        0x24, 0x00, 0x00, 0x00,  # File size
-        0x57, 0x41, 0x56, 0x45,  # "WAVE"
-        0x66, 0x6D, 0x74, 0x20,  # "fmt "
-        0x10, 0x00, 0x00, 0x00,  # Chunk size
-        0x01, 0x00,              # Audio format (PCM)
-        0x01, 0x00,              # Channels (mono)
-        0x80, 0x3E, 0x00, 0x00,  # Sample rate (16000)
-        0x00, 0x7D, 0x00, 0x00,  # Byte rate
-        0x02, 0x00,              # Block align
-        0x10, 0x00,              # Bits per sample
-        0x64, 0x61, 0x74, 0x61,  # "data"
-        0x00, 0x00, 0x00, 0x00,  # Data size
-    ])
+    # Validate speed parameter
+    speed = request.speed if request.speed else 1.0
+    if speed < 0.5 or speed > 2.0:
+        raise HTTPException(
+            status_code=400,
+            detail="Speed must be between 0.5 and 2.0"
+        )
     
-    return Response(
-        content=wav_header,
-        media_type="audio/wav",
-        headers={
-            "Content-Disposition": "attachment; filename=speech.wav"
-        }
-    )
+    try:
+        # Use TTS service to synthesize speech
+        audio_bytes = await tts_service.synthesize_async(
+            text=request.text,
+            emotion=request.emotion or "neutral",
+            speed=speed,
+            language=request.language or "en"
+        )
+        
+        return Response(
+            content=audio_bytes,
+            media_type="audio/wav",
+            headers={
+                "Content-Disposition": "attachment; filename=speech.wav"
+            }
+        )
+    except RuntimeError as e:
+        logger.error(f"TTS synthesis error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Speech synthesis failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected TTS error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during speech synthesis."
+        )
 
 
 @router.post("/generate-question", response_model=GenerateQuestionResponse)
@@ -153,17 +165,33 @@ async def generate_question(request: GenerateQuestionRequest):
             detail="Either code or topic must be provided."
         )
     
-    # TODO: Implement actual LLM generation in Step 7
-    # For now, return a placeholder response
-    return GenerateQuestionResponse(
-        question="Can you explain how your code handles edge cases?",
-        difficulty="medium",
-        topic=request.topic or "general programming",
-        follow_up_hints=[
-            "Consider what happens with empty input",
-            "Think about boundary conditions",
-        ],
-    )
+    try:
+        # Use LLM service to generate question
+        result = llm_service.generate_question(
+            code=request.code,
+            topic=request.topic,
+            difficulty=request.difficulty or "medium",
+            conversation_history=request.conversation_history
+        )
+        
+        return GenerateQuestionResponse(
+            question=result["question"],
+            difficulty=result["difficulty"],
+            topic=result["topic"],
+            follow_up_hints=result.get("follow_up_hints", []),
+        )
+    except RuntimeError as e:
+        logger.error(f"Question generation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Question generation failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected question generation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during question generation."
+        )
 
 
 @router.post("/assess-response", response_model=AssessResponseResponse)
@@ -183,14 +211,33 @@ async def assess_response(request: AssessResponseRequest):
             detail="Both question and response must be provided."
         )
     
-    # TODO: Implement actual assessment in Step 7
-    # For now, return a placeholder response
-    return AssessResponseResponse(
-        understanding_level="partial",
-        clarity="clear",
-        confidence_score=0.7,
-        misconceptions=[],
-        strengths=["Clear communication"],
-        areas_for_improvement=["Could provide more specific examples"],
-        suggested_follow_up="Can you elaborate on that with a specific example?",
-    )
+    try:
+        # Use LLM service to assess response
+        result = llm_service.assess_response(
+            question=request.question,
+            response=request.response,
+            expected_concepts=request.expected_concepts,
+            code_context=request.code_context
+        )
+        
+        return AssessResponseResponse(
+            understanding_level=result["understanding_level"],
+            clarity=result["clarity"],
+            confidence_score=result["confidence_score"],
+            misconceptions=result.get("misconceptions", []),
+            strengths=result.get("strengths", []),
+            areas_for_improvement=result.get("areas_for_improvement", []),
+            suggested_follow_up=result.get("suggested_follow_up", ""),
+        )
+    except RuntimeError as e:
+        logger.error(f"Assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Response assessment failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected assessment error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during response assessment."
+        )
