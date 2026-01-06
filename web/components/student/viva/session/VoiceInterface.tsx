@@ -37,7 +37,7 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
                 setIsTyping(false);
                 clearInterval(interval);
             }
-        }, 50); // 50ms per character for slower typing
+        }, 70); // 50ms per character for slower typing
 
         return () => clearInterval(interval);
     }, [currentQuestion]);
@@ -93,29 +93,31 @@ export function VoiceInterface({ isAiSpeaking, isUserSpeaking, transcription, au
             </div>
 
             {/* User Speech / Transcription Zone */}
-            <div className="relative p-6 bg-gradient-to-t from-black via-black/80 to-transparent">
-                <div className={`flex items-end gap-4 transition-all duration-300 ${isUserSpeaking ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-50'}`}>
-                    <div className={`h-10 w-10 rounded-full border flex items-center justify-center shrink-0 transition-colors ${isUserSpeaking
+            <div className="relative p-4 bg-gradient-to-t from-black via-black/90 to-transparent">
+                <div className={`flex items-start gap-3 transition-all duration-300 ${isUserSpeaking ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-60'}`}>
+                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center shrink-0 transition-colors mt-0.5 ${isUserSpeaking
                         ? 'bg-green-500/20 border-green-500 text-green-500'
                         : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                         }`}>
-                        <Mic className={`h-5 w-5 ${isUserSpeaking ? 'animate-pulse' : ''}`} />
+                        <Mic className={`h-4 w-4 ${isUserSpeaking ? 'animate-pulse' : ''}`} />
                     </div>
-                    <div className="flex-1">
-                        <div className="text-xs text-zinc-400 mb-1 uppercase tracking-wider font-semibold">
-                            {isUserSpeaking ? 'Recording...' : 'Live Transcription'}
+                    <div className="flex-1 min-w-0">
+                        <div className="text-[10px] text-zinc-500 mb-1 uppercase tracking-wider font-semibold">
+                            {isUserSpeaking ? 'Recording...' : 'Your Response'}
                         </div>
-                        <p className="text-lg text-white font-medium leading-relaxed">
-                            {transcription || (
-                                <span className="text-zinc-600 italic">
-                                    {isUserSpeaking
-                                        ? 'Speak now...'
-                                        : isAiSpeaking
-                                            ? 'Wait for the question to finish...'
-                                            : 'Click the microphone button to answer'}
-                                </span>
-                            )}
-                        </p>
+                        <div className="max-h-16 overflow-y-auto">
+                            <p className={`text-white font-medium leading-snug ${transcription && transcription.length > 100 ? 'text-sm' : 'text-base'}`}>
+                                {transcription || (
+                                    <span className="text-zinc-600 italic text-sm">
+                                        {isUserSpeaking
+                                            ? 'Speak now...'
+                                            : isAiSpeaking
+                                                ? 'Wait for the question to finish...'
+                                                : 'Click the microphone button to answer'}
+                                    </span>
+                                )}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

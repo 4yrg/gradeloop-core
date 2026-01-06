@@ -49,8 +49,8 @@ export function AssignmentInfoPanel({
                         <button
                             onClick={() => setActiveTab('question')}
                             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'question'
-                                    ? 'text-foreground border-b-2 border-primary bg-background'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                ? 'text-foreground border-b-2 border-primary bg-background'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             <FileText className="h-3.5 w-3.5" />
@@ -59,8 +59,8 @@ export function AssignmentInfoPanel({
                         <button
                             onClick={() => setActiveTab('answer')}
                             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'answer'
-                                    ? 'text-foreground border-b-2 border-primary bg-background'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                ? 'text-foreground border-b-2 border-primary bg-background'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             <Code className="h-3.5 w-3.5" />
@@ -75,7 +75,7 @@ export function AssignmentInfoPanel({
                                 {assignmentQuestion}
                             </p>
                         ) : (
-                            <pre className="text-xs font-mono bg-zinc-950 text-zinc-300 p-3 rounded-lg overflow-x-auto">
+                            <pre className="text-xs font-mono bg-white dark:bg-zinc-100 text-zinc-900 p-3 rounded-lg overflow-x-auto border">
                                 <code>{studentAnswer}</code>
                             </pre>
                         )}
