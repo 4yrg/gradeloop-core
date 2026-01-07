@@ -108,7 +108,7 @@ Return ONLY the question text in simple English, nothing else."""
         question_number: int
     ) -> str:
         """
-        Generate the next question based on conversation so far
+        Generate feedback for previous answer and the next question
         
         Args:
             conversation_history: All previous Q&A exchanges
@@ -116,8 +116,13 @@ Return ONLY the question text in simple English, nothing else."""
             question_number: Which question number this will be (2-5)
             
         Returns:
-            The next question text
+            Feedback + next question text combined
         """
+        # Get the last entry for feedback context
+        last_entry = conversation_history[-1] if conversation_history else None
+        last_question = last_entry.question_text if last_entry else ""
+        last_score = last_entry.score if last_entry else 0
+        
         # Build conversation context
         history_text = ""
         for entry in conversation_history:
@@ -125,45 +130,50 @@ Return ONLY the question text in simple English, nothing else."""
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Assessment: {entry.understanding_level} (Score: {entry.score}/100)\n"
         
-        prompt = f"""You are a friendly programming teacher conducting a simple oral exam for a beginner student.
+        prompt = f"""You are a friendly programming teacher giving feedback and asking the next question.
 
-Previous conversation:
-{history_text}
+Last Question: {last_question}
+Student's Answer: {current_answer}
+Score: {last_score}/100
 
-Latest Answer: {current_answer}
+CORRECT ANSWERS (use these to give accurate feedback):
+- "What is a for loop?" → A loop used when you know the number of iterations.
+- "What is a while loop?" → A loop that runs while a condition is true / when iterations unknown.
+- "For vs while?" → For = known iterations. While = unknown iterations.
+- "When use for vs while?" → For when you know how many times. While when you don't.
+- "What is a nested loop?" → A loop inside another loop.
+- "Why use loops?" → To repeat code without writing it multiple times.
+- "What is iteration?" → One cycle/execution of the loop body.
+- "What is infinite loop?" → A loop that never stops.
 
-This is question {question_number} of 5. Ask another SIMPLE CONCEPTUAL question.
+FEEDBACK RULES:
+- Score >= 70: Say "That's right!" or "Correct!" + briefly confirm their answer
+- Score 50-69: Say "That's partially correct." + add what was missing
+- Score < 50: Say "Not quite." + give the simple correct answer
 
-CONCEPTUAL QUESTIONS (pick one that wasn't asked before):
-- "What is a for loop?"
-- "What is a while loop?"
-- "What is the difference between a for loop and a while loop?"
-- "When would you use a for loop instead of a while loop?"
-- "What is a nested loop?"
-- "Why do we use loops in programming?"
-- "What does iteration mean?"
-- "What is an infinite loop?"
-- "What is a loop counter?"
-- "What happens if a loop condition is always true?"
-- "What is the purpose of a loop condition?"
-- "Can you have a loop inside another loop?"
-- "What is the benefit of using loops?"
-- "What would happen without loops - how else could you repeat code?"
+NEXT QUESTION - Pick ONE that wasn't asked:
+- What is a for loop?
+- What is a while loop?
+- What is the difference between for and while loop?
+- When would you use a for loop instead of a while loop?
+- What is a nested loop?
+- Why do we use loops in programming?
+- What is iteration?
+- What is an infinite loop?
 
-RULES:
-1. Ask about CONCEPTS only - what something IS or WHY we use it
-2. Questions must be answerable in simple English WITHOUT looking at code
-3. NO questions about specific code, syntax, or "your code"
-4. NO questions like "point out", "in your solution", "why did you use"
-5. If student struggled, ask an EASIER conceptual question
-6. If student did well, ask a slightly deeper conceptual question
+FORMAT: [Short feedback]. [Next question]?
 
-Return ONLY the question text in simple English, nothing else."""
+EXAMPLES:
+- "That's right! For loops are used when you know the iterations. What is a while loop?"
+- "Correct! Loops help us repeat code. What is iteration?"
+- "Not quite. A for loop is for when you know how many times to repeat. What is a nested loop?"
 
-        question = self._call_ollama(prompt, temperature=0.7)
-        question = question.replace("**", "").replace(f"Question {question_number}:", "").strip()
-        question = question.strip('"\'')
-        return question
+Return ONLY feedback + question:"""
+
+        response = self._call_ollama(prompt, temperature=0.7)
+        response = response.replace("**", "").strip()
+        response = response.strip('"\'')
+        return response
     
     def assess_answer(self, question: str, answer: str) -> Dict[str, any]:
         """
@@ -176,41 +186,47 @@ Return ONLY the question text in simple English, nothing else."""
         Returns:
             Dictionary with 'understanding_level' and 'score'
         """
-        prompt = f"""You are a FAIR examiner assessing a beginner student's verbal answer in an oral exam.
+        prompt = f"""You are assessing a beginner student's verbal answer about programming concepts.
 
-Question Asked: {question}
-
+Question: {question}
 Student's Answer: "{answer}"
 
-SCORING RULES - BE FAIR TO BEGINNERS:
+CORRECT ANSWERS FOR COMMON QUESTIONS:
 
-1. First, check if the answer is VALID:
-   - Does it attempt to answer the question?
-   - Is it on-topic?
+"What is a for loop?" 
+→ Correct: A loop used when you know the number of iterations/repetitions.
 
-2. If INVALID (off-topic, nonsense, "I don't know", inappropriate), score as:
-   LEVEL: none
-   SCORE: 0-15
+"What is a while loop?"
+→ Correct: A loop that continues while a condition is true / when you don't know exact iterations.
 
-3. If VALID, score based on correctness:
-   - excellent (85-100): Correct answer with good explanation or example
-   - good (70-84): Correct answer, shows understanding
-   - partial (50-69): Partially correct, has the right idea but incomplete
-   - minimal (25-49): Vague or mostly incorrect
-   - none (0-24): Wrong, off-topic, or refuses to answer
+"Difference between for and while loop?"
+→ Correct: For loop = known iterations. While loop = unknown iterations / condition-based.
 
-EXAMPLES:
-- "What is a for loop?" → "A loop that runs a specific number of times" = GOOD (75)
-- "What is a for loop?" → "For loop is used when we know the number of iterations" = GOOD (70-75)
-- "What is a for loop?" → "It repeats code" = PARTIAL (50-55)
-- "What is a for loop?" → "I don't know" = NONE (5)
+"When to use for loop vs while loop?"
+→ Correct: For loop when you know how many times. While loop when you don't know.
 
-BE FAIR: If the student gives a correct answer in simple words, give them credit (70+). 
-This is an oral exam - answers don't need to be textbook perfect.
+"What is a nested loop?"
+→ Correct: A loop inside another loop.
 
-Respond EXACTLY in this format:
-ANALYSIS: [1 sentence - is the answer correct?]
-LEVEL: [level]
+"Why do we use loops?"
+→ Correct: To repeat code/tasks multiple times without writing it again.
+
+"What is iteration?"
+→ Correct: One complete execution/cycle of the loop body.
+
+"What is an infinite loop?"
+→ Correct: A loop that never stops / runs forever.
+
+SCORING:
+- 75-85: Answer is CORRECT (even if worded simply)
+- 55-74: Partially correct, has the right idea
+- 30-54: Vague or mostly wrong
+- 0-29: Completely wrong, off-topic, or "I don't know"
+
+IMPORTANT: If the student's answer matches the correct concept (even with simple words or minor grammar issues), give 75+.
+
+Respond in this format:
+LEVEL: [excellent/good/partial/minimal/none]
 SCORE: [number]"""
 
         response = self._call_ollama(prompt, temperature=0.2)  # Lower temperature for consistent scoring
