@@ -130,6 +130,37 @@ Return ONLY the question text in simple English, nothing else."""
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Assessment: {entry.understanding_level} (Score: {entry.score}/100)\n"
         
+        # Extract already asked questions to prevent duplicates
+        asked_questions = set()
+        all_possible_questions = [
+            "What is a for loop?",
+            "What is a while loop?",
+            "What is the difference between for and while loop?",
+            "What is the difference between a for loop and a while loop?",
+            "When would you use a for loop instead of a while loop?",
+            "What is a nested loop?",
+            "Why do we use loops in programming?",
+            "What is iteration?",
+            "What is an infinite loop?",
+            "What is a loop counter?",
+            "What happens if a loop condition is always true?"
+        ]
+        
+        # Normalize and check which questions were already asked
+        for entry in conversation_history:
+            q_text_normalized = entry.question_text.lower().strip().rstrip('?')
+            for possible_q in all_possible_questions:
+                possible_q_normalized = possible_q.lower().strip().rstrip('?')
+                if q_text_normalized in possible_q_normalized or possible_q_normalized in q_text_normalized:
+                    asked_questions.add(possible_q)
+                    break
+        
+        # Filter out already asked questions
+        available_questions = [q for q in all_possible_questions if q not in asked_questions]
+        
+        # Format available questions as bullet list
+        available_questions_text = "\n".join(f"- {q}" for q in available_questions)
+        
         prompt = f"""You are a friendly programming teacher giving feedback and asking the next question.
 
 Last Question: {last_question}
@@ -151,15 +182,8 @@ FEEDBACK RULES:
 - Score 50-69: Say "That's partially correct." + add what was missing
 - Score < 50: Say "Not quite." + give the simple correct answer
 
-NEXT QUESTION - Pick ONE that wasn't asked:
-- What is a for loop?
-- What is a while loop?
-- What is the difference between for and while loop?
-- When would you use a for loop instead of a while loop?
-- What is a nested loop?
-- Why do we use loops in programming?
-- What is iteration?
-- What is an infinite loop?
+NEXT QUESTION - Pick ONE from these available questions ONLY:
+{available_questions_text}
 
 FORMAT: [Short feedback]. [Next question]?
 
@@ -177,7 +201,7 @@ Return ONLY feedback + question:"""
     
     def assess_answer(self, question: str, answer: str) -> Dict[str, any]:
         """
-        Assess a student's answer to a question with STRICT scoring
+        Assess a student's answer to any programming question with generic scoring
         
         Args:
             question: The question that was asked
@@ -186,44 +210,27 @@ Return ONLY feedback + question:"""
         Returns:
             Dictionary with 'understanding_level' and 'score'
         """
-        prompt = f"""You are assessing a beginner student's verbal answer about programming concepts.
+        prompt = f"""You are assessing a student's verbal answer about a programming concept.
 
 Question: {question}
 Student's Answer: "{answer}"
 
-CORRECT ANSWERS FOR COMMON QUESTIONS:
+Evaluate the answer based on:
+1. Correctness - Does it address the question?
+2. Completeness - Are key points covered?
+3. Clarity - Is the explanation coherent?
 
-"What is a for loop?" 
-→ Correct: A loop used when you know the number of iterations/repetitions.
+SCORING GUIDELINES:
+- 80-100: Excellent answer, correct and complete understanding
+- 60-79: Good answer, mostly correct with minor gaps
+- 40-59: Partial understanding, some correct elements but significant gaps
+- 20-39: Minimal understanding, mostly incorrect or vague
+- 0-19: No understanding, completely wrong or off-topic
 
-"What is a while loop?"
-→ Correct: A loop that continues while a condition is true / when you don't know exact iterations.
-
-"Difference between for and while loop?"
-→ Correct: For loop = known iterations. While loop = unknown iterations / condition-based.
-
-"When to use for loop vs while loop?"
-→ Correct: For loop when you know how many times. While loop when you don't know.
-
-"What is a nested loop?"
-→ Correct: A loop inside another loop.
-
-"Why do we use loops?"
-→ Correct: To repeat code/tasks multiple times without writing it again.
-
-"What is iteration?"
-→ Correct: One complete execution/cycle of the loop body.
-
-"What is an infinite loop?"
-→ Correct: A loop that never stops / runs forever.
-
-SCORING:
-- 75-85: Answer is CORRECT (even if worded simply)
-- 55-74: Partially correct, has the right idea
-- 30-54: Vague or mostly wrong
-- 0-29: Completely wrong, off-topic, or "I don't know"
-
-IMPORTANT: If the student's answer matches the correct concept (even with simple words or minor grammar issues), give 75+.
+IMPORTANT: 
+- Be lenient with simple wording or grammar issues
+- Focus on conceptual understanding, not perfect phrasing
+- If student shows they understand the concept, score 60+
 
 Respond in this format:
 LEVEL: [excellent/good/partial/minimal/none]
@@ -248,18 +255,17 @@ SCORE: [number]"""
         # Additional validation: check for obviously bad answers
         answer_lower = answer.lower().strip()
         bad_indicators = [
-            "i don't know", "idk", "no idea", "fuck", "shit", "100%", 
-            "give me", "i want", "pass me", "just give", "whatever"
+            "i don't know", "idk", "no idea", "i have no clue",
+            "pass", "skip", "next question"
         ]
         
         if any(indicator in answer_lower for indicator in bad_indicators):
-            # Override with low score if LLM was too lenient
             if score > 20:
                 score = min(score, 15)
                 understanding_level = "none"
         
         # Check for very short non-answers
-        if len(answer.split()) < 5:
+        if len(answer.split()) < 3:
             score = min(score, 25)
             if understanding_level in ["excellent", "good"]:
                 understanding_level = "minimal"

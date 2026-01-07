@@ -65,7 +65,9 @@ class VivaSession(BaseModel):
     student_code: str
     current_question: int = 1
     current_question_text: Optional[str] = None
+    current_question_difficulty: float = 0.0  # IRT difficulty parameter
     conversation_history: List[ConversationEntry] = Field(default_factory=list)
+    student_theta: float = 0.0  # IRT ability estimate
     is_complete: bool = False
 
 

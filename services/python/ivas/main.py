@@ -25,6 +25,7 @@ from models import (
 from services.llm_service import LLMService
 from services.asr_service import ASRService
 from services.tts_service import TTSService
+from services.adaptive_service import AdaptiveQuestionService
 
 # Load environment variables
 load_dotenv()
@@ -36,6 +37,8 @@ tts_service: Optional[TTSService] = None
 
 # In-memory session storage
 sessions: Dict[str, VivaSession] = {}
+# Store adaptive service per session
+adaptive_services: Dict[str, AdaptiveQuestionService] = {}
 
 
 @asynccontextmanager
@@ -135,15 +138,25 @@ async def start_viva(request: StartVivaRequest) -> dict:
         print(f"   Student: {request.student_id}")
         print(f"   Assignment: {request.assignment_title}")
         
-        # Generate first question using LLM
-        print("   Generating first question...")
-        first_question = llm_service.generate_first_question(
-            assignment_title=request.assignment_title,
+        # Initialize adaptive question service for this session
+        adaptive_service = AdaptiveQuestionService()
+        adaptive_service.initialize_question_bank(
             assignment_description=request.assignment_description,
             student_code=request.student_code
         )
+        adaptive_services[session_id] = adaptive_service
         
-        print(f"   Q1: {first_question}")
+        # Select first question using adaptive algorithm
+        print("   Selecting first question...")
+        first_q = adaptive_service.select_next_question([])
+        
+        if not first_q:
+            raise HTTPException(status_code=500, detail="No questions available for this assignment")
+        
+        first_question = first_q.text
+        question_difficulty = first_q.difficulty
+        
+        print(f"   Q1: {first_question} (difficulty: {question_difficulty:.2f})")
         
         # Convert question to speech
         print("   Synthesizing question audio...")
@@ -159,7 +172,9 @@ async def start_viva(request: StartVivaRequest) -> dict:
             student_code=request.student_code,
             current_question=1,
             current_question_text=first_question,
+            current_question_difficulty=question_difficulty,
             conversation_history=[],
+            student_theta=0.0,
             is_complete=False
         )
         
@@ -198,6 +213,10 @@ async def submit_answer(
             raise HTTPException(status_code=404, detail="Session not found")
         
         session = sessions[session_id]
+        adaptive_service = adaptive_services.get(session_id)
+        
+        if not adaptive_service:
+            raise HTTPException(status_code=500, detail="Adaptive service not found for session")
         
         print(f"\n🎤 Processing answer for session: {session_id}")
         print(f"   Question {question_number}")
@@ -218,13 +237,25 @@ async def submit_answer(
         transcript = asr_service.transcribe(audio_bytes)
         print(f"   Transcript: {transcript}")
         
-        # Assess the answer
+        # Assess the answer using LLM
         print("   Assessing answer...")
-        assessment = llm_service.assess_answer(
+        raw_assessment = llm_service.assess_answer(
             question=session.current_question_text,
             answer=transcript
         )
-        print(f"   Assessment: {assessment['understanding_level']} (Score: {assessment['score']}/100)")
+        
+        # Adjust score based on question difficulty (IRT)
+        adjusted_score = adaptive_service.get_adjusted_score(
+            raw_score=raw_assessment['score'],
+            question_difficulty=session.current_question_difficulty
+        )
+        
+        assessment = {
+            'understanding_level': raw_assessment['understanding_level'],
+            'score': adjusted_score
+        }
+        
+        print(f"   Assessment: {assessment['understanding_level']} (Raw: {raw_assessment['score']}, Adjusted: {adjusted_score}/100)")
         
         # Store in conversation history
         conversation_entry = ConversationEntry(
@@ -235,6 +266,14 @@ async def submit_answer(
             score=assessment['score']
         )
         session.conversation_history.append(conversation_entry)
+        
+        # Update student theta
+        session.student_theta = adaptive_service.student_theta
+        
+        # Print diagnostics
+        diagnostics = adaptive_service.get_diagnostics()
+        print(f"   Student ability (θ): {diagnostics['student_theta']}")
+        print(f"   Topic knowledge: {diagnostics['topic_knowledge']}")
         
         # Check if viva is complete (5 questions done)
         if session.current_question >= 5:
@@ -251,6 +290,9 @@ async def submit_answer(
             final_report = FinalReport(**report_data)
             session.is_complete = True
             
+            # Cleanup adaptive service
+            del adaptive_services[session_id]
+            
             print(f"   Final Score: {final_report.total_score}/100")
             print(f"   Competency: {final_report.competency_level}")
             print(f"   ✓ Assessment complete!\n")
@@ -264,14 +306,18 @@ async def submit_answer(
                 final_report=final_report
             )
         
-        # Generate next question
-        print(f"   Generating question {session.current_question + 1}...")
-        next_question_text = llm_service.generate_next_question(
-            conversation_history=session.conversation_history,
-            current_answer=transcript,
-            question_number=session.current_question + 1
-        )
-        print(f"   Q{session.current_question + 1}: {next_question_text}")
+        # Select next question using adaptive algorithm
+        print(f"   Selecting question {session.current_question + 1} adaptively...")
+        next_q = adaptive_service.select_next_question(session.conversation_history)
+        
+        if not next_q:
+            # Fallback if no questions available
+            raise HTTPException(status_code=500, detail="No more questions available")
+        
+        next_question_text = next_q.text
+        next_question_difficulty = next_q.difficulty
+        
+        print(f"   Q{session.current_question + 1}: {next_question_text} (difficulty: {next_question_difficulty:.2f})")
         
         # Convert to speech
         print("   Synthesizing question audio...")
@@ -281,6 +327,7 @@ async def submit_answer(
         # Update session
         session.current_question += 1
         session.current_question_text = next_question_text
+        session.current_question_difficulty = next_question_difficulty
         
         print(f"   ✓ Ready for question {session.current_question}\n")
         
