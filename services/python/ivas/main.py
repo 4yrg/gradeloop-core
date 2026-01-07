@@ -314,6 +314,7 @@ async def submit_answer(
                 assessment=AssessmentResult(**assessment),
                 next_question=None,
                 question_audio=None,
+                feedback_text=feedback,
                 final_report=final_report
             )
         
@@ -330,9 +331,13 @@ async def submit_answer(
         
         print(f"   Q{session.current_question + 1}: {next_question_text} (difficulty: {next_question_difficulty:.2f})")
         
-        # Convert to speech
-        print("   Synthesizing question audio...")
-        next_audio_bytes = tts_service.synthesize(next_question_text)
+        # Combine feedback with next question for audio
+        # This way students hear feedback on their answer before the next question
+        combined_response = f"{feedback} ... Now, let's move on. {next_question_text}"
+        
+        # Convert combined feedback + question to speech
+        print("   Synthesizing feedback + question audio...")
+        next_audio_bytes = tts_service.synthesize(combined_response)
         next_audio_hex = next_audio_bytes.hex()
         
         # Update session
@@ -351,6 +356,7 @@ async def submit_answer(
                 question_text=next_question_text
             ),
             question_audio=next_audio_hex,
+            feedback_text=feedback,
             final_report=None
         )
         

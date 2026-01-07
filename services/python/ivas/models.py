@@ -77,7 +77,8 @@ class AnswerResponse(BaseModel):
     transcript: str = Field(..., description="What the student said (transcribed)")
     assessment: Optional[AssessmentResult] = Field(None, description="Assessment of this answer")
     next_question: Optional[VivaQuestion] = Field(None, description="Next question (if not complete)")
-    question_audio: Optional[str] = Field(None, description="Hex-encoded audio for next question")
+    question_audio: Optional[str] = Field(None, description="Hex-encoded audio for feedback + next question combined")
+    feedback_text: Optional[str] = Field(None, description="Feedback on the previous answer (displayed to student)")
     final_report: Optional[FinalReport] = Field(None, description="Final report (if complete)")
 
 

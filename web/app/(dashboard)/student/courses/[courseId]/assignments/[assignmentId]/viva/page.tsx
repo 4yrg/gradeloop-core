@@ -212,6 +212,7 @@ export default function VivaPage({
     const [currentQuestion, setCurrentQuestion] = useState<VivaQuestion | null>(null);
     const [questionNumber, setQuestionNumber] = useState(0);
     const [liveTranscript, setLiveTranscript] = useState<string>('');
+    const [currentFeedback, setCurrentFeedback] = useState<string | null>(null);
     const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([]);
     const [finalReport, setFinalReport] = useState<FinalReport | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -397,8 +398,11 @@ export default function VivaPage({
 
             if (data.is_complete) {
                 setFinalReport(data.final_report);
+                setCurrentFeedback(data.feedback_text || null);
                 setVivaState('completed');
             } else {
+                // Store feedback to display before next question
+                setCurrentFeedback(data.feedback_text || null);
                 setCurrentQuestion(data.next_question);
                 setQuestionNumber(data.next_question.question_number);
 
@@ -779,6 +783,17 @@ export default function VivaPage({
                                     level={isRecording ? audioLevel : vivaState === 'playing_question' ? 50 : 0} 
                                 />
                             </div>
+
+                            {/* Feedback on Previous Answer */}
+                            {currentFeedback && questionNumber > 1 && (
+                                <div className="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MessageSquare className="h-3 w-3 text-blue-400" />
+                                        <p className="text-xs text-blue-400 uppercase tracking-wider">Feedback on Your Answer</p>
+                                    </div>
+                                    <p className="text-sm leading-relaxed text-blue-100">{currentFeedback}</p>
+                                </div>
+                            )}
 
                             {/* Current Question */}
                             {currentQuestion && (
