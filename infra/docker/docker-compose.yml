@@ -276,6 +276,8 @@ services:
     build:
       context: ../../services/python/keystroke-service
       dockerfile: Dockerfile
+    env_file:
+      - ../../services/python/keystroke-service/.env
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379

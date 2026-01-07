@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Textarea } from '../../../components/ui/textarea';
-import { Input } from '../../../components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Brain, FileCode, Play } from 'lucide-react';
-import { behavioralAnalysisService, type KeystrokeSessionEvent } from '../../../lib/behavioral-analysis-service';
-import { BehavioralAnalysisReport } from '../../../components/instructor/behavioral-analysis-report';
-import type { BehavioralAnalysisResult } from '../../../lib/behavioral-analysis-service';
+import { behavioralAnalysisService, type KeystrokeSessionEvent } from '@/lib/behavioral-analysis-service';
+import { BehavioralAnalysisReport } from '@/components/instructor/behavioral-analysis-report';
+import type { BehavioralAnalysisResult } from '@/lib/behavioral-analysis-service';
 
 export default function BehavioralAnalysisDemo() {
   const [studentId, setStudentId] = useState('student_001');

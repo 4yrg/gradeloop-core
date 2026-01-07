@@ -475,7 +475,7 @@ async def get_analysis_config():
         "success": True,
         "config": {
             "llm_enabled": behavioral_analyzer.model is not None,
-            "llm_model": "gemini-1.5-flash" if behavioral_analyzer.model else None,
+            "llm_model": "gemini-2.5-flash" if behavioral_analyzer.model else None,
             "analysis_features": [
                 "Developmental Logic & Iteration",
                 "Cognitive Load Analysis",

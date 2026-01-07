@@ -174,7 +174,7 @@ Returns current analysis system configuration.
   "success": true,
   "config": {
     "llm_enabled": true,
-    "llm_model": "gemini-1.5-flash",
+    "llm_model": "gemini-2.5-flash",
     "analysis_features": [
       "Developmental Logic & Iteration",
       "Cognitive Load Analysis",

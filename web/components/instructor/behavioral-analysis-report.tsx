@@ -19,13 +19,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Progress } from '../../../components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import type { BehavioralAnalysisResult } from '../../../lib/behavioral-analysis-service';
-import { behavioralAnalysisService } from '../../../lib/behavioral-analysis-service';
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { BehavioralAnalysisResult } from '@/lib/behavioral-analysis-service';
+import { behavioralAnalysisService } from '@/lib/behavioral-analysis-service';
 
 interface BehavioralAnalysisReportProps {
   analysis: BehavioralAnalysisResult;

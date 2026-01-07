@@ -18,11 +18,11 @@ import json
 
 class KeystrokeSessionEvent(BaseModel):
     """Individual keystroke event in a coding session"""
-    timestamp: int  # milliseconds since session start
+    timestamp: float  # milliseconds since session start
     key: str
     keyCode: int
-    dwellTime: int  # time key was held down (ms)
-    flightTime: int  # time between this key and previous key (ms)
+    dwellTime: float  # time key was held down (ms)
+    flightTime: float  # time between this key and previous key (ms)
     action: str  # 'type', 'delete', 'paste', etc.
     lineNumber: Optional[int] = None
     columnNumber: Optional[int] = None
@@ -103,7 +103,7 @@ class BehavioralAnalyzer:
         self.gemini_api_key = gemini_api_key or os.getenv('GEMINI_API_KEY')
         if self.gemini_api_key:
             genai.configure(api_key=self.gemini_api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
         else:
             self.model = None
             print("⚠️  Warning: No Gemini API key provided. LLM analysis will be disabled.")
@@ -579,7 +579,7 @@ Respond ONLY with valid JSON, no additional text."""
 - Struggle Areas: {len(cognitive.struggle_areas)}
 
 **Code Characteristics:**
-- Lines of Code: {len(final_code.split('\\n'))}
+- Lines of Code: {final_code.count(chr(10)) + 1}
 - Characters: {len(final_code)}
 
 **Friction Point Details:**
