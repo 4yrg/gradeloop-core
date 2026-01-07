@@ -1,6 +1,7 @@
 package com.gradeloop.authanalytics.controller;
 
 import com.gradeloop.authanalytics.dto.AuthEventResponse;
+import com.gradeloop.authanalytics.dto.PagedResponse;
 import com.gradeloop.authanalytics.dto.StudentAuthSummary;
 import com.gradeloop.authanalytics.service.AuthEventService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,22 @@ public class AuthAnalyticsController {
             @PathVariable String assignmentId) {
         log.info("Fetching auth events for student: {}, assignment: {}", studentId, assignmentId);
         List<AuthEventResponse> events = authEventService.getStudentAssignmentEvents(studentId, assignmentId);
+        return ResponseEntity.ok(events);
+    }
+
+    /**
+     * Get paginated auth events for a student on a specific assignment
+     */
+    @GetMapping("/student/{studentId}/assignment/{assignmentId}/events/paged")
+    public ResponseEntity<PagedResponse<AuthEventResponse>> getStudentAssignmentEventsPaged(
+            @PathVariable String studentId,
+            @PathVariable String assignmentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("Fetching paginated auth events for student: {}, assignment: {}, page: {}, size: {}",
+                studentId, assignmentId, page, size);
+        PagedResponse<AuthEventResponse> events = authEventService.getStudentAssignmentEventsPaged(
+                studentId, assignmentId, page, size);
         return ResponseEntity.ok(events);
     }
 

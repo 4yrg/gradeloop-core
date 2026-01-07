@@ -1,6 +1,8 @@
 package com.gradeloop.authanalytics.repository;
 
 import com.gradeloop.authanalytics.entity.AuthEvent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +21,15 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     List<AuthEvent> findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(
         String studentId,
         String assignmentId
+    );
+
+    /**
+     * Find auth events for a specific student and assignment with pagination
+     */
+    Page<AuthEvent> findByStudentIdAndAssignmentId(
+        String studentId,
+        String assignmentId,
+        Pageable pageable
     );
 
     /**

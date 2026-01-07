@@ -12,7 +12,8 @@ import {
     AlertCircle,
     CheckCircle2,
     XCircle,
-    Info
+    Info,
+    Fingerprint
 } from "lucide-react";
 import {
     Tabs,
@@ -25,12 +26,15 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Progress } from "../../ui/progress";
 import { Card, CardContent } from "../../ui/card";
+import { AuthAnalyticsTab } from "./auth-analytics-tab";
 
 interface SubmissionViewerProps {
     submissionId: string;
+    studentId?: string;
+    assignmentId?: string;
 }
 
-export function SubmissionViewer({ submissionId }: SubmissionViewerProps) {
+export function SubmissionViewer({ submissionId, studentId, assignmentId }: SubmissionViewerProps) {
     return (
         <Tabs defaultValue="code" className="flex-1 flex flex-col h-full">
             <div className="px-4 border-b bg-muted/5">
@@ -49,6 +53,9 @@ export function SubmissionViewer({ submissionId }: SubmissionViewerProps) {
                     </TabsTrigger>
                     <TabsTrigger value="integrity" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none">
                         <ShieldAlert className="mr-2 h-4 w-4" /> Integrity
+                    </TabsTrigger>
+                    <TabsTrigger value="auth" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none">
+                        <Fingerprint className="mr-2 h-4 w-4" /> Auth Analytics
                     </TabsTrigger>
                     <TabsTrigger value="lineage" className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none">
                         <GitBranch className="mr-2 h-4 w-4" /> Lineage
@@ -240,6 +247,17 @@ export function SubmissionViewer({ submissionId }: SubmissionViewerProps) {
                             </div>
                         </div>
                     </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="auth" className="m-0 h-full">
+                    {studentId && assignmentId ? (
+                        <AuthAnalyticsTab studentId={studentId} assignmentId={assignmentId} />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                            <Fingerprint className="h-12 w-12 mb-4 opacity-20" />
+                            <p>Student and assignment information required</p>
+                        </div>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="lineage" className="m-0 h-full flex flex-col items-center justify-center text-muted-foreground">
