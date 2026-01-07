@@ -11,7 +11,9 @@ import {
     CheckCircle2,
     AlertTriangle,
     FileCode,
-    History
+    History,
+    Brain,
+    ExternalLink
 } from 'lucide-react';
 import { Button } from '../../../../../../../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../../../../../../../components/ui/card';
@@ -71,6 +73,10 @@ export default function StudentSubmissionDetailPage() {
         return { label: 'Low Confidence', color: 'bg-red-500/10 text-red-500 border-red-500/20' };
     };
 
+    const handleViewBehavioralAnalysis = () => {
+        router.push('/demo/behavioral-analysis');
+    };
+
     return (
         <div className="flex flex-col gap-6 pb-12">
             {/* Header */}
@@ -93,6 +99,14 @@ export default function StudentSubmissionDetailPage() {
                         </p>
                     </div>
                 </div>
+                <Button 
+                    onClick={handleViewBehavioralAnalysis}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                    <Brain className="h-4 w-4 mr-2" />
+                    View Behavioral Analysis
+                    <ExternalLink className="h-3 w-3 ml-2" />
+                </Button>
             </div>
 
             {/* Overview Stats */}
@@ -256,7 +270,16 @@ export default function StudentSubmissionDetailPage() {
                                     </Badge>
                                 </div>
                                 <Separator />
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
+                                    <Button 
+                                        variant="default" 
+                                        size="sm" 
+                                        onClick={handleViewBehavioralAnalysis}
+                                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                                    >
+                                        <Brain className="h-4 w-4 mr-2" />
+                                        View Full Behavioral Analysis
+                                    </Button>
                                     <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
                                         Schedule Viva
                                     </Button>
@@ -279,10 +302,19 @@ export default function StudentSubmissionDetailPage() {
                                     Healthy Authentication Profile
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="space-y-3">
                                 <p className="text-sm text-muted-foreground">
                                     Keystroke patterns are consistent with the student's baseline behavior. No integrity concerns detected.
                                 </p>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleViewBehavioralAnalysis}
+                                    className="mt-2"
+                                >
+                                    <Brain className="h-4 w-4 mr-2" />
+                                    View Detailed Analysis
+                                </Button>
                             </CardContent>
                         </Card>
                     )}
