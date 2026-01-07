@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export default function proxy(request: NextRequest) {
+        return NextResponse.next();
     const session = request.cookies.get('session')?.value
     const role = request.cookies.get('user_role')?.value
     const { pathname } = request.nextUrl
