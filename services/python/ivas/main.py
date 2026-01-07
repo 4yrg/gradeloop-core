@@ -250,9 +250,20 @@ async def submit_answer(
             question_difficulty=session.current_question_difficulty
         )
         
+        # Generate feedback for the student
+        print("   Generating feedback...")
+        feedback = adaptive_service.generate_feedback(
+            question=session.current_question_text,
+            answer=transcript,
+            score=adjusted_score,
+            understanding_level=raw_assessment['understanding_level']
+        )
+        print(f"   Feedback: {feedback[:50]}...")
+        
         assessment = {
             'understanding_level': raw_assessment['understanding_level'],
-            'score': adjusted_score
+            'score': adjusted_score,
+            'feedback': feedback
         }
         
         print(f"   Assessment: {assessment['understanding_level']} (Raw: {raw_assessment['score']}, Adjusted: {adjusted_score}/100)")
