@@ -176,6 +176,29 @@ export default function SubmissionPage({
                         </CardContent>
                     </Card>
 
+                    {assignment.vivaEnabled && (
+                        <Card className="border-blue-500/20 bg-blue-500/5">
+                            <CardContent className="pt-4 space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Mic className="h-5 w-5 text-blue-600" />
+                                    <span className="font-semibold text-blue-700 dark:text-blue-300">Viva Assessment</span>
+                                    <Badge variant={assignment.vivaRequired ? "default" : "secondary"} className="text-xs ml-auto">
+                                        {assignment.vivaRequired ? "Required" : "Optional"}
+                                    </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    AI-powered oral examination to verify your understanding. Contributes {assignment.vivaWeight}% to your final grade.
+                                </p>
+                                <Button asChild variant="outline" className="w-full border-blue-500/30 hover:bg-blue-500/10">
+                                    <Link href={`/student/courses/${courseId}/assignments/${assignmentId}/viva`}>
+                                        <PlayCircle className="mr-2 h-4 w-4 text-blue-600" />
+                                        Start Viva Assessment
+                                    </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <Alert variant="destructive" className="border-destructive/50 bg-destructive/5">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle className="font-bold uppercase tracking-wider text-[10px]">Irreversible Action</AlertTitle>
