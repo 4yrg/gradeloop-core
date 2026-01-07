@@ -275,13 +275,54 @@ export default function VivaPage({
         }
     };
 
-    const endSession = () => {
+    const endSession = async () => {
+        // Stop any active recording
         if (mediaRecorderRef.current) {
             mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
         }
-        setVivaState('not_started');
-        setConnectionStatus('disconnected');
-        setSessionStartTime(null);
+        if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+        }
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close();
+        }
+
+        // If viva is completed and we have a final report, just show it
+        if (finalReport) {
+            setVivaState('completed');
+            setConnectionStatus('disconnected');
+            setSessionStartTime(null);
+            return;
+        }
+
+        // If session exists, call the end endpoint to get the final report
+        if (sessionId) {
+            setVivaState('processing');
+            setLiveTranscript('Generating final report...');
+
+            try {
+                const response = await fetch(`${IVAS_API_URL}/viva/end?session_id=${sessionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.final_report) {
+                        setFinalReport(data.final_report);
+                        setVivaState('completed');
+                        setConnectionStatus('disconnected');
+                        setSessionStartTime(null);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('Error ending session:', err);
+            }
+        }
+
+        // Fallback: navigate back to assignment if something goes wrong
+        window.location.href = `/student/courses/${courseId}/assignments/${assignmentId}/submit`;
     };
 
     // Play audio from hex string
@@ -778,9 +819,9 @@ export default function VivaPage({
 
                             {/* Waveform Visualization */}
                             <div className="flex items-center justify-center py-4">
-                                <AudioWaveform 
-                                    isActive={vivaState === 'playing_question' || isRecording} 
-                                    level={isRecording ? audioLevel : vivaState === 'playing_question' ? 50 : 0} 
+                                <AudioWaveform
+                                    isActive={vivaState === 'playing_question' || isRecording}
+                                    level={isRecording ? audioLevel : vivaState === 'playing_question' ? 50 : 0}
                                 />
                             </div>
 

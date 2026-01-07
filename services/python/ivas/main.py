@@ -396,6 +396,95 @@ async def get_session(session_id: str) -> dict:
     }
 
 
+@app.post("/viva/end")
+async def end_viva(session_id: str = Query(..., description="The viva session ID")) -> dict:
+    """
+    End the viva session early and generate a final report based on questions answered so far.
+    
+    This allows students to end the session before completing all 5 questions
+    and still receive an assessment based on their performance.
+    """
+    try:
+        # Validate session exists
+        if session_id not in sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        session = sessions[session_id]
+        
+        print(f"\n🛑 Ending viva session early: {session_id}")
+        print(f"   Questions answered: {len(session.conversation_history)}")
+        
+        # Check if any questions were answered
+        if len(session.conversation_history) == 0:
+            # No questions answered, return a minimal report
+            return {
+                "is_complete": True,
+                "final_report": {
+                    "session_id": session_id,
+                    "student_id": session.student_id,
+                    "assignment_title": session.assignment_title,
+                    "total_score": 0,
+                    "competency_level": "INCOMPLETE",
+                    "strengths": [],
+                    "weaknesses": ["Session ended without answering any questions"],
+                    "recommendations": ["Complete the viva assessment to receive proper evaluation"],
+                    "conversation_history": []
+                },
+                "message": "Session ended without answering any questions"
+            }
+        
+        # Generate final report based on answered questions
+        print("   Generating final report from partial session...")
+        report_data = llm_service.generate_final_report(
+            conversation_history=session.conversation_history,
+            student_id=session.student_id,
+            assignment_title=session.assignment_title
+        )
+        report_data['session_id'] = session_id
+        
+        final_report = FinalReport(**report_data)
+        session.is_complete = True
+        
+        # Cleanup adaptive service if it exists
+        if session_id in adaptive_services:
+            del adaptive_services[session_id]
+        
+        print(f"   Final Score: {final_report.total_score}/100")
+        print(f"   Competency: {final_report.competency_level}")
+        print(f"   ✓ Session ended early with {len(session.conversation_history)} questions answered\n")
+        
+        return {
+            "is_complete": True,
+            "final_report": {
+                "session_id": final_report.session_id,
+                "student_id": final_report.student_id,
+                "assignment_title": final_report.assignment_title,
+                "total_score": final_report.total_score,
+                "competency_level": final_report.competency_level,
+                "strengths": final_report.strengths,
+                "weaknesses": final_report.weaknesses,
+                "recommendations": final_report.recommendations,
+                "conversation_history": [
+                    {
+                        "question_number": entry.question_number,
+                        "question_text": entry.question_text,
+                        "answer_text": entry.answer_text,
+                        "understanding_level": entry.understanding_level,
+                        "score": entry.score
+                    }
+                    for entry in session.conversation_history
+                ]
+            },
+            "message": f"Session ended with {len(session.conversation_history)} of 5 questions answered"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error ending session: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to end session: {str(e)}")
+
+
 @app.delete("/viva/session/{session_id}")
 async def delete_session(session_id: str) -> dict:
     """Delete a session (cleanup)"""
