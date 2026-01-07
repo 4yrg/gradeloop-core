@@ -139,7 +139,7 @@ async def start_viva(request: StartVivaRequest) -> dict:
         print(f"   Assignment: {request.assignment_title}")
         
         # Initialize adaptive question service for this session
-        adaptive_service = AdaptiveQuestionService()
+        adaptive_service = AdaptiveQuestionService(llm_service=llm_service)
         adaptive_service.initialize_question_bank(
             assignment_description=request.assignment_description,
             student_code=request.student_code

@@ -64,35 +64,20 @@ class LLMService:
         Returns:
             The first question text
         """
-        prompt = f"""You are a friendly programming teacher conducting a simple oral exam for a beginner student.
+        prompt = f"""You are a friendly programming teacher conducting an oral exam.
 
 Assignment Topic: {assignment_title}
-(This assignment involves loops and patterns)
+Assignment Details: {assignment_description}
 
-Your job is to ask SIMPLE CONCEPTUAL questions about programming. NO CODE questions!
-
-Ask ONE simple conceptual question. Choose from these:
-
-CONCEPTUAL QUESTIONS (ask these!):
-- "What is a for loop?"
-- "What is a while loop?"
-- "What is the difference between a for loop and a while loop?"
-- "When would you use a for loop instead of a while loop?"
-- "What is a nested loop?"
-- "Why do we use loops in programming?"
-- "What does iteration mean?"
-- "What is an infinite loop?"
-- "What is a loop counter?"
-- "What happens if a loop condition is always true?"
+Ask ONE simple CONCEPTUAL question about programming concepts relevant to this assignment.
 
 RULES:
-1. Ask about CONCEPTS only - what something IS or WHY we use it
-2. Questions should be answerable in simple English without looking at code
-3. NO questions about specific code syntax or implementation
-4. NO questions like "point out in your code" or "in your solution"
-5. Start with the SIMPLEST conceptual question
+1. Ask about CONCEPTS only - what something IS, WHY we use it, or WHEN to use it
+2. Questions should be answerable in plain English without looking at code
+3. NO code-specific questions like "what does line X do?"
+4. Start with a basic question to gauge understanding
 
-Return ONLY the question text in simple English, nothing else."""
+Return ONLY the question text, nothing else."""
 
         question = self._call_ollama(prompt, temperature=0.7)
         # Clean up any markdown or extra formatting
@@ -123,76 +108,35 @@ Return ONLY the question text in simple English, nothing else."""
         last_question = last_entry.question_text if last_entry else ""
         last_score = last_entry.score if last_entry else 0
         
-        # Build conversation context
+        # Build conversation context showing already asked questions
         history_text = ""
         for entry in conversation_history:
             history_text += f"\nQ{entry.question_number}: {entry.question_text}\n"
             history_text += f"A{entry.question_number}: {entry.answer_text}\n"
             history_text += f"Assessment: {entry.understanding_level} (Score: {entry.score}/100)\n"
         
-        # Extract already asked questions to prevent duplicates
-        asked_questions = set()
-        all_possible_questions = [
-            "What is a for loop?",
-            "What is a while loop?",
-            "What is the difference between for and while loop?",
-            "What is the difference between a for loop and a while loop?",
-            "When would you use a for loop instead of a while loop?",
-            "What is a nested loop?",
-            "Why do we use loops in programming?",
-            "What is iteration?",
-            "What is an infinite loop?",
-            "What is a loop counter?",
-            "What happens if a loop condition is always true?"
-        ]
-        
-        # Normalize and check which questions were already asked
-        for entry in conversation_history:
-            q_text_normalized = entry.question_text.lower().strip().rstrip('?')
-            for possible_q in all_possible_questions:
-                possible_q_normalized = possible_q.lower().strip().rstrip('?')
-                if q_text_normalized in possible_q_normalized or possible_q_normalized in q_text_normalized:
-                    asked_questions.add(possible_q)
-                    break
-        
-        # Filter out already asked questions
-        available_questions = [q for q in all_possible_questions if q not in asked_questions]
-        
-        # Format available questions as bullet list
-        available_questions_text = "\n".join(f"- {q}" for q in available_questions)
-        
         prompt = f"""You are a friendly programming teacher giving feedback and asking the next question.
 
-Last Question: {last_question}
-Student's Answer: {current_answer}
+Previous Conversation:
+{history_text}
+
+Latest Question: {last_question}
+Latest Answer: {current_answer}
 Score: {last_score}/100
 
-CORRECT ANSWERS (use these to give accurate feedback):
-- "What is a for loop?" → A loop used when you know the number of iterations.
-- "What is a while loop?" → A loop that runs while a condition is true / when iterations unknown.
-- "For vs while?" → For = known iterations. While = unknown iterations.
-- "When use for vs while?" → For when you know how many times. While when you don't.
-- "What is a nested loop?" → A loop inside another loop.
-- "Why use loops?" → To repeat code without writing it multiple times.
-- "What is iteration?" → One cycle/execution of the loop body.
-- "What is infinite loop?" → A loop that never stops.
+FEEDBACK BASED ON SCORE:
+- Score >= 70: Acknowledge correctness briefly
+- Score 50-69: Note what was partially correct
+- Score < 50: Gently correct with a short explanation
 
-FEEDBACK RULES:
-- Score >= 70: Say "That's right!" or "Correct!" + briefly confirm their answer
-- Score 50-69: Say "That's partially correct." + add what was missing
-- Score < 50: Say "Not quite." + give the simple correct answer
+NEXT QUESTION:
+- Ask a NEW conceptual question (don't repeat previous questions)
+- Stay relevant to programming concepts
+- Keep it simple and answerable in plain English
 
-NEXT QUESTION - Pick ONE from these available questions ONLY:
-{available_questions_text}
+FORMAT: [Brief feedback]. [Next question]?
 
-FORMAT: [Short feedback]. [Next question]?
-
-EXAMPLES:
-- "That's right! For loops are used when you know the iterations. What is a while loop?"
-- "Correct! Loops help us repeat code. What is iteration?"
-- "Not quite. A for loop is for when you know how many times to repeat. What is a nested loop?"
-
-Return ONLY feedback + question:"""
+Return ONLY feedback + question, nothing else."""
 
         response = self._call_ollama(prompt, temperature=0.7)
         response = response.replace("**", "").strip()
@@ -210,27 +154,29 @@ Return ONLY feedback + question:"""
         Returns:
             Dictionary with 'understanding_level' and 'score'
         """
-        prompt = f"""You are assessing a student's verbal answer about a programming concept.
+        prompt = f"""You are assessing a student's SPOKEN answer (transcribed from voice).
 
 Question: {question}
 Student's Answer: "{answer}"
 
-Evaluate the answer based on:
-1. Correctness - Does it address the question?
-2. Completeness - Are key points covered?
-3. Clarity - Is the explanation coherent?
+CRITICAL: This is VOICE-TO-TEXT transcription, so interpret common errors:
+- "four loop" = "for loop"
+- "while lope" / "while globe" = "while loop"  
+- "except number" = "exact number"
+- "iteration" may appear as "iterated", "iterating"
+- "Follow" might be "for loop"
+- Other homophones and speech recognition mistakes
+
+FOCUS: Does the student understand the CONCEPT, ignoring transcription errors?
 
 SCORING GUIDELINES:
-- 80-100: Excellent answer, correct and complete understanding
-- 60-79: Good answer, mostly correct with minor gaps
-- 40-59: Partial understanding, some correct elements but significant gaps
-- 20-39: Minimal understanding, mostly incorrect or vague
-- 0-19: No understanding, completely wrong or off-topic
+- 80-100: Excellent - correct understanding of the concept
+- 60-79: Good - mostly correct understanding
+- 40-59: Partial - some understanding but significant gaps
+- 20-39: Minimal - vague or mostly incorrect
+- 0-19: None - completely wrong, off-topic, or "I don't know"
 
-IMPORTANT: 
-- Be lenient with simple wording or grammar issues
-- Focus on conceptual understanding, not perfect phrasing
-- If student shows they understand the concept, score 60+
+Be FAIR with transcription errors. If the concept is right, score 60+.
 
 Respond in this format:
 LEVEL: [excellent/good/partial/minimal/none]
@@ -252,7 +198,7 @@ SCORE: [number]"""
         
         score = max(0, min(100, score))  # Clamp between 0-100
         
-        # Additional validation: check for obviously bad answers
+        # Only check for obvious non-answers
         answer_lower = answer.lower().strip()
         bad_indicators = [
             "i don't know", "idk", "no idea", "i have no clue",
@@ -264,8 +210,8 @@ SCORE: [number]"""
                 score = min(score, 15)
                 understanding_level = "none"
         
-        # Check for very short non-answers
-        if len(answer.split()) < 3:
+        # Check for very short non-answers (less than 3 words)
+        if len(answer.split()) < 3 and "[No speech detected]" not in answer:
             score = min(score, 25)
             if understanding_level in ["excellent", "good"]:
                 understanding_level = "minimal"

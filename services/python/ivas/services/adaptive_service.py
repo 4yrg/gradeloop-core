@@ -2,6 +2,7 @@
 Adaptive Question Selection Service using simplified IRT and BKT algorithms
 """
 import math
+import re
 from typing import List, Dict, Optional, Tuple
 from models import ConversationEntry
 
@@ -24,31 +25,153 @@ class AdaptiveQuestionService:
     and BKT (Bayesian Knowledge Tracing) principles
     """
     
-    def __init__(self):
+    def __init__(self, llm_service=None):
         """Initialize the adaptive service with default question bank"""
         self.student_theta = 0.0  # Student ability estimate (starts neutral)
         self.topic_knowledge = {}  # Track knowledge state per topic
         self.question_bank = []
         self.asked_questions = set()
+        self.primary_topic = None  # Main focus topic from assignment
+        self.llm_service = llm_service  # For dynamic question generation
         
     def initialize_question_bank(self, assignment_description: str, student_code: str):
-        """
-        Initialize question bank based on assignment context.
-        For now, uses a generic bank but can be expanded to analyze code.
+        """using LLM to generate relevant questions
         
         Args:
             assignment_description: Description of the assignment
             student_code: Student's submitted code
         """
-        # Extract topics from assignment description (simple keyword matching)
+        print("  Analyzing assignment and generating questions...")
+        
+        # Use LLM to generate questions if available
+        if self.llm_service:
+            self.question_bank = self._generate_questions_with_llm(
+                assignment_description, 
+                student_code
+            )
+        else:
+            # Fallback to hardcoded questions
+            self.question_bank = self._get_fallback_questions(assignment_description)
+        
+        # Detect primary topic from questions
+        if self.question_bank:
+            self.primary_topic = self.question_bank[0].topic
+        else:
+            self.primary_topic = 'programming'
+        
+        # Initialize topic knowledge states
+        topics = set(q.topic for q in self.question_bank)
+        for topic in topics:
+            self.topic_knowledge[topic] = 0.5  # Start with 50% knowledge probability
+        
+        print(f"✓ Generated {len(self.question_bank)} questions")
+        print(f"  Primary topic: {self.primary_topic}")
+        print(f"  All topics: {', '.join(topics)}")
+    
+    def _generate_questions_with_llm(self, assignment_description: str, student_code: str) -> List[Question]:
+        """
+        Use LLM to generate 20 conceptual questions about the assignment
+        
+        Args:
+            assignment_description: What the assignment is about
+            student_code: Student's code (for context)
+            
+        Returns:
+            List of Question objects with difficulty ratings
+        """
+        prompt = f"""You are a programming teacher creating viva questions for a student.
+
+Assignment: {assignment_description}
+
+Student's Code Summary: {student_code[:500]}...
+
+Generate 20 CONCEPTUAL questions about programming concepts related to this assignment.
+Questions should be about CONCEPTS, not specific code implementation.
+
+REQUIREMENTS:
+- Questions 1-7: EASY (basic definitions, "what is X?")
+- Questions 8-13: MEDIUM (differences, when to use, why)
+- Questions 14-20: HARD (deeper understanding, edge cases, tradeoffs)
+- Focus on programming CONCEPTS relevant to the assignment
+- NO questions about specific code syntax or implementation details
+- Questions should be answerable verbally without looking at code
+
+Format EXACTLY as:
+TOPIC: [main_topic_name]
+Q1|EASY: [question text]
+Q2|EASY: [question text]
+...
+Q8|MEDIUM: [question text]
+...
+Q14|HARD: [question text]
+...
+Q20|HARD: [question text]
+
+Generate all 20 questions now:"""
+
+        try:
+            response = self.llm_service._call_ollama(prompt, temperature=0.7)
+            questions = self._parse_llm_questions(response)
+            
+            if len(questions) < 10:
+                print(f"  Warning: Only generated {len(questions)} questions, using fallback")
+                return self._get_fallback_questions(assignment_description)
+            
+            return questions
+            
+        except Exception as e:
+            print(f"  Error generating questions with LLM: {e}")
+            print("  Falling back to predefined questions")
+            return self._get_fallback_questions(assignment_description)
+    
+    def _parse_llm_questions(self, llm_response: str) -> List[Question]:
+        """Parse LLM response into Question objects"""
+        questions = []
+        topic = "programming"
+        
+        # Extract topic
+        topic_match = re.search(r'TOPIC:\s*(.+)', llm_response, re.IGNORECASE)
+        if topic_match:
+            topic = topic_match.group(1).strip().lower()
+        
+        # Difficulty mapping
+        difficulty_map = {
+            'EASY': -1.5,
+            'MEDIUM': 0.0,
+            'HARD': 1.0
+        }
+        
+        # Parse questions
+        pattern = r'Q\d+\|(EASY|MEDIUM|HARD):\s*(.+?)(?=\n|$)'
+        matches = re.findall(pattern, llm_response, re.IGNORECASE | re.MULTILINE)
+        
+        for difficulty_str, question_text in matches:
+            difficulty = difficulty_map.get(difficulty_str.upper(), 0.0)
+            # Add variation to difficulty within each category
+            if difficulty_str.upper() == 'EASY':
+                difficulty += (len(questions) % 7) * 0.1  # -1.5 to -0.9
+            elif difficulty_str.upper() == 'MEDIUM':
+                difficulty += (len(questions) % 6) * 0.15  # 0.0 to 0.75
+            else:  # HARD
+                difficulty += (len(questions) % 7) * 0.15  # 1.0 to 1.9
+            
+            questions.append(Question(
+                text=question_text.strip(),
+                difficulty=round(difficulty, 2),
+                topic=topic
+            ))
+        
+        return questions
+    
+    def _get_fallback_questions(self, assignment_description: str) -> List[Question]:
+        """Fallback to predefined questions if LLM fails"""
         desc_lower = assignment_description.lower()
         
-        # Build dynamic question bank based on detected topics
-        self.question_bank = []
-        
-        # Loop-related questions (if loops are mentioned)
-        if any(word in desc_lower for word in ['loop', 'iteration', 'for', 'while']):
-            self.question_bank.extend([
+        # Detect primary topic
+        if any(word in desc_lower for word in ['loop', 'iteration', 'for', 'while', 'repeat']):
+            self.primary_topic = 'loops'
+        elif any(word in desc_lower for word in ['if', 'else', 'condition', 'boolean']):
+            questions.extend([
                 Question("What is a for loop?", -1.5, "loops"),
                 Question("What is a while loop?", -1.2, "loops"),
                 Question("What is the difference between a for loop and a while loop?", -0.5, "loops"),
@@ -57,43 +180,66 @@ class AdaptiveQuestionService:
                 Question("Why do we use loops in programming?", -1.0, "loops"),
                 Question("What is iteration?", -0.8, "loops"),
                 Question("What is an infinite loop?", 0.2, "loops"),
+                Question("What does it mean to iterate?", -0.6, "loops"),
+                Question("How do you exit a loop early?", 0.5, "loops"),
             ])
         
         # Conditional-related questions
-        if any(word in desc_lower for word in ['if', 'else', 'condition', 'decision']):
-            self.question_bank.extend([
+        elif self.primary_topic == 'conditionals':
+            questions.extend([
                 Question("What is a conditional statement?", -1.5, "conditionals"),
                 Question("What is the difference between if and else?", -0.8, "conditionals"),
                 Question("When do we use elif?", 0.0, "conditionals"),
                 Question("What is a boolean expression?", -0.3, "conditionals"),
+                Question("What are comparison operators?", -0.2, "conditionals"),
             ])
         
         # Function-related questions
-        if any(word in desc_lower for word in ['function', 'method', 'def', 'return']):
-            self.question_bank.extend([
+        elif self.primary_topic == 'functions':
+            questions.extend([
                 Question("What is a function?", -1.3, "functions"),
                 Question("What does it mean to return a value?", -0.5, "functions"),
                 Question("What is the difference between a parameter and an argument?", 0.5, "functions"),
                 Question("Why do we use functions?", -0.8, "functions"),
+                Question("What does it mean to call a function?", -0.7, "functions"),
             ])
         
         # Array/List questions
-        if any(word in desc_lower for word in ['array', 'list', 'index']):
-            self.question_bank.extend([
+        elif self.primary_topic == 'arrays':
+            questions.extend([
                 Question("What is an array?", -1.2, "arrays"),
                 Question("What is an index?", -0.7, "arrays"),
                 Question("How do you access elements in an array?", -0.3, "arrays"),
+                Question("What does zero-based indexing mean?", 0.2, "arrays"),
             ])
         
         # String questions
-        if any(word in desc_lower for word in ['string', 'text', 'character']):
-            self.question_bank.extend([
+        elif self.primary_topic == 'strings':
+            questions.extend([
                 Question("What is a string?", -1.5, "strings"),
                 Question("How are strings different from numbers?", -0.5, "strings"),
+                Question("How do you concatenate strings?", -0.2, "strings"),
             ])
         
         # Variable/Data type questions
-        if any(word in desc_lower for word in ['variable', 'data', 'type']):
+        elif self.primary_topic == 'variables':
+            questions.extend([
+                Question("What is an array?", -1.2, "arrays"),
+                Question("What is an index?", -0.7, "arrays"),
+                Question("How do you access elements in an array?", -0.3, "arrays"),
+                Question("What does zero-based indexing mean?", 0.2, "arrays"),
+            ])
+        
+        # String questions
+        elif self.primary_topic == 'strings':
+            self.question_bank.extend([
+                Question("What is a string?", -1.5, "strings"),
+                Question("How are strings different from numbers?", -0.5, "strings"),
+                Question("How do you concatenate strings?", -0.2, "strings"),
+            ])
+        
+        # Variable/Data type questions
+        elif self.primary_topic == 'variables':
             self.question_bank.extend([
                 Question("What is a variable?", -1.8, "variables"),
                 Question("What are data types?", -1.0, "variables"),
@@ -101,8 +247,8 @@ class AdaptiveQuestionService:
             ])
         
         # If no specific topics detected, use generic programming concepts
-        if not self.question_bank:
-            self.question_bank.extend([
+        if not questions:
+            questions.extend([
                 Question("What is a variable?", -1.8, "basics"),
                 Question("What is a function?", -1.3, "basics"),
                 Question("What is a loop?", -1.2, "basics"),
@@ -110,13 +256,7 @@ class AdaptiveQuestionService:
                 Question("Why do we use comments in code?", -0.8, "basics"),
             ])
         
-        # Initialize topic knowledge states
-        topics = set(q.topic for q in self.question_bank)
-        for topic in topics:
-            self.topic_knowledge[topic] = 0.5  # Start with 50% knowledge probability
-        
-        print(f"✓ Initialized question bank with {len(self.question_bank)} questions")
-        print(f"  Topics: {', '.join(topics)}")
+        return questions
     
     def calculate_probability_correct(self, student_ability: float, question_difficulty: float) -> float:
         """
@@ -177,6 +317,13 @@ class AdaptiveQuestionService:
             available.sort(key=lambda q: q.difficulty)
             return available[0]
         
+        # Strongly prefer questions from primary topic
+        primary_topic_questions = [q for q in available if q.topic == self.primary_topic]
+        
+        # Use primary topic questions if available
+        if primary_topic_questions:
+            available = primary_topic_questions
+        
         # Calculate information value for each available question
         best_question = None
         best_score = -1
@@ -188,10 +335,12 @@ class AdaptiveQuestionService:
             # Knowledge state from BKT
             topic_knowledge = self.topic_knowledge.get(question.topic, 0.5)
             
-            # Combined score: prioritize topics with low knowledge and high information
-            # Weight: 70% information, 30% topic coverage
-            uncertainty = abs(0.5 - topic_knowledge)  # How uncertain we are about this topic
-            score = 0.7 * irt_info + 0.3 * uncertainty
+            # Bonus for staying on primary topic
+            topic_bonus = 0.5 if question.topic == self.primary_topic else 0.0
+            
+            # Combined score: IRT info + topic coverage + topic focus
+            uncertainty = abs(0.5 - topic_knowledge)
+            score = 0.6 * irt_info + 0.2 * uncertainty + topic_bonus
             
             if score > best_score:
                 best_score = score
