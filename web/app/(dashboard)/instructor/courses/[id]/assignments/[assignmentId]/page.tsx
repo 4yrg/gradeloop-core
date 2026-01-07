@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { mockAssignments } from "../../../../../../../lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../../../../../components/ui/card";
 import {
@@ -10,34 +10,87 @@ import {
     AlertTriangle,
     BarChart3,
     MessageSquare,
-    ShieldAlert
+    ShieldAlert,
+    ArrowRight
 } from "lucide-react";
 import { Badge } from "../../../../../../../components/ui/badge";
 import { Progress } from "../../../../../../../components/ui/progress";
+import { MOCK_STUDENT_SUBMISSIONS, getFlaggedSubmissions } from "../../../../../../../lib/mock-submissions-data";
 
 export default function AssignmentOverviewPage() {
     const params = useParams();
-    const { assignmentId } = params;
+    const router = useRouter();
+    const { id: courseId, assignmentId } = params;
 
     const assignment = mockAssignments.find(a => a.id === assignmentId) || {
         name: "Assignment Title",
     };
 
+    const totalSubmissions = MOCK_STUDENT_SUBMISSIONS.length;
+    const flaggedCount = getFlaggedSubmissions().length;
+    const gradedCount = MOCK_STUDENT_SUBMISSIONS.filter(s => s.status === "Graded").length;
+    const avgScore = Math.round(
+        MOCK_STUDENT_SUBMISSIONS.reduce((sum, s) => sum + s.latestScore, 0) / totalSubmissions
+    );
+
     const stats = [
-        { label: "Submissions", value: "84 / 120", icon: Users, trend: "+12 today" },
-        { label: "Avg. Score", value: "72.4%", icon: BarChart3, trend: "Target: 75%" },
-        { label: "Viva Completion", value: "65%", icon: MessageSquare, progress: 65 },
-        { label: "Integrity Flags", value: "5", icon: ShieldAlert, color: "text-red-500" },
+        { 
+            label: "Submissions", 
+            value: `${totalSubmissions}`, 
+            icon: Users, 
+            trend: `${gradedCount} graded`,
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/submissions`,
+            clickable: true
+        },
+        { 
+            label: "Avg. Score", 
+            value: `${avgScore}%`, 
+            icon: BarChart3, 
+            trend: "Target: 75%" 
+        },
+        { 
+            label: "Viva Completion", 
+            value: "65%", 
+            icon: MessageSquare, 
+            progress: 65 
+        },
+        { 
+            label: "Integrity Flags", 
+            value: `${flaggedCount}`, 
+            icon: ShieldAlert, 
+            color: "text-red-500",
+            href: `/instructor/courses/${courseId}/assignments/${assignmentId}/integrity-flags`,
+            clickable: true,
+            highlight: flaggedCount > 0
+        },
     ];
+
+    const handleCardClick = (href?: string) => {
+        if (href) {
+            router.push(href);
+        }
+    };
 
     return (
         <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat) => (
-                    <Card key={stat.label}>
+                    <Card 
+                        key={stat.label}
+                        className={`
+                            ${stat.clickable ? 'cursor-pointer transition-all hover:shadow-lg hover:scale-105 hover:border-primary/50' : ''}
+                            ${stat.highlight ? 'border-red-500/20 bg-red-500/5' : ''}
+                        `}
+                        onClick={() => handleCardClick(stat.href)}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-                            <stat.icon className={`h-4 w-4 text-muted-foreground ${stat.color || ""}`} />
+                            <div className="flex items-center gap-2">
+                                <stat.icon className={`h-4 w-4 text-muted-foreground ${stat.color || ""}`} />
+                                {stat.clickable && (
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stat.value}</div>
@@ -46,6 +99,9 @@ export default function AssignmentOverviewPage() {
                             )}
                             {stat.progress !== undefined && (
                                 <Progress value={stat.progress} className="h-1 mt-3" />
+                            )}
+                            {stat.clickable && (
+                                <p className="text-xs text-primary mt-2 font-medium">Click to view →</p>
                             )}
                         </CardContent>
                     </Card>
