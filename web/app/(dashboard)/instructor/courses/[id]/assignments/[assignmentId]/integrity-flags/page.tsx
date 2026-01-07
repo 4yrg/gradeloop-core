@@ -62,10 +62,6 @@ export default function IntegrityFlagsPage() {
         if (score < 40) return { label: "Critical", color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" };
         return { label: "Medium", color: "text-yellow-600", bg: "bg-yellow-500/10", border: "border-yellow-500/20" };
     };
-    const getIntegrityLevel = (score: number) => {
-        if (score < 40) return { label: "Critical", color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" };
-        return { label: "Medium", color: "text-yellow-600", bg: "bg-yellow-500/10", border: "border-yellow-500/20" };
-    };
 
     // Calculate stats
     const criticalFlags = flaggedSubmissions.filter(s => s.overallIntegrityScore < 40).length;
