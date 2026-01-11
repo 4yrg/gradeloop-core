@@ -186,7 +186,7 @@ docker compose up -d keystroke-analytics-service
 
 This will:
 - Start PostgreSQL database (`keystroke-analytics-db` on port 5434)
-- Start the auth-analytics service (port 8085)
+- Start the keystroke-analytics service (port 8085)
 - Connect to RabbitMQ for event listening
 
 ### Standalone (Development)

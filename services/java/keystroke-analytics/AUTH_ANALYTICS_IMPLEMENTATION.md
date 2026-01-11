@@ -1,8 +1,8 @@
-# Auth Analytics Service - Complete Implementation Guide
+# Keystroke Analytics Service - Complete Implementation Guide
 
 ## Overview
 
-This document provides a comprehensive overview of the auth-analytics service implementation, including backend services, UI components, and end-to-end integration with the submission flow.
+This document provides a comprehensive overview of the keystroke-analytics service implementation, including backend services, UI components, and end-to-end integration with the submission flow.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ This document provides a comprehensive overview of the auth-analytics service im
          │ Consumes Events
          ▼
 ┌──────────────────┐
-│  Auth-Analytics  │
+│  Keystroke-Analytics  │
 │  Service (Java)  │
 │   (Port 8085)    │
 └────────┬─────────┘
@@ -33,7 +33,7 @@ This document provides a comprehensive overview of the auth-analytics service im
          ▼
 ┌──────────────────┐
 │   PostgreSQL     │
-│  auth_analytics  │
+│  keystroke_analytics  │
 │   (Port 5434)    │
 └──────────────────┘
          │
@@ -50,9 +50,9 @@ This document provides a comprehensive overview of the auth-analytics service im
 
 ### 1. Backend Services
 
-#### Auth-Analytics Service (Java/Spring Boot)
+#### Keystroke-Analytics Service (Java/Spring Boot)
 
-**Location:** `/services/java/auth-analytics/`
+**Location:** `/services/java/keystroke-analytics/`
 
 **New Features Added:**
 
@@ -63,7 +63,7 @@ This document provides a comprehensive overview of the auth-analytics service im
    - `GlobalExceptionHandler` - Centralized error handling with proper HTTP responses
 
 2. **Data Validation**
-   - Added Jakarta validation annotations to `AuthEventMessage` DTO
+   - Added Jakarta validation annotations to `KeystrokeEventMessage` DTO
    - Confidence level: 0-100%
    - Risk score: 0-100%
    - Required fields validated
@@ -84,7 +84,7 @@ This document provides a comprehensive overview of the auth-analytics service im
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/analytics/student/{studentId}/assignment/{assignmentId}/events` | GET | Get all auth events |
+| `/api/analytics/student/{studentId}/assignment/{assignmentId}/events` | GET | Get all keystroke events |
 | `/api/analytics/student/{studentId}/assignment/{assignmentId}/events/paged` | GET | Get paginated events |
 | `/api/analytics/student/{studentId}/assignment/{assignmentId}/summary` | GET | Get statistics summary |
 | `/api/analytics/assignment/{assignmentId}/suspicious` | GET | Get high-risk events |
@@ -97,15 +97,15 @@ This document provides a comprehensive overview of the auth-analytics service im
 **Location:** `/services/python/keystroke-service/`
 
 **Existing Integration:**
-- Already publishes auth events to RabbitMQ after verification
+- Already publishes keystroke events to RabbitMQ after verification
 - Endpoints: `/api/keystroke/verify` and `/api/keystroke/monitor`
 - Events include: studentId, assignmentId, courseId, confidenceLevel, riskScore, etc.
 
 ### 2. Frontend UI Components
 
-#### 1. Auth Analytics Service Client
+#### 1. Keystroke Analytics Service Client
 
-**File:** `/web/lib/auth-analytics-service.ts`
+**File:** `/web/lib/keystroke-analytics-service.ts`
 
 **Features:**
 - TypeScript interfaces for all DTOs
@@ -118,14 +118,14 @@ This document provides a comprehensive overview of the auth-analytics service im
 
 **Interfaces:**
 ```typescript
-- AuthEvent
+- KeystrokeEvent
 - StudentAuthSummary
 - PagedResponse<T>
 ```
 
 #### 2. Auth Analytics Tab (Submission Viewer)
 
-**File:** `/web/components/instructor/assignment/auth-analytics-tab.tsx`
+**File:** `/web/components/instructor/assignment/keystroke-analytics-tab.tsx`
 
 **Features:**
 - Real-time data loading for student submissions
@@ -162,7 +162,7 @@ This document provides a comprehensive overview of the auth-analytics service im
 - Added `Fingerprint` icon import
 - Added optional `studentId` and `assignmentId` props
 - New "Auth Analytics" tab with Fingerprint icon
-- Conditional rendering of AuthAnalyticsTab component
+- Conditional rendering of KeystrokeAnalyticsTab component
 - Fallback message when student/assignment data missing
 
 **Tab Structure:**
@@ -262,7 +262,7 @@ Code | Autograder | Viva | Socratic Chat | Integrity | Auth Analytics | Lineage
    - Message includes: studentId, assignmentId, courseId, confidence, risk, etc.
 
 4. **Event Consumption**
-   - Auth-Analytics service listens on queue: `keystroke.auth.events`
+   - Keystroke-Analytics service listens on queue: `keystroke.auth.events`
    - Validates incoming message
    - Persists to PostgreSQL database
    - Logs successful storage
@@ -270,7 +270,7 @@ Code | Autograder | Viva | Socratic Chat | Integrity | Auth Analytics | Lineage
 5. **UI Display**
    - Instructor navigates to submission viewer
    - Clicks "Auth Analytics" tab
-   - Frontend fetches data from auth-analytics API
+   - Frontend fetches data from keystroke-analytics API
    - Displays statistics, events timeline, and risk assessment
    - Updates in real-time on refresh
 
@@ -321,9 +321,9 @@ Code | Autograder | Viva | Socratic Chat | Integrity | Auth Analytics | Lineage
 
 ### Environment Variables
 
-**Auth-Analytics Service:**
+**Keystroke-Analytics Service:**
 ```properties
-SPRING_DATASOURCE_URL=jdbc:postgresql://auth-analytics-db:5432/auth_analytics_db
+SPRING_DATASOURCE_URL=jdbc:postgresql://keystroke-analytics-db:5432/keystroke_analytics_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
 SPRING_RABBITMQ_HOST=rabbitmq
@@ -346,13 +346,13 @@ NEXT_PUBLIC_AUTH_ANALYTICS_API_URL=http://localhost:8085/api/analytics
 Services configured in `/infra/docker/docker-compose.yml`:
 
 ```yaml
-auth-analytics-service:
+keystroke-analytics-service:
   ports: ["8085:8085"]
   depends_on:
-    - auth-analytics-db
+    - keystroke-analytics-db
     - rabbitmq
 
-auth-analytics-db:
+keystroke-analytics-db:
   image: postgres:15-alpine
   ports: ["5434:5432"]
 
@@ -423,7 +423,7 @@ Students don't directly interact with the auth analytics interface. The system w
 ```bash
 # Start services
 cd infra/docker
-docker-compose up auth-analytics-service auth-analytics-db rabbitmq
+docker-compose up keystroke-analytics-service keystroke-analytics-db rabbitmq
 
 # Check health
 curl http://localhost:8085/api/analytics/health
@@ -439,7 +439,7 @@ curl http://localhost:8085/api/analytics/student/test-student/assignment/test-as
 # (Use Python script or RabbitMQ management UI)
 
 # Check database for stored event
-docker exec -it auth-analytics-db psql -U postgres -d auth_analytics_db -c "SELECT * FROM auth_events;"
+docker exec -it keystroke-analytics-db psql -U postgres -d keystroke_analytics_db -c "SELECT * FROM auth_events;"
 ```
 
 ### 3. Test Frontend
@@ -459,7 +459,7 @@ npm run dev
 
 1. Enroll a test user in keystroke service
 2. Submit assignment with keystroke monitoring
-3. Verify event appears in auth-analytics database
+3. Verify event appears in keystroke-analytics database
 4. Check UI displays the event correctly
 5. Verify real-time monitor shows active session
 
@@ -517,7 +517,7 @@ npm run dev
 ### Common Issues
 
 **1. No events showing in UI**
-- Check if auth-analytics service is running
+- Check if keystroke-analytics service is running
 - Verify RabbitMQ connection
 - Check if keystroke service is publishing events
 - Verify API URL in frontend environment
@@ -568,7 +568,7 @@ npm run dev
 
 ## Conclusion
 
-The auth-analytics service provides a comprehensive solution for continuous authentication monitoring in the GradeLoop platform. The end-to-end implementation includes:
+The keystroke-analytics service provides a comprehensive solution for continuous authentication monitoring in the GradeLoop platform. The end-to-end implementation includes:
 
 - ✅ Robust backend service with error handling and validation
 - ✅ Seamless integration with keystroke service via RabbitMQ
@@ -582,9 +582,9 @@ The system is production-ready with recommendations for security hardening and p
 ## Support
 
 For issues or questions:
-- Check logs: `docker logs auth-analytics-service`
+- Check logs: `docker logs keystroke-analytics-service`
 - Review RabbitMQ management UI: `http://localhost:15672`
-- Check database: `docker exec -it auth-analytics-db psql`
+- Check database: `docker exec -it keystroke-analytics-db psql`
 - Frontend console: Browser developer tools
 
 ---
