@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.dto;
+package com.gradeloop.keystrokeanalytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
