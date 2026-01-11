@@ -1,6 +1,6 @@
-package com.gradeloop.authanalytics.repository;
+package com.gradeloop.keystrokeanalytics.repository;
 
-import com.gradeloop.authanalytics.entity.AuthEvent;
+import com.gradeloop.keystrokeanalytics.entity.KeystrokeEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,49 +13,49 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
+public interface KeystrokeEventRepository extends JpaRepository<KeystrokeEvent, Long> {
 
     /**
-     * Find all auth events for a specific student and assignment
+     * Find all keystroke events for a specific student and assignment
      */
-    List<AuthEvent> findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(
+    List<KeystrokeEvent> findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(
         String studentId,
         String assignmentId
     );
 
     /**
-     * Find auth events for a specific student and assignment with pagination
+     * Find keystroke events for a specific student and assignment with pagination
      */
-    Page<AuthEvent> findByStudentIdAndAssignmentId(
+    Page<KeystrokeEvent> findByStudentIdAndAssignmentId(
         String studentId,
         String assignmentId,
         Pageable pageable
     );
 
     /**
-     * Find all auth events for a specific student
+     * Find all keystroke events for a specific student
      */
-    List<AuthEvent> findByStudentIdOrderByEventTimestampDesc(String studentId);
+    List<KeystrokeEvent> findByStudentIdOrderByEventTimestampDesc(String studentId);
 
     /**
-     * Find all auth events for a specific assignment
+     * Find all keystroke events for a specific assignment
      */
-    List<AuthEvent> findByAssignmentIdOrderByEventTimestampDesc(String assignmentId);
+    List<KeystrokeEvent> findByAssignmentIdOrderByEventTimestampDesc(String assignmentId);
 
     /**
-     * Find all auth events for a specific course
+     * Find all keystroke events for a specific course
      */
-    List<AuthEvent> findByCourseIdOrderByEventTimestampDesc(String courseId);
+    List<KeystrokeEvent> findByCourseIdOrderByEventTimestampDesc(String courseId);
 
     /**
      * Find suspicious events (high risk score)
      */
-    List<AuthEvent> findByRiskScoreGreaterThanOrderByEventTimestampDesc(BigDecimal threshold);
+    List<KeystrokeEvent> findByRiskScoreGreaterThanOrderByEventTimestampDesc(BigDecimal threshold);
 
     /**
      * Find suspicious events for a specific assignment
      */
-    List<AuthEvent> findByAssignmentIdAndRiskScoreGreaterThanOrderByEventTimestampDesc(
+    List<KeystrokeEvent> findByAssignmentIdAndRiskScoreGreaterThanOrderByEventTimestampDesc(
         String assignmentId,
         BigDecimal threshold
     );
@@ -63,7 +63,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Find events within a time range
      */
-    List<AuthEvent> findByEventTimestampBetweenOrderByEventTimestampDesc(
+    List<KeystrokeEvent> findByEventTimestampBetweenOrderByEventTimestampDesc(
         LocalDateTime start,
         LocalDateTime end
     );
@@ -71,7 +71,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Get average confidence for a student on an assignment
      */
-    @Query("SELECT AVG(e.confidenceLevel) FROM AuthEvent e " +
+    @Query("SELECT AVG(e.confidenceLevel) FROM KeystrokeEvent e " +
            "WHERE e.studentId = :studentId AND e.assignmentId = :assignmentId")
     BigDecimal getAverageConfidence(@Param("studentId") String studentId,
                                    @Param("assignmentId") String assignmentId);
@@ -79,7 +79,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Get average risk score for a student on an assignment
      */
-    @Query("SELECT AVG(e.riskScore) FROM AuthEvent e " +
+    @Query("SELECT AVG(e.riskScore) FROM KeystrokeEvent e " +
            "WHERE e.studentId = :studentId AND e.assignmentId = :assignmentId")
     BigDecimal getAverageRiskScore(@Param("studentId") String studentId,
                                   @Param("assignmentId") String assignmentId);
@@ -87,7 +87,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Count suspicious events for a student on an assignment
      */
-    @Query("SELECT COUNT(e) FROM AuthEvent e " +
+    @Query("SELECT COUNT(e) FROM KeystrokeEvent e " +
            "WHERE e.studentId = :studentId AND e.assignmentId = :assignmentId " +
            "AND e.riskScore > :threshold")
     Long countSuspiciousEvents(@Param("studentId") String studentId,
@@ -97,7 +97,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Get min and max confidence for a student on an assignment
      */
-    @Query("SELECT MIN(e.confidenceLevel), MAX(e.confidenceLevel) FROM AuthEvent e " +
+    @Query("SELECT MIN(e.confidenceLevel), MAX(e.confidenceLevel) FROM KeystrokeEvent e " +
            "WHERE e.studentId = :studentId AND e.assignmentId = :assignmentId")
     List<Object[]> getConfidenceRange(@Param("studentId") String studentId,
                                      @Param("assignmentId") String assignmentId);
@@ -105,7 +105,7 @@ public interface AuthEventRepository extends JpaRepository<AuthEvent, Long> {
     /**
      * Get first and last event timestamps
      */
-    @Query("SELECT MIN(e.eventTimestamp), MAX(e.eventTimestamp) FROM AuthEvent e " +
+    @Query("SELECT MIN(e.eventTimestamp), MAX(e.eventTimestamp) FROM KeystrokeEvent e " +
            "WHERE e.studentId = :studentId AND e.assignmentId = :assignmentId")
     List<Object[]> getTimeRange(@Param("studentId") String studentId,
                                @Param("assignmentId") String assignmentId);
