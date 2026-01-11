@@ -1,14 +1,14 @@
-package com.gradeloop.authanalytics.service;
+package com.gradeloop.keystrokeanalytics.service;
 
-import com.gradeloop.authanalytics.dto.AuthEventMessage;
-import com.gradeloop.authanalytics.dto.AuthEventResponse;
-import com.gradeloop.authanalytics.dto.PagedResponse;
-import com.gradeloop.authanalytics.dto.StudentAuthSummary;
-import com.gradeloop.authanalytics.entity.AuthEvent;
-import com.gradeloop.authanalytics.exception.InvalidDataException;
-import com.gradeloop.authanalytics.exception.MessagingException;
-import com.gradeloop.authanalytics.exception.ResourceNotFoundException;
-import com.gradeloop.authanalytics.repository.AuthEventRepository;
+import com.gradeloop.keystrokeanalytics.dto.KeystrokeEventMessage;
+import com.gradeloop.keystrokeanalytics.dto.KeystrokeEventResponse;
+import com.gradeloop.keystrokeanalytics.dto.PagedResponse;
+import com.gradeloop.keystrokeanalytics.dto.StudentKeystrokeSummary;
+import com.gradeloop.keystrokeanalytics.entity.KeystrokeEvent;
+import com.gradeloop.keystrokeanalytics.exception.InvalidDataException;
+import com.gradeloop.keystrokeanalytics.exception.MessagingException;
+import com.gradeloop.keystrokeanalytics.exception.ResourceNotFoundException;
+import com.gradeloop.keystrokeanalytics.repository.KeystrokeEventRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,24 +31,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-public class AuthEventService {
+public class KeystrokeEventService {
 
-    private final AuthEventRepository authEventRepository;
+    private final KeystrokeEventRepository keystrokeEventRepository;
     private static final BigDecimal SUSPICIOUS_THRESHOLD = new BigDecimal("0.5");
 
     /**
-     * Listen for auth events from RabbitMQ and store them
+     * Listen for keystroke events from RabbitMQ and store them
      */
     @RabbitListener(queues = "keystroke.auth.events")
     @Transactional
-    public void handleAuthEvent(@Valid AuthEventMessage message) {
+    public void handleKeystrokeEvent(@Valid KeystrokeEventMessage message) {
         try {
-            log.info("Received auth event for student: {}, assignment: {}",
+            log.info("Received keystroke event for student: {}, assignment: {}",
                     message.getStudentId(), message.getAssignmentId());
 
-            validateAuthEventMessage(message);
+            validateKeystrokeEventMessage(message);
 
-            AuthEvent event = AuthEvent.builder()
+            KeystrokeEvent event = KeystrokeEvent.builder()
                     .studentId(message.getStudentId())
                     .assignmentId(message.getAssignmentId())
                     .courseId(message.getCourseId())
@@ -62,22 +62,22 @@ public class AuthEventService {
                     .metadata(message.getMetadata())
                     .build();
 
-            authEventRepository.save(event);
-            log.info("Successfully stored auth event with ID: {}", event.getId());
+            keystrokeEventRepository.save(event);
+            log.info("Successfully stored keystroke event with ID: {}", event.getId());
 
         } catch (InvalidDataException e) {
-            log.error("Invalid auth event data: {}", e.getMessage());
-            throw new MessagingException("Invalid auth event data", e);
+            log.error("Invalid keystroke event data: {}", e.getMessage());
+            throw new MessagingException("Invalid keystroke event data", e);
         } catch (Exception e) {
-            log.error("Error processing auth event: {}", e.getMessage(), e);
-            throw new MessagingException("Failed to process auth event", e);
+            log.error("Error processing keystroke event: {}", e.getMessage(), e);
+            throw new MessagingException("Failed to process keystroke event", e);
         }
     }
 
     /**
-     * Validate auth event message
+     * Validate keystroke event message
      */
-    private void validateAuthEventMessage(AuthEventMessage message) {
+    private void validateKeystrokeEventMessage(KeystrokeEventMessage message) {
         if (message.getStudentId() == null || message.getStudentId().trim().isEmpty()) {
             throw new InvalidDataException("studentId", "cannot be null or empty");
         }
@@ -90,10 +90,10 @@ public class AuthEventService {
     }
 
     /**
-     * Get all auth events for a student on an assignment
+     * Get all keystroke events for a student on an assignment
      */
-    public List<AuthEventResponse> getStudentAssignmentEvents(String studentId, String assignmentId) {
-        List<AuthEvent> events = authEventRepository
+    public List<KeystrokeEventResponse> getStudentAssignmentEvents(String studentId, String assignmentId) {
+        List<KeystrokeEvent> events = keystrokeEventRepository
                 .findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(studentId, assignmentId);
         return events.stream()
                 .map(this::mapToResponse)
@@ -101,9 +101,9 @@ public class AuthEventService {
     }
 
     /**
-     * Get all auth events with pagination
+     * Get all keystroke events with pagination
      */
-    public PagedResponse<AuthEventResponse> getStudentAssignmentEventsPaged(
+    public PagedResponse<KeystrokeEventResponse> getStudentAssignmentEventsPaged(
             String studentId, String assignmentId, int page, int size) {
         if (page < 0) {
             throw new InvalidDataException("page", "must be non-negative");
@@ -113,14 +113,14 @@ public class AuthEventService {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("eventTimestamp").descending());
-        Page<AuthEvent> eventPage = authEventRepository.findByStudentIdAndAssignmentId(
+        Page<KeystrokeEvent> eventPage = keystrokeEventRepository.findByStudentIdAndAssignmentId(
                 studentId, assignmentId, pageable);
 
-        List<AuthEventResponse> responses = eventPage.getContent().stream()
+        List<KeystrokeEventResponse> responses = eventPage.getContent().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
 
-        return PagedResponse.<AuthEventResponse>builder()
+        return PagedResponse.<KeystrokeEventResponse>builder()
                 .content(responses)
                 .page(eventPage.getNumber())
                 .size(eventPage.getSize())
@@ -134,20 +134,20 @@ public class AuthEventService {
     /**
      * Get summary statistics for a student on an assignment
      */
-    public StudentAuthSummary getStudentAssignmentSummary(String studentId, String assignmentId) {
-        List<AuthEvent> events = authEventRepository
+    public StudentKeystrokeSummary getStudentAssignmentSummary(String studentId, String assignmentId) {
+        List<KeystrokeEvent> events = keystrokeEventRepository
                 .findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(studentId, assignmentId);
 
         if (events.isEmpty()) {
-            throw new ResourceNotFoundException("Auth events",
+            throw new ResourceNotFoundException("Keystroke events",
                     "studentId=" + studentId + ", assignmentId=" + assignmentId);
         }
-        BigDecimal avgConfidence = authEventRepository.getAverageConfidence(studentId, assignmentId);
-        BigDecimal avgRiskScore = authEventRepository.getAverageRiskScore(studentId, assignmentId);
-        Long suspiciousCount = authEventRepository.countSuspiciousEvents(studentId, assignmentId, SUSPICIOUS_THRESHOLD);
+        BigDecimal avgConfidence = keystrokeEventRepository.getAverageConfidence(studentId, assignmentId);
+        BigDecimal avgRiskScore = keystrokeEventRepository.getAverageRiskScore(studentId, assignmentId);
+        Long suspiciousCount = keystrokeEventRepository.countSuspiciousEvents(studentId, assignmentId, SUSPICIOUS_THRESHOLD);
 
-        List<Object[]> confidenceRange = authEventRepository.getConfidenceRange(studentId, assignmentId);
-        List<Object[]> timeRange = authEventRepository.getTimeRange(studentId, assignmentId);
+        List<Object[]> confidenceRange = keystrokeEventRepository.getConfidenceRange(studentId, assignmentId);
+        List<Object[]> timeRange = keystrokeEventRepository.getTimeRange(studentId, assignmentId);
 
         BigDecimal minConfidence = BigDecimal.ZERO;
         BigDecimal maxConfidence = BigDecimal.ZERO;
@@ -164,12 +164,12 @@ public class AuthEventService {
             lastEventTime = (LocalDateTime) timeRange.get(0)[1];
         }
 
-        Long totalEvents = (long) authEventRepository.findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(
+        Long totalEvents = (long) keystrokeEventRepository.findByStudentIdAndAssignmentIdOrderByEventTimestampDesc(
                 studentId, assignmentId).size();
 
         String riskLevel = calculateRiskLevel(avgRiskScore);
 
-        return StudentAuthSummary.builder()
+        return StudentKeystrokeSummary.builder()
                 .studentId(studentId)
                 .assignmentId(assignmentId)
                 .totalEvents((long) totalEvents)
@@ -187,8 +187,8 @@ public class AuthEventService {
     /**
      * Get all suspicious events for an assignment
      */
-    public List<AuthEventResponse> getSuspiciousEvents(String assignmentId) {
-        List<AuthEvent> events = authEventRepository
+    public List<KeystrokeEventResponse> getSuspiciousEvents(String assignmentId) {
+        List<KeystrokeEvent> events = keystrokeEventRepository
                 .findByAssignmentIdAndRiskScoreGreaterThanOrderByEventTimestampDesc(
                         assignmentId, SUSPICIOUS_THRESHOLD);
         return events.stream()
@@ -199,8 +199,8 @@ public class AuthEventService {
     /**
      * Get all events for a course
      */
-    public List<AuthEventResponse> getCourseEvents(String courseId) {
-        List<AuthEvent> events = authEventRepository.findByCourseIdOrderByEventTimestampDesc(courseId);
+    public List<KeystrokeEventResponse> getCourseEvents(String courseId) {
+        List<KeystrokeEvent> events = keystrokeEventRepository.findByCourseIdOrderByEventTimestampDesc(courseId);
         return events.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -209,8 +209,8 @@ public class AuthEventService {
     /**
      * Get all events for an assignment
      */
-    public List<AuthEventResponse> getAssignmentEvents(String assignmentId) {
-        List<AuthEvent> events = authEventRepository.findByAssignmentIdOrderByEventTimestampDesc(assignmentId);
+    public List<KeystrokeEventResponse> getAssignmentEvents(String assignmentId) {
+        List<KeystrokeEvent> events = keystrokeEventRepository.findByAssignmentIdOrderByEventTimestampDesc(assignmentId);
         return events.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -235,8 +235,8 @@ public class AuthEventService {
     /**
      * Map entity to response DTO
      */
-    private AuthEventResponse mapToResponse(AuthEvent event) {
-        return AuthEventResponse.builder()
+    private KeystrokeEventResponse mapToResponse(KeystrokeEvent event) {
+        return KeystrokeEventResponse.builder()
                 .id(event.getId())
                 .studentId(event.getStudentId())
                 .assignmentId(event.getAssignmentId())
