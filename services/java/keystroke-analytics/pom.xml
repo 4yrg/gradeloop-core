@@ -13,10 +13,10 @@
     </parent>
 
     <groupId>com.gradeloop</groupId>
-    <artifactId>auth-analytics</artifactId>
+    <artifactId>keystroke-analytics</artifactId>
     <version>1.0.0</version>
-    <name>Auth Analytics Service</name>
-    <description>Continuous Authentication Analytics Service for GradeLoop</description>
+    <name>Keystroke Analytics Service</name>
+    <description>Keystroke dynamics analytics and monitoring service for GradeLoop</description>
 
     <properties>
         <java.version>17</java.version>
