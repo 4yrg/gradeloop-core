@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.exception;
+package com.gradeloop.keystrokeanalytics.exception;
 
 /**
  * Exception thrown when a requested resource is not found
