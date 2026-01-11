@@ -52,6 +52,9 @@ authenticator = TypeNetAuthenticator(
     device='cpu'  # Change to 'cuda' if GPU available
 )
 
+# Initialize Behavioral Analyzer
+behavioral_analyzer = BehavioralAnalyzer()
+
 # Load user templates if available
 if os.path.exists(typenet_template_path):
     try:

@@ -317,7 +317,7 @@ services:
   # ============================================================================
   # Keystroke Services
   # ============================================================================
-  keystroke-service:
+  keystroke-ml-service:
     build:
       context: ../../services/python/keystroke-service
       dockerfile: Dockerfile
