@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.dto;
+package com.gradeloop.keystrokeanalytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,13 +9,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Summary statistics for a student's auth events
+ * Summary statistics for a student's keystroke events
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentAuthSummary {
+public class StudentKeystrokeSummary {
     private String studentId;
     private String assignmentId;
     private Long totalEvents;
