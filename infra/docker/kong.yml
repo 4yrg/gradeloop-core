@@ -18,6 +18,7 @@ services:
           - /degrees
           - /classes
           - /courses
+          - /submission-api
   - name: user-service
     url: http://user-service:5000
     routes:

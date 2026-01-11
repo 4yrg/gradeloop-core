@@ -133,6 +133,26 @@ services:
     networks:
       - gradeloop-net
 
+  minio:
+    image: minio/minio:latest
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9001:9000"
+      - "9002:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gradeloop-net
+
   # ============================================================================
   # API Gateway
   # ============================================================================
@@ -197,11 +217,17 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_RABBITMQ_HOST: rabbitmq
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_NAME: gradeloop-submissions
       SERVER_PORT: 5000
     depends_on:
       institute-db:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - gradeloop-net
@@ -295,6 +321,8 @@ services:
     build:
       context: ../../services/python/keystroke-service
       dockerfile: Dockerfile
+    env_file:
+      - ../../services/python/keystroke-service/.env
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -348,6 +376,7 @@ services:
 
 volumes:
   auth-db-data:
+  minio-data:
   institute-db-data:
   user-db-data:
   ivas-db-data:
