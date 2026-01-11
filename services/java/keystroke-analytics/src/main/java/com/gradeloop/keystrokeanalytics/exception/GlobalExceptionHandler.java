@@ -1,6 +1,6 @@
-package com.gradeloop.authanalytics.exception;
+package com.gradeloop.keystrokeanalytics.exception;
 
-import com.gradeloop.authanalytics.dto.ErrorResponse;
+import com.gradeloop.keystrokeanalytics.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
