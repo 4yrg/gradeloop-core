@@ -33,15 +33,15 @@ import {
   SelectValue
 } from '../../ui/select';
 import {
-  authAnalyticsService,
-  type AuthEvent
-} from '@/lib/auth-analytics-service';
+  keystrokeAnalyticsService,
+  type KeystrokeEvent
+} from '@/lib/keystroke-analytics-service';
 
 interface SuspiciousSubmissionsDashboardProps {
   assignmentId: string;
 }
 
-interface GroupedSuspiciousEvent extends AuthEvent {
+interface GroupedSuspiciousEvent extends KeystrokeEvent {
   studentName?: string;
 }
 
@@ -61,7 +61,7 @@ export function SuspiciousSubmissionsDashboard({
         setLoading(true);
         setError(null);
 
-        const events = await authAnalyticsService.getSuspiciousEvents(assignmentId);
+        const events = await keystrokeAnalyticsService.getSuspiciousEvents(assignmentId);
         setSuspiciousEvents(events);
         setFilteredEvents(events);
       } catch (err) {
@@ -286,7 +286,7 @@ export function SuspiciousSubmissionsDashboard({
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`text-xs font-mono ${authAnalyticsService.getConfidenceColor(
+                          className={`text-xs font-mono ${keystrokeAnalyticsService.getConfidenceColor(
                             event.confidenceLevel
                           )}`}
                         >

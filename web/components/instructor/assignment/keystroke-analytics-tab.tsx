@@ -17,19 +17,19 @@ import { Progress } from '../../ui/progress';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Skeleton } from '../../ui/skeleton';
 import {
-  authAnalyticsService,
-  type AuthEvent,
-  type StudentAuthSummary
-} from '@/lib/auth-analytics-service';
+  keystrokeAnalyticsService,
+  type KeystrokeEvent,
+  type StudentKeystrokeSummary
+} from '@/lib/keystroke-analytics-service';
 
-interface AuthAnalyticsTabProps {
+interface KeystrokeAnalyticsTabProps {
   studentId: string;
   assignmentId: string;
 }
 
-export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabProps) {
-  const [summary, setSummary] = useState<StudentAuthSummary | null>(null);
-  const [events, setEvents] = useState<AuthEvent[]>([]);
+export function KeystrokeAnalyticsTab({ studentId, assignmentId }: KeystrokeAnalyticsTabProps) {
+  const [summary, setSummary] = useState<StudentKeystrokeSummary | null>(null);
+  const [events, setEvents] = useState<KeystrokeEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,14 +40,14 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
         setError(null);
 
         const [summaryData, eventsData] = await Promise.all([
-          authAnalyticsService.getStudentAssignmentSummary(studentId, assignmentId),
-          authAnalyticsService.getStudentAssignmentEvents(studentId, assignmentId)
+          keystrokeAnalyticsService.getStudentAssignmentSummary(studentId, assignmentId),
+          keystrokeAnalyticsService.getStudentAssignmentEvents(studentId, assignmentId)
         ]);
 
         setSummary(summaryData);
         setEvents(eventsData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load auth analytics');
+        setError(err instanceof Error ? err.message : 'Failed to load keystroke analytics');
       } finally {
         setLoading(false);
       }
@@ -87,7 +87,7 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
     );
   }
 
-  const riskColor = authAnalyticsService.getRiskLevelColor(summary.riskLevel);
+  const riskColor = keystrokeAnalyticsService.getRiskLevelColor(summary.riskLevel);
 
   return (
     <ScrollArea className="h-full">
@@ -111,7 +111,7 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
               <Badge variant="outline" className="text-blue-500 border-blue-500/20 bg-blue-500/5">
                 Avg Confidence
               </Badge>
-              <span className={`text-3xl font-bold ${authAnalyticsService.getConfidenceColor(summary.averageConfidence)}`}>
+              <span className={`text-3xl font-bold ${keystrokeAnalyticsService.getConfidenceColor(summary.averageConfidence)}`}>
                 {summary.averageConfidence.toFixed(1)}%
               </span>
               <Progress value={summary.averageConfidence} className="h-1 w-full" />
@@ -160,19 +160,19 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Minimum</span>
-                <span className={`font-mono font-bold ${authAnalyticsService.getConfidenceColor(summary.minConfidence)}`}>
+                <span className={`font-mono font-bold ${keystrokeAnalyticsService.getConfidenceColor(summary.minConfidence)}`}>
                   {summary.minConfidence.toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Average</span>
-                <span className={`font-mono font-bold ${authAnalyticsService.getConfidenceColor(summary.averageConfidence)}`}>
+                <span className={`font-mono font-bold ${keystrokeAnalyticsService.getConfidenceColor(summary.averageConfidence)}`}>
                   {summary.averageConfidence.toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Maximum</span>
-                <span className={`font-mono font-bold ${authAnalyticsService.getConfidenceColor(summary.maxConfidence)}`}>
+                <span className={`font-mono font-bold ${keystrokeAnalyticsService.getConfidenceColor(summary.maxConfidence)}`}>
                   {summary.maxConfidence.toFixed(1)}%
                 </span>
               </div>
@@ -259,7 +259,7 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-mono text-muted-foreground">
-                          {authAnalyticsService.formatRelativeTime(event.eventTimestamp)}
+                          {keystrokeAnalyticsService.formatRelativeTime(event.eventTimestamp)}
                         </span>
                         <Badge
                           variant="outline"
@@ -271,7 +271,7 @@ export function AuthAnalyticsTab({ studentId, assignmentId }: AuthAnalyticsTabPr
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         <div>
                           <span className="text-muted-foreground">Confidence:</span>
-                          <span className={`ml-1 font-bold ${authAnalyticsService.getConfidenceColor(event.confidenceLevel)}`}>
+                          <span className={`ml-1 font-bold ${keystrokeAnalyticsService.getConfidenceColor(event.confidenceLevel)}`}>
                             {event.confidenceLevel.toFixed(1)}%
                           </span>
                         </div>
