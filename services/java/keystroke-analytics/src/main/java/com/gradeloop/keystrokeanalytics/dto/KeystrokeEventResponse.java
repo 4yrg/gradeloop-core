@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.dto;
+package com.gradeloop.keystrokeanalytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthEventResponse {
+public class KeystrokeEventResponse {
     private Long id;
     private String studentId;
     private String assignmentId;
