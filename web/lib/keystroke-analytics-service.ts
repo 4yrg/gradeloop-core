@@ -1,11 +1,11 @@
 /**
- * Auth Analytics Service
+ * Keystroke Analytics Service
  * API client for keystroke authentication analytics
  */
 
-const AUTH_ANALYTICS_API_BASE = process.env.NEXT_PUBLIC_AUTH_ANALYTICS_API_URL || 'http://localhost:8085/api/analytics';
+const KEYSTROKE_ANALYTICS_API_BASE = process.env.NEXT_PUBLIC_KEYSTROKE_ANALYTICS_API_URL || 'http://localhost:8085/api/analytics';
 
-export interface AuthEvent {
+export interface KeystrokeEvent {
   id: number;
   studentId: string;
   assignmentId: string;
@@ -20,7 +20,7 @@ export interface AuthEvent {
   createdAt: string;
 }
 
-export interface StudentAuthSummary {
+export interface StudentKeystrokeSummary {
   studentId: string;
   assignmentId: string;
   totalEvents: number;
@@ -44,40 +44,40 @@ export interface PagedResponse<T> {
   last: boolean;
 }
 
-class AuthAnalyticsService {
+class KeystrokeAnalyticsService {
   /**
-   * Get all auth events for a student on an assignment
+   * Get all keystroke events for a student on an assignment
    */
   async getStudentAssignmentEvents(
     studentId: string,
     assignmentId: string
-  ): Promise<AuthEvent[]> {
+  ): Promise<KeystrokeEvent[]> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/events`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/events`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch auth events');
+      throw new Error('Failed to fetch keystroke events');
     }
 
     return response.json();
   }
 
   /**
-   * Get paginated auth events for a student on an assignment
+   * Get paginated keystroke events for a student on an assignment
    */
   async getStudentAssignmentEventsPaged(
     studentId: string,
     assignmentId: string,
     page: number = 0,
     size: number = 20
-  ): Promise<PagedResponse<AuthEvent>> {
+  ): Promise<PagedResponse<KeystrokeEvent>> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/events/paged?page=${page}&size=${size}`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/events/paged?page=${page}&size=${size}`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch paginated auth events');
+      throw new Error('Failed to fetch paginated keystroke events');
     }
 
     return response.json();
@@ -89,13 +89,13 @@ class AuthAnalyticsService {
   async getStudentAssignmentSummary(
     studentId: string,
     assignmentId: string
-  ): Promise<StudentAuthSummary> {
+  ): Promise<StudentKeystrokeSummary> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/summary`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/student/${studentId}/assignment/${assignmentId}/summary`
     );
 
     if (!response.ok) {
-      throw new Error('Failed to fetch auth summary');
+      throw new Error('Failed to fetch keystroke summary');
     }
 
     return response.json();
@@ -104,9 +104,9 @@ class AuthAnalyticsService {
   /**
    * Get all suspicious events for an assignment
    */
-  async getSuspiciousEvents(assignmentId: string): Promise<AuthEvent[]> {
+  async getSuspiciousEvents(assignmentId: string): Promise<KeystrokeEvent[]> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/assignment/${assignmentId}/suspicious`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/assignment/${assignmentId}/suspicious`
     );
 
     if (!response.ok) {
@@ -117,11 +117,11 @@ class AuthAnalyticsService {
   }
 
   /**
-   * Get all auth events for an assignment
+   * Get all keystroke events for an assignment
    */
-  async getAssignmentEvents(assignmentId: string): Promise<AuthEvent[]> {
+  async getAssignmentEvents(assignmentId: string): Promise<KeystrokeEvent[]> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/assignment/${assignmentId}/events`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/assignment/${assignmentId}/events`
     );
 
     if (!response.ok) {
@@ -132,11 +132,11 @@ class AuthAnalyticsService {
   }
 
   /**
-   * Get all auth events for a course
+   * Get all keystroke events for a course
    */
-  async getCourseEvents(courseId: string): Promise<AuthEvent[]> {
+  async getCourseEvents(courseId: string): Promise<KeystrokeEvent[]> {
     const response = await fetch(
-      `${AUTH_ANALYTICS_API_BASE}/course/${courseId}/events`
+      `${KEYSTROKE_ANALYTICS_API_BASE}/course/${courseId}/events`
     );
 
     if (!response.ok) {
@@ -186,4 +186,4 @@ class AuthAnalyticsService {
   }
 }
 
-export const authAnalyticsService = new AuthAnalyticsService();
+export const keystrokeAnalyticsService = new KeystrokeAnalyticsService();
