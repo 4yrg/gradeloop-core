@@ -72,6 +72,25 @@ services:
     networks:
       - gradeloop-net
 
+  auth-analytics-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: auth_analytics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - auth-analytics-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gradeloop-net
+
   db-manager:
     image: adminer
     restart: always
@@ -269,6 +288,32 @@ services:
         - action: rebuild
           path: ../../services/java/ivas/pom.xml
 
+  auth-analytics-service:
+    build:
+      context: ../../services/java/auth-analytics
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-analytics-db:5432/auth_analytics_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SERVER_PORT: 8085
+    ports:
+      - "8085:8085"
+    depends_on:
+      auth-analytics-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/java/auth-analytics/src
+        - action: rebuild
+          path: ../../services/java/auth-analytics/pom.xml
+
   # ============================================================================
   # Keystroke Services
   # ============================================================================
@@ -335,6 +380,7 @@ volumes:
   institute-db-data:
   user-db-data:
   ivas-db-data:
+  auth-analytics-db-data:
   redis-data:
   rabbitmq-data:
   keystroke-models:

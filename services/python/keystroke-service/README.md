@@ -116,3 +116,11 @@ The service uses TypeNet, a pre-trained LSTM model for keystroke dynamics:
 - Input: Sequences of 70 keystrokes with 5 features each (HL, IL, PL, RL, KeyCode)
 - Output: 128-dimensional embedding for similarity comparison
 - Templates stored in `models/user_templates.pkl`
+
+
+
+the assignment submissions will handle by another service. I can get the assignment id and the student id later after the service created.
+
+I have to display the students continuous auth confident level data to the instructure. therefore want to store continuous auth data with timestamp and the assignment id,course id and student id in a database.
+
+Should i use a seperate sprinboot service or can use the current keystroke service ?

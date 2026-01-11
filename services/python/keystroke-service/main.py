@@ -11,6 +11,8 @@ import os
 import numpy as np
 from datetime import datetime
 import asyncio
+import json
+import pika
 
 from feature_extraction import KeystrokeFeatureExtractor
 from typenet_inference import TypeNetAuthenticator
@@ -64,8 +66,42 @@ else:
 # In-memory session storage (use Redis in production)
 active_sessions = {}
 
-# Initialize Behavioral Analyzer
-behavioral_analyzer = BehavioralAnalyzer()
+# RabbitMQ Configuration
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_EXCHANGE = 'keystroke.exchange'
+RABBITMQ_ROUTING_KEY = 'keystroke.auth.result'
+
+def publish_auth_event(event_data: dict):
+    """Publish authentication event to RabbitMQ"""
+    try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=RABBITMQ_HOST)
+        )
+        channel = connection.channel()
+
+        # Declare exchange
+        channel.exchange_declare(
+            exchange=RABBITMQ_EXCHANGE,
+            exchange_type='topic',
+            durable=True
+        )
+
+        # Publish message
+        channel.basic_publish(
+            exchange=RABBITMQ_EXCHANGE,
+            routing_key=RABBITMQ_ROUTING_KEY,
+            body=json.dumps(event_data),
+            properties=pika.BasicProperties(
+                content_type='application/json',
+                delivery_mode=2  # Make message persistent
+            )
+        )
+
+        connection.close()
+        print(f"✅ Published auth event to RabbitMQ for student: {event_data.get('studentId')}")
+    except Exception as e:
+        print(f"⚠️ Failed to publish to RabbitMQ: {e}")
+        # Don't fail the request if RabbitMQ publish fails
 
 
 # ==================== Pydantic Models ====================
@@ -93,6 +129,8 @@ class VerificationRequest(BaseModel):
     userId: str
     keystrokeEvents: List[Dict]
     threshold: Optional[float] = 0.7
+    assignmentId: Optional[str] = None
+    courseId: Optional[str] = None
 
 
 class IdentificationRequest(BaseModel):
@@ -111,6 +149,8 @@ class BehavioralAnalysisRequest(BaseModel):
 class MonitoringRequest(BaseModel):
     userId: str
     sessionId: str
+    assignmentId: Optional[str] = None
+    courseId: Optional[str] = None
 
 
 # ==================== Health Check ====================
@@ -258,6 +298,22 @@ async def verify_user(request: VerificationRequest):
         # Verify
         result = authenticator.verify_user(user_id, sequence, threshold)
 
+        # Publish auth event to RabbitMQ
+        auth_event = {
+            "studentId": user_id,
+            "assignmentId": request.assignmentId,
+            "courseId": request.courseId,
+            "sessionId": None,
+            "confidenceLevel": result.get('similarity', 0) * 100,  # Convert to percentage
+            "riskScore": result.get('risk_score', 0) * 100,  # Convert to percentage
+            "keystrokeSampleSize": len(events),
+            "timestamp": datetime.now().isoformat(),
+            "authenticated": result.get('authenticated', False),
+            "similarityScore": result.get('similarity', 0) * 100,
+            "metadata": json.dumps({"threshold": threshold})
+        }
+        publish_auth_event(auth_event)
+
         return result
 
     except HTTPException:
@@ -352,6 +408,25 @@ async def monitor_session(request: MonitoringRequest):
         # Update session
         session_data['last_verification'] = datetime.now().isoformat()
         session_data['risk_score'] = result.get('average_risk_score', 0.0)
+
+        # Publish auth event to RabbitMQ
+        auth_event = {
+            "studentId": user_id,
+            "assignmentId": request.assignmentId,
+            "courseId": request.courseId,
+            "sessionId": session_id,
+            "confidenceLevel": (1 - result.get('average_risk_score', 0)) * 100,
+            "riskScore": result.get('average_risk_score', 0) * 100,
+            "keystrokeSampleSize": len(events),
+            "timestamp": datetime.now().isoformat(),
+            "authenticated": result.get('status') == 'AUTHENTICATED',
+            "similarityScore": (1 - result.get('average_risk_score', 0)) * 100,
+            "metadata": json.dumps({
+                "verification_count": len(sequences),
+                "status": result.get('status')
+            })
+        }
+        publish_auth_event(auth_event)
 
         return result
 

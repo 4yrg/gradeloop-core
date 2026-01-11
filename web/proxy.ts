@@ -7,6 +7,9 @@ export default function proxy(request: NextRequest) {
     const role = request.cookies.get('user_role')?.value
     const { pathname } = request.nextUrl
 
+    // TEMPORARY: AUTH DISABLED FOR DEVELOPMENT
+    return NextResponse.next()
+
     // Define public routes (allowlist)
     const publicRoutes = ['/', '/login', '/forgot-password', '/reset-password', '/enroll', '/recognize'] // Add other public routes as needed
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/auth/')
