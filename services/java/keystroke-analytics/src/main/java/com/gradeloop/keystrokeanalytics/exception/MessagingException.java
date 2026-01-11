@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.exception;
+package com.gradeloop.keystrokeanalytics.exception;
 
 /**
  * Exception thrown when there are issues with message processing
