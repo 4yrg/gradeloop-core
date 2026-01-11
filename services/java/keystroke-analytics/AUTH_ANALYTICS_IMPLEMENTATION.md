@@ -338,7 +338,7 @@ PORT=8003
 
 **Next.js Frontend:**
 ```env
-NEXT_PUBLIC_AUTH_ANALYTICS_API_URL=http://localhost:8085/api/analytics
+NEXT_PUBLIC_KEYSTROKE_ANALYTICS_API_URL=http://localhost:8085/api/analytics
 ```
 
 ### Docker Compose
