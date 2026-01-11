@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.entity;
+package com.gradeloop.keystrokeanalytics.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "auth_events", indexes = {
+@Table(name = "keystroke_events", indexes = {
     @Index(name = "idx_student_assignment", columnList = "student_id,assignment_id"),
     @Index(name = "idx_timestamp", columnList = "event_timestamp"),
     @Index(name = "idx_risk_score", columnList = "risk_score")
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthEvent {
+public class KeystrokeEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
