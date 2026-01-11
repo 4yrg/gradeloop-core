@@ -26,7 +26,7 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Progress } from "../../ui/progress";
 import { Card, CardContent } from "../../ui/card";
-import { AuthAnalyticsTab } from "./auth-analytics-tab";
+import { KeystrokeAnalyticsTab } from "./keystroke-analytics-tab";
 
 interface SubmissionViewerProps {
     submissionId: string;
@@ -251,7 +251,7 @@ export function SubmissionViewer({ submissionId, studentId, assignmentId }: Subm
 
                 <TabsContent value="auth" className="m-0 h-full">
                     {studentId && assignmentId ? (
-                        <AuthAnalyticsTab studentId={studentId} assignmentId={assignmentId} />
+                        <KeystrokeAnalyticsTab studentId={studentId} assignmentId={assignmentId} />
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                             <Fingerprint className="h-12 w-12 mb-4 opacity-20" />

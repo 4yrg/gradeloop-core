@@ -18,9 +18,9 @@ import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Progress } from '../../ui/progress';
 import {
-  authAnalyticsService,
-  type AuthEvent
-} from '@/lib/auth-analytics-service';
+  keystrokeAnalyticsService,
+  type KeystrokeEvent
+} from '@/lib/keystroke-analytics-service';
 
 interface RealTimeAuthMonitorProps {
   assignmentId: string;
@@ -29,7 +29,7 @@ interface RealTimeAuthMonitorProps {
 
 interface ActiveSession {
   studentId: string;
-  latestEvent: AuthEvent;
+  latestEvent: KeystrokeEvent;
   eventCount: number;
   averageConfidence: number;
   averageRisk: number;
@@ -48,7 +48,7 @@ export function RealTimeAuthMonitor({
 
   const fetchLatestEvents = useCallback(async () => {
     try {
-      const events = await authAnalyticsService.getAssignmentEvents(assignmentId);
+      const events = await keystrokeAnalyticsService.getAssignmentEvents(assignmentId);
 
       // Get events from the last 10 minutes
       const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
@@ -243,7 +243,7 @@ export function RealTimeAuthMonitor({
                             <p className="font-medium text-sm">{session.studentId}</p>
                             <p className="text-xs text-muted-foreground">
                               {session.eventCount} events •{' '}
-                              {authAnalyticsService.formatRelativeTime(
+                              {keystrokeAnalyticsService.formatRelativeTime(
                                 session.lastUpdate.toISOString()
                               )}
                             </p>
@@ -271,7 +271,7 @@ export function RealTimeAuthMonitor({
                           <div className="flex items-center justify-between text-xs mb-1">
                             <span className="text-muted-foreground">Confidence</span>
                             <span
-                              className={`font-bold ${authAnalyticsService.getConfidenceColor(
+                              className={`font-bold ${keystrokeAnalyticsService.getConfidenceColor(
                                 session.averageConfidence
                               )}`}
                             >
@@ -344,7 +344,7 @@ export function RealTimeAuthMonitor({
                         {event.riskScore.toFixed(0)}%
                       </Badge>
                       <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                        {authAnalyticsService.formatRelativeTime(event.eventTimestamp)}
+                        {keystrokeAnalyticsService.formatRelativeTime(event.eventTimestamp)}
                       </span>
                     </div>
                   </div>

@@ -34,7 +34,7 @@ services:
         paths:
           - /api/v1/viva
   - name: keystroke-service
-    url: http://keystroke-service:8003
+    url: http://keystroke-ml-service:8003
     routes:
       - name: keystroke-routes
         strip_path: false
