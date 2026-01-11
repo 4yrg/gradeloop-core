@@ -1,8 +1,8 @@
-# Continuous Authentication Analytics Service
+# Keystroke Analytics Service
 
 ## Overview
 
-The **Auth Analytics Service** is a Spring Boot microservice that collects, stores, and provides analytics on continuous authentication events from the keystroke dynamics system. It enables instructors to monitor student authentication confidence levels during assignments in real-time.
+The **Keystroke Analytics Service** is a Spring Boot microservice that collects, stores, and provides analytics on keystroke authentication events from the keystroke dynamics system. It enables instructors to monitor student authentication confidence levels during assignments in real-time.
 
 ## Architecture
 
@@ -13,9 +13,9 @@ The **Auth Analytics Service** is a Spring Boot microservice that collects, stor
                  │ REST API Calls
                  ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Auth Analytics Service (Spring Boot:8085)                  │
+│  Keystroke Analytics Service (Spring Boot:8085)            │
 │  - REST API endpoints for instructors                       │
-│  - Aggregate auth data & statistics                         │
+│  - Aggregate keystroke data & statistics                    │
 │  - PostgreSQL database for persistence                      │
 └───────────┬──────────────────────────────┬──────────────────┘
             │                              │
@@ -23,8 +23,8 @@ The **Auth Analytics Service** is a Spring Boot microservice that collects, stor
             ▼                              ▼
 ┌─────────────────────────┐    ┌──────────────────────────────┐
 │  Python Keystroke       │    │  PostgreSQL                  │
-│  Service (8003)         │    │  (auth_analytics_db:5434)    │
-│  - Publishes auth       │    │  - auth_events table         │
+│  Service (8003)         │    │  (keystroke_analytics_db:5434)│
+│  - Publishes keystroke  │    │  - keystroke_events table    │
 │    events to RabbitMQ   │    └──────────────────────────────┘
 └─────────────────────────┘
 ```
@@ -33,26 +33,26 @@ The **Auth Analytics Service** is a Spring Boot microservice that collects, stor
 
 ### 1. Real-time Event Collection
 - Listens to RabbitMQ queue: `keystroke.auth.events`
-- Automatically stores auth events from keystroke service
+- Automatically stores keystroke events from keystroke service
 - Handles verification and continuous monitoring events
 
 ### 2. Comprehensive Analytics API
 
 **Student-specific analytics:**
-- `/api/analytics/student/{studentId}/assignment/{assignmentId}/events` - Get all auth events for a student
+- `/api/analytics/student/{studentId}/assignment/{assignmentId}/events` - Get all keystroke events for a student
 - `/api/analytics/student/{studentId}/assignment/{assignmentId}/summary` - Get summary statistics
 
 **Assignment-level analytics:**
-- `/api/analytics/assignment/{assignmentId}/events` - All auth events for an assignment
+- `/api/analytics/assignment/{assignmentId}/events` - All keystroke events for an assignment
 - `/api/analytics/assignment/{assignmentId}/suspicious` - Suspicious events (risk > 50%)
 
 **Course-level analytics:**
-- `/api/analytics/course/{courseId}/events` - All auth events for a course
+- `/api/analytics/course/{courseId}/events` - All keystroke events for a course
 
 ## Database Schema
 
 ```sql
-CREATE TABLE auth_events (
+CREATE TABLE keystroke_events (
     id BIGSERIAL PRIMARY KEY,
     student_id VARCHAR(255) NOT NULL,
     assignment_id VARCHAR(255),
@@ -69,9 +69,9 @@ CREATE TABLE auth_events (
 );
 
 -- Indexes for fast queries
-CREATE INDEX idx_student_assignment ON auth_events(student_id, assignment_id);
-CREATE INDEX idx_timestamp ON auth_events(event_timestamp DESC);
-CREATE INDEX idx_risk_score ON auth_events(risk_score DESC);
+CREATE INDEX idx_student_assignment ON keystroke_events(student_id, assignment_id);
+CREATE INDEX idx_timestamp ON keystroke_events(event_timestamp DESC);
+CREATE INDEX idx_risk_score ON keystroke_events(risk_score DESC);
 ```
 
 ## API Endpoints
@@ -140,7 +140,7 @@ Get all authentication events for a course.
 
 ## Integration with Keystroke Service
 
-The Python keystroke service now publishes auth events automatically when:
+The Python keystroke service now publishes keystroke events automatically when:
 
 1. **User Verification** (`/api/keystroke/verify`)
    - After verifying a student's typing pattern
@@ -181,24 +181,24 @@ POST /api/keystroke/monitor
 
 ```bash
 cd infra/docker
-docker compose up -d auth-analytics-service
+docker compose up -d keystroke-analytics-service
 ```
 
 This will:
-- Start PostgreSQL database (`auth-analytics-db` on port 5434)
+- Start PostgreSQL database (`keystroke-analytics-db` on port 5434)
 - Start the auth-analytics service (port 8085)
 - Connect to RabbitMQ for event listening
 
 ### Standalone (Development)
 
 ```bash
-cd services/java/auth-analytics
+cd services/java/keystroke-analytics
 ./mvnw spring-boot:run
 ```
 
 **Environment Variables:**
 ```bash
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/auth_analytics_db
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/keystroke_analytics_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=password
 SPRING_RABBITMQ_HOST=localhost
@@ -273,7 +273,7 @@ Once the assignment submission service is created by other developers:
 server.port=8085
 
 # Database
-spring.datasource.url=jdbc:postgresql://localhost:5434/auth_analytics_db
+spring.datasource.url=jdbc:postgresql://localhost:5434/keystroke_analytics_db
 spring.datasource.username=postgres
 spring.datasource.password=password
 
@@ -291,7 +291,7 @@ spring.rabbitmq.port=5672
 
 **Check RabbitMQ connection:**
 ```bash
-docker compose logs auth-analytics-service | grep -i rabbit
+docker compose logs keystroke-analytics-service | grep -i rabbit
 ```
 
 **Check keystroke service logs:**
@@ -303,12 +303,12 @@ docker compose logs keystroke-service | grep -i published
 
 **Verify database is running:**
 ```bash
-docker compose ps auth-analytics-db
+docker compose ps keystroke-analytics-db
 ```
 
 **Check database logs:**
 ```bash
-docker compose logs auth-analytics-db
+docker compose logs keystroke-analytics-db
 ```
 
 ### No data in responses
@@ -319,7 +319,7 @@ docker compose logs auth-analytics-db
 
 **Check service logs:**
 ```bash
-docker compose logs -f auth-analytics-service
+docker compose logs -f keystroke-analytics-service
 ```
 
 ## Development Notes
