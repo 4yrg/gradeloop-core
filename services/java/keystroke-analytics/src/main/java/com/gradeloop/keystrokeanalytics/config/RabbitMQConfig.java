@@ -1,4 +1,4 @@
-package com.gradeloop.authanalytics.config;
+package com.gradeloop.keystrokeanalytics.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
