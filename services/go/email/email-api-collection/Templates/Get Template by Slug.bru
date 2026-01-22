@@ -1,0 +1,21 @@
+meta {
+  name: Get Template by Slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/templates/:slug
+  body: none
+  auth: none
+}
+
+params:path {
+  slug: welcome-email
+}
+
+docs {
+  # Get Template by Slug
+
+  Retrieves a specific email template by its slug.
+}

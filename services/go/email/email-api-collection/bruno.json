@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "[GradeLoop] Identity Service API",
+  "name": "[GradeLoop] Email Service APi",
   "type": "collection",
   "ignore": [
     "node_modules",

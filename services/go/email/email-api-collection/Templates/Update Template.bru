@@ -1,0 +1,30 @@
+meta {
+  name: Update Template
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/{{api_version}}/templates/:slug
+  body: json
+  auth: none
+}
+
+params:path {
+  slug: welcome-email
+}
+
+body:json {
+  {
+    "subject": "Welcome to GradeLoop! (Updated)",
+    "html_body": "<h1>Hello {{.Name}}</h1><p>Welcome to our platform. We updated our features!</p>",
+    "text_body": "Hello {{.Name}}, Welcome back!",
+    "placeholders": "Name"
+  }
+}
+
+docs {
+  # Update Template
+
+  Updates an existing email template identifies by its slug.
+}
