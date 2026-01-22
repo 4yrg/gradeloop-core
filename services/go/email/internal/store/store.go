@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/glebarez/sqlite"
 	"github.com/gradeloop/email-service/internal/config"
 	"github.com/gradeloop/email-service/internal/models"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
