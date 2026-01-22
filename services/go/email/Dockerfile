@@ -50,10 +50,10 @@ FROM alpine:latest AS final
 # Leverage a cache mount to /var/cache/apk/ to speed up subsequent builds.
 RUN --mount=type=cache,target=/var/cache/apk \
     apk --update add \
-        ca-certificates \
-        tzdata \
-        && \
-        update-ca-certificates
+    ca-certificates \
+    tzdata \
+    && \
+    update-ca-certificates
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -66,6 +66,10 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser
+
+# Create data directory for SQLite with correct permissions
+RUN mkdir -p /data && chown appuser:appuser /data
+
 USER appuser
 
 # Copy the executable from the "build" stage.

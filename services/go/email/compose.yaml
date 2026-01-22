@@ -29,7 +29,7 @@ services:
       - SQLITE_PATH=/data/email.db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     volumes:
-      - ./data:/data
+      - email-data:/data
 
   db:
     image: postgres:15-alpine
@@ -39,7 +39,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5433:5432 # Map to 5433 to avoid conflict with local postgres
+      - 5434:5432 # Map to 5434 to avoid conflict
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -52,8 +52,8 @@ services:
     image: rabbitmq:3-management-alpine
     restart: always
     ports:
-      - 5672:5672
-      - 15672:15672
+      - 5674:5672
+      - 15674:15672
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "check_running" ]
       interval: 10s
@@ -62,5 +62,6 @@ services:
 
 volumes:
   db-data:
+  email-data:
 
 
