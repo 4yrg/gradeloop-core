@@ -73,8 +73,12 @@ func (w *Worker) handleMessage(d amqp.Delivery) {
 	}
 
 	// Render template
+	log.Printf("DEBUG: Processing LogID=%s, DataRaw='%s'", emailLog.ID, emailLog.Data)
 	var data map[string]interface{}
-	json.Unmarshal([]byte(emailLog.Data), &data)
+	if err := json.Unmarshal([]byte(emailLog.Data), &data); err != nil {
+		log.Printf("ERROR: Failed to unmarshal JSON data: %v", err)
+	}
+	log.Printf("DEBUG: Unmarshalled Data: %+v", data)
 
 	renderedBody, err := w.emailService.RenderTemplate(emailLog.Template.HTMLBody, data)
 	if err != nil {

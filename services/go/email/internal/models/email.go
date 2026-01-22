@@ -13,7 +13,7 @@ type EmailTemplate struct {
 	Subject      string         `gorm:"not null" json:"subject"`
 	HTMLBody     string         `gorm:"type:text;not null" json:"html_body"`
 	TextBody     string         `gorm:"type:text" json:"text_body"`
-	Placeholders string         `json:"placeholders"` // Comma-separated list of placeholder keys
+	Placeholders string         `json:"placeholders"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
@@ -41,7 +41,7 @@ type EmailLog struct {
 	TemplateID uuid.UUID     `gorm:"type:uuid;not null" json:"template_id"`
 	Template   EmailTemplate `gorm:"foreignKey:TemplateID" json:"template,omitempty"`
 	Status     EmailStatus   `gorm:"not null" json:"status"`
-	Data       string        `gorm:"type:text" json:"data"` // JSON string of dynamic data used for rendering
+	Data       string        `gorm:"type:text" json:"data"`
 	RetryCount int           `gorm:"default:0" json:"retry_count"`
 	LastError  string        `json:"last_error"`
 	SentAt     *time.Time    `json:"sent_at,omitempty"`
