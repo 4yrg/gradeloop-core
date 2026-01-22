@@ -29,6 +29,8 @@ func main() {
 		checkDuplicates(db)
 	case "list-students":
 		listStudents(db)
+	case "list-users":
+		listAllUsers(db)
 	case "delete-user":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: cleanup delete-user <email>")
@@ -41,6 +43,12 @@ func main() {
 			return
 		}
 		deleteStudentByUserID(db, os.Args[2])
+	case "fix-user":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: cleanup fix-user <user_id>")
+			return
+		}
+		fixBrokenUser(db, os.Args[2])
 	default:
 		showHelp()
 	}
@@ -53,8 +61,10 @@ func showHelp() {
 	fmt.Println("\nCommands:")
 	fmt.Println("  check                      - Check for duplicate student records")
 	fmt.Println("  list-students              - List all students")
+	fmt.Println("  list-users                 - List all users with their type info")
 	fmt.Println("  delete-user <email>        - Delete a user by email (cascades to student record)")
 	fmt.Println("  delete-student <user_id>   - Delete a student record by user_id")
+	fmt.Println("  fix-user <user_id>         - Fix broken user (remove orphaned type records)")
 }
 
 func checkDuplicates(db *gorm.DB) {
@@ -182,4 +192,136 @@ func deleteStudentByUserID(db *gorm.DB, userIDStr string) {
 	}
 
 	fmt.Println("✓ Student record deleted successfully")
+}
+
+func listAllUsers(db *gorm.DB) {
+	var users []models.User
+	db.Find(&users)
+
+	fmt.Printf("\nTotal Users: %d\n\n", len(users))
+	fmt.Printf("%-6s | %-30s | %-25s | %-15s | %-8s\n", "ID", "Email", "Name", "UserType", "Active")
+	fmt.Println("-------|--------------------------------|---------------------------|-----------------|----------")
+
+	for _, u := range users {
+		fmt.Printf("%-6d | %-30s | %-25s | %-15s | %-8t\n",
+			u.ID, u.Email, u.Name, u.UserType, u.IsActive)
+	}
+
+	fmt.Println("\nType-Specific Records:")
+	fmt.Println("----------------------")
+
+	// Check students
+	var students []models.Student
+	db.Find(&students)
+	fmt.Printf("Students: %d records\n", len(students))
+	for _, s := range students {
+		var userEmail string
+		db.Model(&models.User{}).Select("email").Where("id = ?", s.UserID).Scan(&userEmail)
+		fmt.Printf("  - Student ID=%d, UserID=%d (%s), StudentNum=%s\n", s.ID, s.UserID, userEmail, s.StudentID)
+	}
+
+	// Check instructors
+	var instructors []models.Instructor
+	db.Find(&instructors)
+	fmt.Printf("Instructors: %d records\n", len(instructors))
+	for _, i := range instructors {
+		var userEmail string
+		db.Model(&models.User{}).Select("email").Where("id = ?", i.UserID).Scan(&userEmail)
+		fmt.Printf("  - Instructor ID=%d, UserID=%d (%s), EmployeeID=%s\n", i.ID, i.UserID, userEmail, i.EmployeeID)
+	}
+
+	// Check system admins
+	var sysAdmins []models.SystemAdmin
+	db.Find(&sysAdmins)
+	fmt.Printf("System Admins: %d records\n", len(sysAdmins))
+	for _, a := range sysAdmins {
+		var userEmail string
+		db.Model(&models.User{}).Select("email").Where("id = ?", a.UserID).Scan(&userEmail)
+		fmt.Printf("  - SystemAdmin ID=%d, UserID=%d (%s)\n", a.ID, a.UserID, userEmail)
+	}
+
+	// Check institute admins
+	var instAdmins []models.InstituteAdmin
+	db.Find(&instAdmins)
+	fmt.Printf("Institute Admins: %d records\n", len(instAdmins))
+	for _, a := range instAdmins {
+		var userEmail string
+		db.Model(&models.User{}).Select("email").Where("id = ?", a.UserID).Scan(&userEmail)
+		fmt.Printf("  - InstituteAdmin ID=%d, UserID=%d (%s), InstituteID=%d\n", a.ID, a.UserID, userEmail, a.InstituteID)
+	}
+}
+
+func fixBrokenUser(db *gorm.DB, userIDStr string) {
+	var userID uint
+	if _, err := fmt.Sscanf(userIDStr, "%d", &userID); err != nil {
+		fmt.Printf("Error: Invalid user_id '%s'\n", userIDStr)
+		return
+	}
+
+	var user models.User
+	if err := db.First(&user, userID).Error; err != nil {
+		fmt.Printf("Error: User with ID %d not found\n", userID)
+		return
+	}
+
+	fmt.Printf("Found user: ID=%d, Email=%s, Name=%s, Type=%s\n",
+		user.ID, user.Email, user.Name, user.UserType)
+
+	// Check for orphaned type-specific records
+	fmt.Println("\nChecking for orphaned type records...")
+
+	fixed := false
+
+	// If user is student, check for extra instructor/admin records
+	if user.UserType == models.UserTypeStudent {
+		var instructor models.Instructor
+		if err := db.Where("user_id = ?", userID).First(&instructor).Error; err == nil {
+			fmt.Printf("⚠ Found orphaned Instructor record (ID=%d) for Student user\n", instructor.ID)
+			fmt.Print("Delete it? (yes/no): ")
+			var confirm string
+			fmt.Scanln(&confirm)
+			if confirm == "yes" {
+				db.Delete(&instructor)
+				fmt.Println("✓ Deleted orphaned Instructor record")
+				fixed = true
+			}
+		}
+
+		var sysAdmin models.SystemAdmin
+		if err := db.Where("user_id = ?", userID).First(&sysAdmin).Error; err == nil {
+			fmt.Printf("⚠ Found orphaned SystemAdmin record (ID=%d) for Student user\n", sysAdmin.ID)
+			fmt.Print("Delete it? (yes/no): ")
+			var confirm string
+			fmt.Scanln(&confirm)
+			if confirm == "yes" {
+				db.Delete(&sysAdmin)
+				fmt.Println("✓ Deleted orphaned SystemAdmin record")
+				fixed = true
+			}
+		}
+
+		var instAdmin models.InstituteAdmin
+		if err := db.Where("user_id = ?", userID).First(&instAdmin).Error; err == nil {
+			fmt.Printf("⚠ Found orphaned InstituteAdmin record (ID=%d) for Student user\n", instAdmin.ID)
+			fmt.Print("Delete it? (yes/no): ")
+			var confirm string
+			fmt.Scanln(&confirm)
+			if confirm == "yes" {
+				db.Delete(&instAdmin)
+				fmt.Println("✓ Deleted orphaned InstituteAdmin record")
+				fixed = true
+			}
+		}
+
+		// Check if student record is missing
+		var student models.Student
+		if err := db.Where("user_id = ?", userID).First(&student).Error; err != nil {
+			fmt.Printf("⚠ Missing Student record for user_type='student'\n")
+			fmt.Println("Note: You may need to recreate this user")
+		}
+	}
+
+	if !fixed {
+		fmt.Println("✓ No orphaned records found - user looks good!")
+	}
 }

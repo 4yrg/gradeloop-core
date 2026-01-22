@@ -33,6 +33,47 @@ func (r *userRepository) Create(user *models.User) error {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
 
+		// Before creating type-specific records, check if one already exists (from a failed previous transaction)
+		// and clean it up if found
+		switch user.UserType {
+		case models.UserTypeStudent:
+			// Check for orphaned student record
+			var existingStudent models.Student
+			if err := tx.Where("user_id = ?", user.ID).First(&existingStudent).Error; err == nil {
+				// Orphaned student record exists, delete it
+				if err := tx.Delete(&existingStudent).Error; err != nil {
+					return fmt.Errorf("failed to clean up orphaned student record for user_id %d: %w", user.ID, err)
+				}
+			}
+		case models.UserTypeInstructor:
+			// Check for orphaned instructor record
+			var existingInstructor models.Instructor
+			if err := tx.Where("user_id = ?", user.ID).First(&existingInstructor).Error; err == nil {
+				// Orphaned instructor record exists, delete it
+				if err := tx.Delete(&existingInstructor).Error; err != nil {
+					return fmt.Errorf("failed to clean up orphaned instructor record for user_id %d: %w", user.ID, err)
+				}
+			}
+		case models.UserTypeSystemAdmin:
+			// Check for orphaned system admin record
+			var existingSysAdmin models.SystemAdmin
+			if err := tx.Where("user_id = ?", user.ID).First(&existingSysAdmin).Error; err == nil {
+				// Orphaned system admin record exists, delete it
+				if err := tx.Delete(&existingSysAdmin).Error; err != nil {
+					return fmt.Errorf("failed to clean up orphaned system admin record for user_id %d: %w", user.ID, err)
+				}
+			}
+		case models.UserTypeInstituteAdmin:
+			// Check for orphaned institute admin record
+			var existingInstAdmin models.InstituteAdmin
+			if err := tx.Where("user_id = ?", user.ID).First(&existingInstAdmin).Error; err == nil {
+				// Orphaned institute admin record exists, delete it
+				if err := tx.Delete(&existingInstAdmin).Error; err != nil {
+					return fmt.Errorf("failed to clean up orphaned institute admin record for user_id %d: %w", user.ID, err)
+				}
+			}
+		}
+
 		// Create type-specific record
 		switch user.UserType {
 		case models.UserTypeStudent:
@@ -40,7 +81,7 @@ func (r *userRepository) Create(user *models.User) error {
 				user.Student.UserID = user.ID
 				user.Student.ID = 0 // Reset ID to let GORM auto-generate it
 				if err := tx.Create(user.Student).Error; err != nil {
-					return fmt.Errorf("failed to create student record for user_id %d: %w (this user may already have a student record)", user.ID, err)
+					return fmt.Errorf("failed to create student record for user_id %d: %w", user.ID, err)
 				}
 			}
 		case models.UserTypeInstructor:
@@ -48,7 +89,7 @@ func (r *userRepository) Create(user *models.User) error {
 				user.Instructor.UserID = user.ID
 				user.Instructor.ID = 0 // Reset ID to let GORM auto-generate it
 				if err := tx.Create(user.Instructor).Error; err != nil {
-					return fmt.Errorf("failed to create instructor record for user_id %d: %w (this user may already have an instructor record)", user.ID, err)
+					return fmt.Errorf("failed to create instructor record for user_id %d: %w", user.ID, err)
 				}
 			}
 		case models.UserTypeSystemAdmin:
