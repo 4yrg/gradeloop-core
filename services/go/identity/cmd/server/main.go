@@ -40,15 +40,41 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db.DB)
+	instituteRepo := repository.NewInstituteRepository(db.DB)
+	facultyRepo := repository.NewFacultyRepository(db.DB)
+	departmentRepo := repository.NewDepartmentRepository(db.DB)
+	classRepo := repository.NewClassRepository(db.DB)
+	membershipRepo := repository.NewMembershipRepository(db.DB)
+	roleRepo := repository.NewRoleRepository(db.DB)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
+	instituteService := service.NewInstituteService(instituteRepo)
+	facultyService := service.NewFacultyService(facultyRepo)
+	departmentService := service.NewDepartmentService(departmentRepo)
+	classService := service.NewClassService(classRepo)
+	membershipService := service.NewMembershipService(membershipRepo)
+	roleService := service.NewRoleService(roleRepo)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService)
+	instituteHandler := handlers.NewInstituteHandler(instituteService)
+	facultyHandler := handlers.NewFacultyHandler(facultyService)
+	departmentHandler := handlers.NewDepartmentHandler(departmentService)
+	classHandler := handlers.NewClassHandler(classService)
+	membershipHandler := handlers.NewMembershipHandler(membershipService)
+	roleHandler := handlers.NewRoleHandler(roleService)
 
 	// Setup routes
-	router := routes.NewRouter(userHandler)
+	router := routes.NewRouter(
+		userHandler,
+		instituteHandler,
+		facultyHandler,
+		departmentHandler,
+		classHandler,
+		membershipHandler,
+		roleHandler,
+	)
 	r := router.Setup()
 
 	// Start server
