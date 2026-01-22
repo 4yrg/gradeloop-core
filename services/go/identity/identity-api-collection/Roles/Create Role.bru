@@ -1,0 +1,39 @@
+meta {
+  name: Create Role
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/roles
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Course Coordinator",
+    "description": "Manages course content and assignments",
+    "permissions": ["manage_courses", "view_students", "grade_assignments"]
+  }
+}
+
+docs {
+  # Create Role
+
+  Creates a new role in the system.
+
+  ## Request Body
+  - `name` (required): Name of the role
+  - `description` (optional): Description of the role's purpose and capabilities
+  - `permissions` (optional): Array of permission strings defining what this role can do
+
+  ## Response
+  Returns the created role object with auto-generated ID and timestamps.
+
+  ## Notes
+  - Role names should be descriptive and unique
+  - Permissions define the specific actions users with this role can perform
+  - Roles can be assigned to users to grant them access to specific features
+  - Common roles include: admin, instructor, student, grader, etc.
+}

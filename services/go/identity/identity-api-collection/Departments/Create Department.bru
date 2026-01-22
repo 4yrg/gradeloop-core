@@ -1,0 +1,42 @@
+meta {
+  name: Create Department
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/departments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Computer Science Department",
+    "code": "CS",
+    "description": "Department of Computer Science and Software Engineering",
+    "faculty_id": 1,
+    "is_active": true
+  }
+}
+
+docs {
+  # Create Department
+
+  Creates a new department within a faculty.
+
+  ## Request Body
+  - `name` (required): Name of the department
+  - `code` (optional): Unique code/identifier for the department
+  - `description` (optional): Description of the department
+  - `faculty_id` (required): ID of the faculty this department belongs to
+  - `is_active` (optional): Whether the department is active (default: true)
+
+  ## Response
+  Returns the created department object with auto-generated ID and timestamps.
+
+  ## Notes
+  - The faculty must exist before creating a department
+  - Departments are organizational units within faculties
+  - Classes belong to departments
+}

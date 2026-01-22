@@ -1,0 +1,33 @@
+meta {
+  name: Delete Department
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/{{api_version}}/departments/1
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+docs {
+  # Delete Department
+
+  Deletes a department from the system (soft delete).
+
+  ## Path Parameters
+  - `id`: The unique identifier of the department to delete
+
+  ## Response
+  Returns a success message confirming the department was deleted.
+
+  ## Notes
+  - This is a soft delete - the department record remains in the database with DeletedAt timestamp set
+  - Deleted departments will not appear in normal queries
+  - Associated classes may also be affected
+  - Consider the cascade implications before deleting a department
+}

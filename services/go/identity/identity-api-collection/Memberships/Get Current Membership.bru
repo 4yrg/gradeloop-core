@@ -1,0 +1,33 @@
+meta {
+  name: Get Current Membership
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/students/1/memberships/current
+  body: none
+  auth: none
+}
+
+params:path {
+  studentId: 1
+}
+
+docs {
+  # Get Current Membership
+
+  Retrieves the current active class membership for a specific student.
+
+  ## Path Parameters
+  - `studentId`: The unique identifier of the student
+
+  ## Response
+  Returns the student's current active membership, including the class they are currently enrolled in.
+
+  ## Notes
+  - Returns only the most recent active membership
+  - Useful for determining which class a student is currently attending
+  - Returns null or 404 if the student has no active membership
+  - Transferred or inactive memberships are not included
+}
