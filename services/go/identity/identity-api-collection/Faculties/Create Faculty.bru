@@ -1,0 +1,42 @@
+meta {
+  name: Create Faculty
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/faculties
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Faculty of Engineering",
+    "code": "ENG",
+    "description": "Engineering and Technology Programs",
+    "institute_id": 1,
+    "is_active": true
+  }
+}
+
+docs {
+  # Create Faculty
+
+  Creates a new faculty within an institute.
+
+  ## Request Body
+  - `name` (required): Name of the faculty
+  - `code` (optional): Unique code/identifier for the faculty
+  - `description` (optional): Description of the faculty
+  - `institute_id` (required): ID of the institute this faculty belongs to
+  - `is_active` (optional): Whether the faculty is active (default: true)
+
+  ## Response
+  Returns the created faculty object with auto-generated ID and timestamps.
+
+  ## Notes
+  - The institute must exist before creating a faculty
+  - Faculties are organizational units within institutes
+  - Departments belong to faculties
+}

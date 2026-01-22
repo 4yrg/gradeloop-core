@@ -1,0 +1,43 @@
+meta {
+  name: Create Institute Admin
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "dean@university.edu",
+    "name": "Dean Williams",
+    "user_type": "institute_admin",
+    "is_active": true,
+    "institute_admin": {
+      "institute_id": 1
+    }
+  }
+}
+
+docs {
+  # Create Institute Admin
+
+  Creates a new institute administrator user in the system.
+
+  ## Request Body
+  - `email` (required): Institute admin's email address (must be unique)
+  - `name` (required): Institute admin's full name
+  - `user_type` (required): Must be "institute_admin"
+  - `is_active` (optional): Whether the user is active (default: true)
+  - `institute_admin` (required): Institute admin-specific data
+    - `institute_id` (required): ID of the institute this admin manages
+
+  ## Response
+  Returns the created user object with institute_admin details and auto-generated ID, timestamps.
+
+  ## Notes
+  Institute admins have administrative access to a specific institute.
+}

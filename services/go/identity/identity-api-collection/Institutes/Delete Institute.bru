@@ -1,0 +1,33 @@
+meta {
+  name: Delete Institute
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/{{api_version}}/institutes/1
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+docs {
+  # Delete Institute
+
+  Deletes an institute from the system (soft delete).
+
+  ## Path Parameters
+  - `id`: The unique identifier of the institute to delete
+
+  ## Response
+  Returns a success message confirming the institute was deleted.
+
+  ## Notes
+  - This is a soft delete - the institute record remains in the database with DeletedAt timestamp set
+  - Deleted institutes will not appear in normal queries
+  - Associated faculties, departments, and classes may also be affected
+  - Consider the cascade implications before deleting an institute
+}

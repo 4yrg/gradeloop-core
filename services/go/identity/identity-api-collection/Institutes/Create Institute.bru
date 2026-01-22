@@ -1,0 +1,39 @@
+meta {
+  name: Create Institute
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/institutes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "University of Technology",
+    "code": "UTECH",
+    "description": "A leading technology university",
+    "is_active": true
+  }
+}
+
+docs {
+  # Create Institute
+
+  Creates a new institute in the system.
+
+  ## Request Body
+  - `name` (required): Name of the institute
+  - `code` (optional): Unique code/identifier for the institute
+  - `description` (optional): Description of the institute
+  - `is_active` (optional): Whether the institute is active (default: true)
+
+  ## Response
+  Returns the created institute object with auto-generated ID and timestamps.
+
+  ## Notes
+  - The institute is the top-level organizational unit
+  - Faculties belong to institutes
+}
