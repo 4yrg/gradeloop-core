@@ -1,0 +1,28 @@
+meta {
+  name: Register
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/v1/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "newuser@example.com",
+    "password": "password123",
+    "first_name": "New",
+    "last_name": "User"
+  }
+}
+
+vars:pre-request {
+  base_url: http://localhost:8083
+}
+
+assert {
+  res.status: eq 200
+}

@@ -3,12 +3,18 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/config"
+	internalgrpc "github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/grpc"
+	pb "github.com/4yrg/gradeloop-core/libs/proto/user"
+
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/database"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/handlers"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/repository"
@@ -64,6 +70,23 @@ func main() {
 	classHandler := handlers.NewClassHandler(classService)
 	membershipHandler := handlers.NewMembershipHandler(membershipService)
 	roleHandler := handlers.NewRoleHandler(roleService)
+
+	// Initialize gRPC Server
+	grpcServer := grpc.NewServer()
+	identityGrpcServer := internalgrpc.NewServer(userService)
+	pb.RegisterUserServiceServer(grpcServer, identityGrpcServer)
+
+	// Start gRPC server in goroutine
+	go func() {
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.GrpcPort))
+		if err != nil {
+			log.Fatalf("failed to listen for gRPC: %v", err)
+		}
+		log.Printf("gRPC server listening on :%s", cfg.Server.GrpcPort)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
 
 	// Setup routes
 	router := routes.NewRouter(

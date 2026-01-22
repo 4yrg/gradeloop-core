@@ -3,6 +3,8 @@ package service
 import (
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/models"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/repository"
 	"github.com/go-playground/validator/v10"
@@ -16,6 +18,8 @@ type UserService interface {
 	UpdateUser(user *models.User) error
 	DeleteUser(id uint) error
 	AssignRolesToUser(userID uint, roleIDs []uint) error
+	ValidateCredentials(email, password string) (*models.User, bool, error)
+	UpdatePassword(userID uint, password string) error
 }
 
 type userService struct {
@@ -108,4 +112,37 @@ func (s *userService) AssignRolesToUser(userID uint, roleIDs []uint) error {
 	}
 
 	return s.userRepo.AssignRoles(userID, roleIDs)
+}
+
+func (s *userService) ValidateCredentials(email, password string) (*models.User, bool, error) {
+	user, err := s.userRepo.GetByEmail(email)
+	if err != nil {
+		return nil, false, err
+	}
+	// If user not found, GetByEmail might return nil, nil depending on repo implementation.
+	// Assuming it returns nil, nil or error if not found.
+	if user == nil {
+		return nil, false, nil
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return nil, false, nil
+	}
+
+	return user, true, nil
+}
+
+func (s *userService) UpdatePassword(userID uint, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = string(hashedPassword)
+	return s.userRepo.Update(user)
 }

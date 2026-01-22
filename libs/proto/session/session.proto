@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package session;
+
+option go_package = "github.com/4yrg/gradeloop-core/libs/proto/session";
+
+service SessionService {
+  rpc CreateSession (CreateSessionRequest) returns (Session);
+  rpc GetSession (GetSessionRequest) returns (Session);
+  rpc RefreshSession (RefreshSessionRequest) returns (Session);
+  rpc RevokeSession (RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeAllUserSessions (RevokeAllUserSessionsRequest) returns (RevokeAllUserSessionsResponse);
+}
+
+message Session {
+  string id = 1;
+  string user_id = 2;
+  string user_role = 3;
+  string refresh_token = 4; // Only returned on creation/refresh
+  string user_agent = 5;
+  string client_ip = 6;
+  bool is_revoked = 7;
+  int64 expires_at = 8;
+  int64 created_at = 9;
+}
+
+message CreateSessionRequest {
+  string user_id = 1;
+  string user_role = 2;
+  string user_agent = 3;
+  string client_ip = 4;
+}
+
+message GetSessionRequest {
+  string session_id = 1;
+}
+
+message RefreshSessionRequest {
+  string session_id = 1;
+  string old_refresh_token = 2; // For verification
+  string new_refresh_token = 3; // To update the hash
+}
+
+message RevokeSessionRequest {
+  string session_id = 1;
+}
+
+message RevokeSessionResponse {
+  bool success = 1;
+}
+
+message RevokeAllUserSessionsRequest {
+  string user_id = 1;
+}
+
+message RevokeAllUserSessionsResponse {
+  int32 revoked_count = 1;
+}

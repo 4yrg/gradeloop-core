@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package user;
 
+option go_package = "github.com/4yrg/gradeloop-core/libs/proto/user";
+
 service UserService {
   // Profile Management
   rpc GetProfile (GetProfileRequest) returns (UserProfile);
@@ -15,6 +17,10 @@ service UserService {
   rpc CreateInstructor (CreateUserRequest) returns (UserResponse);
   rpc CreateStudent (CreateUserRequest) returns (UserResponse);
   rpc BulkImport (BulkImportRequest) returns (BulkImportResponse);
+
+  // Authentication Internal
+  rpc ValidateCredentials (ValidateCredentialsRequest) returns (ValidateCredentialsResponse);
+  rpc UpdatePassword (UpdatePasswordRequest) returns (UpdatePasswordResponse);
 }
 
 message UserProfile {
@@ -77,4 +83,23 @@ message BulkImportResponse {
   int32 success_count = 1;
   int32 failure_count = 2;
   repeated string errors = 3;
+}
+
+message ValidateCredentialsRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message ValidateCredentialsResponse {
+  bool valid = 1;
+  UserResponse user = 2; // Reuse UserResponse or define minimal user info
+}
+
+message UpdatePasswordRequest {
+  string user_id = 1;
+  string new_password = 2;
+}
+
+message UpdatePasswordResponse {
+  bool success = 1;
 }

@@ -3,13 +3,18 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+
+	pb "github.com/4yrg/gradeloop-core/libs/proto/session"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gradeloop/session-service/internal/cache"
 	"github.com/gradeloop/session-service/internal/config"
+	internalgrpc "github.com/gradeloop/session-service/internal/grpc"
 	"github.com/gradeloop/session-service/internal/handlers"
 	"github.com/gradeloop/session-service/internal/routes"
 	"github.com/gradeloop/session-service/internal/service"
@@ -47,6 +52,22 @@ func main() {
 	})
 
 	routes.SetupRoutes(app, h)
+
+	// Start gRPC Server
+	grpcServer := grpc.NewServer()
+	sessionGrpcServer := internalgrpc.NewServer(svc)
+	pb.RegisterSessionServiceServer(grpcServer, sessionGrpcServer)
+
+	go func() {
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GrpcPort))
+		if err != nil {
+			log.Fatalf("failed to listen for gRPC: %v", err)
+		}
+		log.Printf("gRPC server listening on :%s", cfg.GrpcPort)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
 
 	// 7. Start Server
 	go func() {
