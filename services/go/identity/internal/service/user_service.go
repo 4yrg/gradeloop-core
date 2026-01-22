@@ -36,6 +36,12 @@ func (s *userService) CreateUser(user *models.User) error {
 		return fmt.Errorf("validation error: %w", err)
 	}
 
+	// Check if user already exists by email
+	existingUser, err := s.userRepo.GetByEmail(user.Email)
+	if err == nil && existingUser != nil {
+		return fmt.Errorf("user with email %s already exists", user.Email)
+	}
+
 	// Validate user-specific fields
 	switch user.UserType {
 	case models.UserTypeStudent:

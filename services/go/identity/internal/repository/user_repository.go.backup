@@ -30,7 +30,7 @@ func (r *userRepository) Create(user *models.User) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Create the base user
 		if err := tx.Create(user).Error; err != nil {
-			return fmt.Errorf("failed to create user: %w", err)
+			return err
 		}
 
 		// Create type-specific record
@@ -38,30 +38,27 @@ func (r *userRepository) Create(user *models.User) error {
 		case models.UserTypeStudent:
 			if user.Student != nil {
 				user.Student.UserID = user.ID
-				user.Student.ID = 0 // Reset ID to let GORM auto-generate it
 				if err := tx.Create(user.Student).Error; err != nil {
-					return fmt.Errorf("failed to create student record for user_id %d: %w (this user may already have a student record)", user.ID, err)
+					return err
 				}
 			}
 		case models.UserTypeInstructor:
 			if user.Instructor != nil {
 				user.Instructor.UserID = user.ID
-				user.Instructor.ID = 0 // Reset ID to let GORM auto-generate it
 				if err := tx.Create(user.Instructor).Error; err != nil {
-					return fmt.Errorf("failed to create instructor record for user_id %d: %w (this user may already have an instructor record)", user.ID, err)
+					return err
 				}
 			}
 		case models.UserTypeSystemAdmin:
 			systemAdmin := &models.SystemAdmin{UserID: user.ID}
 			if err := tx.Create(systemAdmin).Error; err != nil {
-				return fmt.Errorf("failed to create system admin record for user_id %d: %w", user.ID, err)
+				return err
 			}
 		case models.UserTypeInstituteAdmin:
 			if user.InstituteAdmin != nil {
 				user.InstituteAdmin.UserID = user.ID
-				user.InstituteAdmin.ID = 0 // Reset ID to let GORM auto-generate it
 				if err := tx.Create(user.InstituteAdmin).Error; err != nil {
-					return fmt.Errorf("failed to create institute admin record for user_id %d: %w", user.ID, err)
+					return err
 				}
 			}
 		}

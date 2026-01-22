@@ -15,18 +15,23 @@ params:query {
   offset: 0
 }
 
+vars:pre-request {
+  base_url: http://localhost:8080
+  api_version: v1
+}
+
 docs {
   # Get All Roles
-
+  
   Retrieves a paginated list of all roles in the system.
-
+  
   ## Query Parameters
   - `limit` (optional): Number of results to return (default: 10)
   - `offset` (optional): Number of results to skip (default: 0)
-
+  
   ## Response
   Returns an array of roles with pagination metadata including total count.
-
+  
   ## Notes
   - Roles define permissions and access levels in the system
   - Roles can be assigned to users to grant them specific capabilities
