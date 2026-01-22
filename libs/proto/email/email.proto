@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package email;
+
+option go_package = "github.com/4yrg/gradeloop-core/libs/proto/email";
+
+service EmailService {
+  rpc SendEmail (SendEmailRequest) returns (SendEmailResponse);
+}
+
+message SendEmailRequest {
+  string to = 1;
+  string subject = 2;
+  string template_name = 3; // Optional if using template
+  map<string, string> template_data = 4;
+  string body = 5; // Optional if using raw body
+}
+
+message SendEmailResponse {
+  bool success = 1;
+  string message_id = 2;
+}

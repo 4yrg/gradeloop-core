@@ -18,8 +18,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port string
-	Host string
+	Port     string
+	GrpcPort string
+	Host     string
 }
 
 type DatabaseConfig struct {
@@ -57,8 +58,9 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8081"), // Different port from identity service
-			Host: getEnv("SERVER_HOST", "0.0.0.0"),
+			Port:     getEnv("SERVER_PORT", "8081"),
+			GrpcPort: getEnv("GRPC_PORT", "50053"), // Distinct port
+			Host:     getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{
 			Driver:     getEnv("DB_DRIVER", "sqlite"),

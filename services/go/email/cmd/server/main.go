@@ -2,14 +2,20 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc"
+
+	pb "github.com/4yrg/gradeloop-core/libs/proto/email"
 	"github.com/gradeloop/email-service/internal/config"
+	internalgrpc "github.com/gradeloop/email-service/internal/grpc"
 	"github.com/gradeloop/email-service/internal/queue"
 	"github.com/gradeloop/email-service/internal/routes"
 	"github.com/gradeloop/email-service/internal/service"
@@ -48,6 +54,22 @@ func main() {
 
 	// Setup routes
 	router := routes.SetupRouter(s, emailService)
+
+	// Start gRPC Server
+	grpcServer := grpc.NewServer()
+	emailGrpcServer := internalgrpc.NewServer(emailService)
+	pb.RegisterEmailServiceServer(grpcServer, emailGrpcServer)
+
+	go func() {
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.GrpcPort))
+		if err != nil {
+			log.Fatalf("failed to listen for gRPC: %v", err)
+		}
+		log.Printf("gRPC server listening on :%s", cfg.Server.GrpcPort)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
 
 	// Start worker in a goroutine
 	ctx, cancel := context.WithCancel(context.Background())

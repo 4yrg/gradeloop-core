@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	AppPort       string
+	GrpcPort      string
 	DBDriver      string // sqlite or postgres
 	DBDSN         string
 	RedisAddr     string
@@ -23,6 +24,7 @@ func Load() (*Config, error) {
 
 	cfg := &Config{
 		AppPort:       getEnv("APP_PORT", "8082"),
+		GrpcPort:      getEnv("GRPC_PORT", "50052"),
 		DBDriver:      getEnv("DB_DRIVER", "sqlite"),
 		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),

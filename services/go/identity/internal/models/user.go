@@ -16,14 +16,15 @@ const (
 
 // User is the base user model with common fields
 type User struct {
-	ID        uint           `gorm:"primarykey" json:"id"`
-	Email     string         `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
-	Name      string         `gorm:"not null" json:"name" validate:"required"`
-	UserType  UserType       `gorm:"type:varchar(50);not null" json:"user_type" validate:"required,oneof=system_admin institute_admin student instructor"`
-	IsActive  bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt FlexibleTime   `json:"created_at"`
-	UpdatedAt FlexibleTime   `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID           uint           `gorm:"primarykey" json:"id"`
+	Email        string         `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
+	Name         string         `gorm:"not null" json:"name" validate:"required"`
+	UserType     UserType       `gorm:"type:varchar(50);not null" json:"user_type" validate:"required,oneof=system_admin institute_admin student instructor"`
+	PasswordHash string         `gorm:"type:varchar(255)" json:"-"`
+	IsActive     bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt    FlexibleTime   `json:"created_at"`
+	UpdatedAt    FlexibleTime   `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// Relationships - loaded based on UserType
 	Student        *Student        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"student,omitempty"`

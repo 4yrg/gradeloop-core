@@ -12,13 +12,15 @@ type Config struct {
 	Environment string
 	Server      ServerConfig
 	Database    DatabaseConfig
+	Services    ServicesConfig
+	OAuth       OAuthConfig
+	JWT         JWTConfig
 	Logging     LoggingConfig
 }
 
 type ServerConfig struct {
-	Port     string
-	GrpcPort string
-	Host     string
+	Port string
+	Host string
 }
 
 type DatabaseConfig struct {
@@ -32,6 +34,23 @@ type DatabaseConfig struct {
 	SQLitePath string
 }
 
+type ServicesConfig struct {
+	IdentityServiceURL string
+	SessionServiceURL  string
+	EmailServiceURL    string
+}
+
+type OAuthConfig struct {
+	GitHubClientID     string
+	GitHubClientSecret string
+	GitHubRedirectURL  string
+}
+
+type JWTConfig struct {
+	Secret    string
+	ExpiryStr string
+}
+
 type LoggingConfig struct {
 	Level string
 }
@@ -42,9 +61,8 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port:     getEnv("SERVER_PORT", "8080"),
-			GrpcPort: getEnv("GRPC_PORT", "50051"),
-			Host:     getEnv("SERVER_HOST", "0.0.0.0"),
+			Port: getEnv("SERVER_PORT", "8080"), // Default port for AuthN (API Gateway usually)
+			Host: getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{
 			Driver:     getEnv("DB_DRIVER", "sqlite"),
@@ -52,9 +70,23 @@ func Load() (*Config, error) {
 			Port:       getEnvAsInt("DB_PORT", 5432),
 			User:       getEnv("DB_USER", "postgres"),
 			Password:   getEnv("DB_PASSWORD", "postgres"),
-			Name:       getEnv("DB_NAME", "identity_db"),
+			Name:       getEnv("DB_NAME", "authn_db"),
 			SSLMode:    getEnv("DB_SSLMODE", "disable"),
-			SQLitePath: getEnv("SQLITE_PATH", "./identity.db"),
+			SQLitePath: getEnv("SQLITE_PATH", "./authn.db"),
+		},
+		Services: ServicesConfig{
+			IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "localhost:50051"),
+			SessionServiceURL:  getEnv("SESSION_SERVICE_URL", "localhost:50052"),
+			EmailServiceURL:    getEnv("EMAIL_SERVICE_URL", "localhost:50053"),
+		},
+		OAuth: OAuthConfig{
+			GitHubClientID:     getEnv("GITHUB_CLIENT_ID", ""),
+			GitHubClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
+			GitHubRedirectURL:  getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/auth/github/callback"),
+		},
+		JWT: JWTConfig{
+			Secret:    getEnv("JWT_SECRET", "supersecretkey"),
+			ExpiryStr: getEnv("JWT_EXPIRY", "15m"),
 		},
 		Logging: LoggingConfig{
 			Level: getEnv("LOG_LEVEL", "info"),
