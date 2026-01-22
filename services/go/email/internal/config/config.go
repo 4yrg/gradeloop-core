@@ -14,6 +14,7 @@ type Config struct {
 	Database    DatabaseConfig
 	RabbitMQ    RabbitMQConfig
 	Logging     LoggingConfig
+	SMTP        SMTPConfig
 }
 
 type ServerConfig struct {
@@ -42,6 +43,14 @@ type LoggingConfig struct {
 	Level string
 }
 
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+}
+
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
@@ -68,6 +77,13 @@ func Load() (*Config, error) {
 		},
 		Logging: LoggingConfig{
 			Level: getEnv("LOG_LEVEL", "info"),
+		},
+		SMTP: SMTPConfig{
+			Host:     getEnv("SMTP_HOST", "localhost"),
+			Port:     getEnvAsInt("SMTP_PORT", 1025), // Default to mailpit/mailhog port
+			Username: getEnv("SMTP_USERNAME", ""),
+			Password: getEnv("SMTP_PASSWORD", ""),
+			From:     getEnv("SMTP_FROM", "no-reply@gradeloop.com"),
 		},
 	}
 

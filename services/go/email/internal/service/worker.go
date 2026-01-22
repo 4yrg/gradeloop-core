@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"net/smtp"
 	"time"
 
+	"github.com/gradeloop/email-service/internal/config"
 	"github.com/gradeloop/email-service/internal/models"
 	"github.com/gradeloop/email-service/internal/queue"
 	"github.com/gradeloop/email-service/internal/store"
@@ -16,13 +19,15 @@ type Worker struct {
 	store        *store.Store
 	queue        *queue.RabbitMQ
 	emailService *EmailService
+	smtpCfg      config.SMTPConfig
 }
 
-func NewWorker(s *store.Store, q *queue.RabbitMQ, es *EmailService) *Worker {
+func NewWorker(s *store.Store, q *queue.RabbitMQ, es *EmailService, smtpCfg config.SMTPConfig) *Worker {
 	return &Worker{
 		store:        s,
 		queue:        q,
 		emailService: es,
+		smtpCfg:      smtpCfg,
 	}
 }
 
@@ -78,9 +83,23 @@ func (w *Worker) handleMessage(d amqp.Delivery) {
 		return
 	}
 
-	// Actual Send (Mocking for now)
-	log.Printf("Sending email to %s with subject: %s", emailLog.Recipient, emailLog.Template.Subject)
-	log.Printf("Body: %s", renderedBody)
+	// Render Subject
+	renderedSubject, err := w.emailService.RenderTemplate(emailLog.Template.Subject, data)
+	if err != nil {
+		w.handleFailure(emailLog, err)
+		d.Ack(false)
+		return
+	}
+
+	// Actual Send
+	if err := w.sendSMTP(emailLog.Recipient, renderedSubject, renderedBody); err != nil {
+		log.Printf("Failed to send SMTP email: %v", err)
+		w.handleFailure(emailLog, err)
+		d.Ack(false)
+		return
+	}
+
+	log.Printf("Sent email successfully to %s", emailLog.Recipient)
 
 	// Simulate success
 	now := time.Now()
@@ -96,4 +115,31 @@ func (w *Worker) handleFailure(emailLog *models.EmailLog, err error) {
 	emailLog.LastError = err.Error()
 	emailLog.RetryCount++
 	w.store.UpdateLog(emailLog)
+}
+
+func (w *Worker) sendSMTP(recipient, subject, body string) error {
+	addr := fmt.Sprintf("%s:%d", w.smtpCfg.Host, w.smtpCfg.Port)
+	from := w.smtpCfg.From
+
+	// Build the message with proper headers
+	msg := []byte(fmt.Sprintf("To: %s\r\n"+
+		"From: %s\r\n"+
+		"Subject: %s\r\n"+
+		"MIME-version: 1.0;\r\n"+
+		"Content-Type: text/html; charset=\"UTF-8\";\r\n"+
+		"\r\n"+
+		"%s\r\n", recipient, from, subject, body))
+
+	// If username is provided, use auth
+	var auth smtp.Auth
+	if w.smtpCfg.Username != "" {
+		auth = smtp.PlainAuth("", w.smtpCfg.Username, w.smtpCfg.Password, w.smtpCfg.Host)
+	}
+
+	err := smtp.SendMail(addr, auth, from, []string{recipient}, msg)
+	if err != nil {
+		return fmt.Errorf("smtp error (host=%s port=%d user=%s): %w", w.smtpCfg.Host, w.smtpCfg.Port, w.smtpCfg.Username, err)
+	}
+
+	return nil
 }

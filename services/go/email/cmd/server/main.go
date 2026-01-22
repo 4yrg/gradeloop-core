@@ -44,7 +44,7 @@ func main() {
 
 	// Initialize services
 	emailService := service.NewEmailService(s, q)
-	worker := service.NewWorker(s, q, emailService)
+	worker := service.NewWorker(s, q, emailService, cfg.SMTP)
 
 	// Setup routes
 	router := routes.SetupRouter(s, emailService)
