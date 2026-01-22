@@ -24,25 +24,23 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	session, err := h.authService.Login(c.Context(), req.Email, req.Password, c.Get("User-Agent"), c.IP())
+	resp, err := h.authService.Login(c.Context(), req.Email, req.Password, c.Get("User-Agent"), c.IP())
 	if err != nil {
-		// Differentiate errors if possible (401 vs 500)
-		// For now simple 401/500 split based on error string is tedious, simplify
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"session_id":    session.Id,
-		"refresh_token": session.RefreshToken,
-		// Access Token generation is missing in Session Service logic we implemented?
-		// Session Service creates refresh token and returns expiry.
-		// Wait, AuthN usually mints JWT Access Token using Session/User info?
-		// My Plan said "Token Management (JWT Access/Refresh)".
-		// My `AuthService.Login` returns `session.Session` (proto).
-		// The proto session has `refresh_token` but NOT `access_token`.
-		// `Access Token` should be a JWT signed by AuthN service.
-		// So `handlers.Login` (or `service.Login`) should Generate JWT.
-		// I missed `GenerateJWT` in `AuthService`.
-		// I should add JWT generation to `AuthService.Login`.
+		"session_id":    resp.Session.Id,
+		"refresh_token": resp.Session.RefreshToken,
+		"access_token":  resp.AccessToken,
+		"expires_at":    resp.Session.ExpiresAt,
 	})
+}
+
+func (h *AuthHandler) Refresh(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{"message": "Refresh endpoint coming soon"})
+}
+
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusNotImplemented).JSON(fiber.Map{"message": "Logout endpoint coming soon"})
 }

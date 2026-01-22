@@ -71,8 +71,8 @@ func main() {
 	auth := v1.Group("/auth")
 
 	auth.Post("/login", authHandler.Login)
-	// auth.Post("/refresh", authHandler.Refresh)
-	// auth.Post("/logout", authHandler.Logout)
+	auth.Post("/refresh", authHandler.Refresh)
+	auth.Post("/logout", authHandler.Logout)
 
 	// 7. Start Server
 	go func() {

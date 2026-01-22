@@ -61,7 +61,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8080"), // Default port for AuthN (API Gateway usually)
+			Port: getEnv("SERVER_PORT", "8083"), // Default port to match Docker/Compose
 			Host: getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{
@@ -82,7 +82,7 @@ func Load() (*Config, error) {
 		OAuth: OAuthConfig{
 			GitHubClientID:     getEnv("GITHUB_CLIENT_ID", ""),
 			GitHubClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
-			GitHubRedirectURL:  getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/auth/github/callback"),
+			GitHubRedirectURL:  getEnv("GITHUB_REDIRECT_URL", "http://localhost:8083/auth/github/callback"),
 		},
 		JWT: JWTConfig{
 			Secret:    getEnv("JWT_SECRET", "supersecretkey"),

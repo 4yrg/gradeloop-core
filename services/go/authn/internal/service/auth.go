@@ -4,11 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	"github.com/4yrg/gradeloop-core/develop/services/go/authn/internal/config"
 	"github.com/4yrg/gradeloop-core/libs/proto/email"
 	"github.com/4yrg/gradeloop-core/libs/proto/session"
 	"github.com/4yrg/gradeloop-core/libs/proto/user"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+type AuthResponse struct {
+	Session     *session.Session
+	AccessToken string
+}
 
 type AuthService struct {
 	cfg            *config.Config
@@ -26,7 +34,7 @@ func NewAuthService(cfg *config.Config, ic user.UserServiceClient, sc session.Se
 	}
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password, userAgent, clientIP string) (*session.Session, error) {
+func (s *AuthService) Login(ctx context.Context, email, password, userAgent, clientIP string) (*AuthResponse, error) {
 	// 1. Validate Credentials via Identity Service
 	valResp, err := s.identityClient.ValidateCredentials(ctx, &user.ValidateCredentialsRequest{
 		Email:    email,
@@ -71,5 +79,28 @@ func (s *AuthService) Login(ctx context.Context, email, password, userAgent, cli
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	return sessResp, nil
+	// 3. Generate JWT Access Token
+	accessToken, err := s.GenerateAccessToken(valResp.User.UserId, profile.Email, profile.Role, sessResp.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	return &AuthResponse{
+		Session:     sessResp,
+		AccessToken: accessToken,
+	}, nil
+}
+
+func (s *AuthService) GenerateAccessToken(userID, email, role, sessionID string) (string, error) {
+	claims := jwt.MapClaims{
+		"sub":   userID,
+		"email": email,
+		"role":  role,
+		"sid":   sessionID,
+		"iat":   time.Now().Unix(),
+		"exp":   time.Now().Add(15 * time.Minute).Unix(), // 15m expiry for access token
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(s.cfg.JWT.Secret))
 }
