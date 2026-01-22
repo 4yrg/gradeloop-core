@@ -62,11 +62,12 @@ func (r *membershipRepository) TransferStudent(studentID, newFacultyID, newDepar
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// End the current membership
 		now := time.Now()
+		flexNow := models.FlexibleTime(now)
 		err := tx.Model(&models.StudentMembership{}).
 			Where("student_id = ? AND is_current = ?", studentID, true).
 			Updates(map[string]interface{}{
 				"is_current": false,
-				"end_date":   &now,
+				"end_date":   &flexNow,
 			}).Error
 
 		if err != nil {
@@ -79,7 +80,7 @@ func (r *membershipRepository) TransferStudent(studentID, newFacultyID, newDepar
 			FacultyID:    newFacultyID,
 			DepartmentID: newDepartmentID,
 			ClassID:      newClassID,
-			StartDate:    now,
+			StartDate:    models.FlexibleTime(now),
 			IsCurrent:    true,
 		}
 

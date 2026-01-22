@@ -26,11 +26,42 @@ func setupTestServer(t *testing.T) (*httptest.Server, *database.Database) {
 	err = dbInstance.AutoMigrate()
 	assert.NoError(t, err)
 
+	// Create all repositories
 	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
+	instituteRepo := repository.NewInstituteRepository(db)
+	facultyRepo := repository.NewFacultyRepository(db)
+	departmentRepo := repository.NewDepartmentRepository(db)
+	classRepo := repository.NewClassRepository(db)
+	membershipRepo := repository.NewMembershipRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
 
-	router := routes.NewRouter(userHandler)
+	// Create all services
+	userService := service.NewUserService(userRepo)
+	instituteService := service.NewInstituteService(instituteRepo)
+	facultyService := service.NewFacultyService(facultyRepo)
+	departmentService := service.NewDepartmentService(departmentRepo)
+	classService := service.NewClassService(classRepo)
+	membershipService := service.NewMembershipService(membershipRepo)
+	roleService := service.NewRoleService(roleRepo)
+
+	// Create all handlers
+	userHandler := handlers.NewUserHandler(userService)
+	instituteHandler := handlers.NewInstituteHandler(instituteService)
+	facultyHandler := handlers.NewFacultyHandler(facultyService)
+	departmentHandler := handlers.NewDepartmentHandler(departmentService)
+	classHandler := handlers.NewClassHandler(classService)
+	membershipHandler := handlers.NewMembershipHandler(membershipService)
+	roleHandler := handlers.NewRoleHandler(roleService)
+
+	router := routes.NewRouter(
+		userHandler,
+		instituteHandler,
+		facultyHandler,
+		departmentHandler,
+		classHandler,
+		membershipHandler,
+		roleHandler,
+	)
 	r := router.Setup()
 
 	server := httptest.NewServer(r)
@@ -90,6 +121,7 @@ func TestGetUserAPI(t *testing.T) {
 	// Get the user via API
 	resp, err := http.Get(server.URL + "/api/v1/users/" + string(rune(user.ID+'0')))
 	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Note: This will fail because we're not handling ID conversion properly
 	// In a real scenario, you'd use strconv.Itoa(int(user.ID))
@@ -108,9 +140,9 @@ func TestGetAllUsersAPI(t *testing.T) {
 			Student:  &models.Student{StudentID: "U001"},
 		},
 		{
-			Email:    "user2@example.com",
-			Name:     "User 2",
-			UserType: models.UserTypeInstructor,
+			Email:      "user2@example.com",
+			Name:       "User 2",
+			UserType:   models.UserTypeInstructor,
 			Instructor: &models.Instructor{EmployeeID: "E001"},
 		},
 	}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -16,8 +16,8 @@ type Institute struct {
 	Code        string         `gorm:"uniqueIndex;not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	CreatedAt   FlexibleTime   `json:"created_at"`
+	UpdatedAt   FlexibleTime   `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Faculties []Faculty `gorm:"foreignKey:InstituteID;constraint:OnDelete:CASCADE" json:"faculties,omitempty"`
@@ -31,8 +31,8 @@ type Faculty struct {
 	Code        string         `gorm:"not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	CreatedAt   FlexibleTime   `json:"created_at"`
+	UpdatedAt   FlexibleTime   `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Institute   *Institute   `gorm:"foreignKey:InstituteID" json:"institute,omitempty"`
@@ -47,8 +47,8 @@ type Department struct {
 	Code        string         `gorm:"not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	CreatedAt   FlexibleTime   `json:"created_at"`
+	UpdatedAt   FlexibleTime   `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Faculty *Faculty `gorm:"foreignKey:FacultyID" json:"faculty,omitempty"`
@@ -61,11 +61,11 @@ type Class struct {
 	DepartmentID uint           `gorm:"not null;index" json:"department_id" validate:"required"`
 	Name         string         `gorm:"not null" json:"name" validate:"required"`
 	Code         string         `gorm:"not null" json:"code" validate:"required"`
-	Year         int            `gorm:"not null" json:"-" validate:"required,min=1,max=10"`
-	Semester     int            `gorm:"not null" json:"-" validate:"required,min=1,max=2"`
+	Year         int            `gorm:"not null" json:"-" validate:"omitempty,min=1,max=10"`
+	Semester     int            `gorm:"not null" json:"-" validate:"omitempty,min=1,max=4"`
 	IsActive     bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	CreatedAt    FlexibleTime   `json:"created_at"`
+	UpdatedAt    FlexibleTime   `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Department *Department `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
@@ -87,6 +87,23 @@ func (fi *FlexibleInt) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return fmt.Errorf("semester/year must be a number or string representation of a number")
+	}
+
+	// Semantic mapping for semester/year
+	lowerS := strings.ToLower(s)
+	switch lowerS {
+	case "spring", "first", "1st":
+		*fi = 1
+		return nil
+	case "fall", "second", "2nd":
+		*fi = 2
+		return nil
+	case "summer", "third", "3rd":
+		*fi = 3
+		return nil
+	case "winter", "fourth", "4th":
+		*fi = 4
+		return nil
 	}
 
 	// Convert string to int

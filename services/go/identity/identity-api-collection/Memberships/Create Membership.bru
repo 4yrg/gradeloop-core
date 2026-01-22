@@ -12,27 +12,28 @@ post {
 
 body:json {
   {
-    "student_id": 1,
-    "class_id": 1,
+    "student_id": 2,
+    "class_id": 2,
     "enrollment_date": "2024-01-15",
-    "status": "active"
+    "status": "active",
+    "department_id": 1
   }
 }
 
 docs {
   # Create Membership
-
+  
   Creates a new membership linking a student to a class.
-
+  
   ## Request Body
   - `student_id` (required): ID of the student to enroll
   - `class_id` (required): ID of the class to enroll the student in
   - `enrollment_date` (optional): Date of enrollment (ISO 8601 format)
   - `status` (optional): Enrollment status (e.g., "active", "inactive", "transferred")
-
+  
   ## Response
   Returns the created membership object with auto-generated ID and timestamps.
-
+  
   ## Notes
   - Both the student and class must exist before creating a membership
   - A student can be enrolled in multiple classes

@@ -93,7 +93,7 @@ func TestCreateStudentMembership(t *testing.T) {
 		FacultyID:    facultyID,
 		DepartmentID: departmentID,
 		ClassID:      classID,
-		StartDate:    time.Now(),
+		StartDate:    models.FlexibleTime(time.Now()),
 		IsCurrent:    true,
 	}
 
@@ -114,7 +114,7 @@ func TestGetCurrentMembership(t *testing.T) {
 		FacultyID:    facultyID,
 		DepartmentID: departmentID,
 		ClassID:      classID,
-		StartDate:    time.Now(),
+		StartDate:    models.FlexibleTime(time.Now()),
 		IsCurrent:    true,
 	}
 
@@ -142,7 +142,7 @@ func TestTransferStudent(t *testing.T) {
 		FacultyID:    facultyID,
 		DepartmentID: departmentID,
 		ClassID:      classID,
-		StartDate:    time.Now(),
+		StartDate:    models.FlexibleTime(time.Now()),
 		IsCurrent:    true,
 	}
 	err := membershipService.CreateMembership(membership)
@@ -191,7 +191,7 @@ func TestMembershipHistory(t *testing.T) {
 		FacultyID:    facultyID,
 		DepartmentID: departmentID,
 		ClassID:      classID,
-		StartDate:    time.Now().AddDate(0, -6, 0), // 6 months ago
+		StartDate:    models.FlexibleTime(time.Now().AddDate(0, -6, 0)), // 6 months ago
 		IsCurrent:    true,
 	}
 	membershipService.CreateMembership(membership1)
