@@ -24,10 +24,12 @@ func NewAdminHandler(p repository.PolicyRepository, r repository.RoleRepository)
 func (h *AdminHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/roles", h.ListRoles)
-	r.Post("/roles", h.CreateRole)
-	r.Get("/policies", h.ListPolicies)
-	r.Post("/policies", h.CreatePolicy)
+	r.Route("/api/v1/authz", func(r chi.Router) {
+		r.Get("/roles", h.ListRoles)
+		r.Post("/roles", h.CreateRole)
+		r.Get("/policies", h.ListPolicies)
+		r.Post("/policies", h.CreatePolicy)
+	})
 
 	return r
 }

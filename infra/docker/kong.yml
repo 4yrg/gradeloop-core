@@ -1,45 +1,46 @@
 _format_version: "3.0"
+
 services:
-  - name: auth-service
-    url: http://auth-service:5000
+  - name: authn-service
+    url: http://authn-service:8083
     routes:
-      - name: auth-routes
+      - name: authn-routes
         strip_path: false
         paths:
-          - /auth
-  - name: institute-service
-    url: http://institute-service:5000
+          - /api/v1/auth
+  
+  - name: authz-service
+    url: http://authz-service:8080
     routes:
-      - name: institute-routes
+      - name: authz-routes
         strip_path: false
         paths:
-          - /institutes
-          - /semesters
-          - /degrees
-          - /classes
-          - /courses
-          - /submission-api
-  - name: user-service
-    url: http://user-service:5000
+          - /api/v1/authz
+  
+  - name: identity-service
+    url: http://identity-service:8080
     routes:
-      - name: user-routes
+      - name: identity-routes
         strip_path: false
         paths:
-          - /users
-  - name: ivas-service
-    url: http://ivas-service:8084
+          - /api/v1/identity
+  
+  - name: session-service
+    url: http://session-service:8080
     routes:
-      - name: ivas-routes
+      - name: session-routes
         strip_path: false
         paths:
-          - /api/v1/viva
-  - name: keystroke-service
-    url: http://keystroke-ml-service:8003
+          - /api/v1/session
+  
+  - name: email-service
+    url: http://email-service-go:8080
     routes:
-      - name: keystroke-routes
+      - name: email-routes
         strip_path: false
         paths:
-          - /api/keystroke
+          - /api/v1/email
+
 plugins:
   - name: cors
     config:
@@ -68,3 +69,6 @@ plugins:
       credentials: true
       max_age: 3600
       preflight_continue: false
+
+# Deprecated/Old routes cleanup
+# Removed: institute-service, user-service (assuming identity covers this), ivas-service

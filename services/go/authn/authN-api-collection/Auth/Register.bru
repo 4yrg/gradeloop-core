@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/auth/register
+  url: {{base_url}}/api/v1/auth/register
   body: json
   auth: none
 }
@@ -26,22 +26,22 @@ script:post-response {
 
     // Store tokens if provided
     if (res.body.access_token) {
-      bru.setVar("authToken", res.body.access_token);
+      bru.setVar("access_token", res.body.access_token);
       console.log("   Access token stored");
     }
 
     if (res.body.refresh_token) {
-      bru.setVar("refreshToken", res.body.refresh_token);
+      bru.setVar("refresh_token", res.body.refresh_token);
       console.log("   Refresh token stored");
     }
 
     if (res.body.session_id) {
-      bru.setVar("sessionId", res.body.session_id);
+      bru.setVar("session_id", res.body.session_id);
       console.log("   Session ID stored");
     }
 
     if (res.body.user_id || res.body.userId) {
-      bru.setVar("userId", res.body.user_id || res.body.userId);
+      bru.setVar("user_id", res.body.user_id || res.body.userId);
       console.log("   User ID stored");
     }
   } else {

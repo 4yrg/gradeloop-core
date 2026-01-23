@@ -6,6 +6,17 @@ auth {
   mode: none
 }
 
+script:pre-request {
+  const uuid = require("uuid");
+  req.setHeader("X-Correlation-ID", uuid.v4());
+  
+  // Inject Auth Token if available and not already set
+  const token = bru.getEnvVar("access_token");
+  if (token && !req.getHeader("Authorization")) {
+      req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}
+
 vars {
   baseUrl: http://localhost:8082
 }

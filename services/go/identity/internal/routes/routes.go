@@ -56,14 +56,14 @@ func (rt *Router) Setup() *chi.Mux {
 		MaxAge:           300,
 	}))
 
-	// Health check
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-
 	// API routes
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route("/api/v1/identity", func(r chi.Router) {
+		// Health check
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		})
+
 		// User routes
 		r.Route("/users", func(r chi.Router) {
 			r.Post("/", rt.userHandler.CreateUser)

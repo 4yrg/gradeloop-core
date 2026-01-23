@@ -16,7 +16,7 @@ func SetupRoutes(app *fiber.App, h *handlers.ValidationHandler) {
 	app.Get("/health", h.Health)
 
 	// Session Management
-	api := app.Group("/sessions")
+	api := app.Group("/api/v1/session")
 
 	api.Post("/", h.CreateSession)
 	api.Post("/validate", h.ValidateSession)
