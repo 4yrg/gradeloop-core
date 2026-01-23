@@ -7,6 +7,17 @@ option go_package = "github.com/4yrg/gradeloop-core/libs/proto/authz";
 service AuthorizationService {
   rpc CheckPermission(CheckRequest) returns (CheckResponse);
   rpc BatchCheck(BatchCheckRequest) returns (BatchCheckResponse);
+  rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
+}
+
+message IssueServiceTokenRequest {
+  string service_id = 1;
+  string service_secret = 2;
+}
+
+message IssueServiceTokenResponse {
+  string token = 1;
+  int64 expires_at = 2;
 }
 
 message CheckRequest {

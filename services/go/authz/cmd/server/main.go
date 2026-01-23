@@ -18,6 +18,7 @@ import (
 	"github.com/4yrg/gradeloop-core/develop/services/go/authz/internal/repository"
 	"github.com/4yrg/gradeloop-core/develop/services/go/authz/internal/service"
 	authzpb "github.com/4yrg/gradeloop-core/libs/proto/authz"
+	"github.com/4yrg/gradeloop-core/libs/security"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -65,6 +66,14 @@ func main() {
 	// Services
 	authzSvc := service.NewAuthzService(policyRepo, roleRepo, permissionRepo, auditRepo)
 
+	// Token Service
+	privKey, err := security.LoadPrivateKeyFromFile(cfg.Auth.PrivateKeyPath)
+	if err != nil {
+		log.Fatalf("Failed to load private key: %v", err)
+	}
+	signer := security.NewTokenSigner(privKey, "authz-service")
+	tokenSvc := service.NewTokenService(signer, cfg)
+
 	// gRPC Server
 	lis, err := net.Listen("tcp", ":"+cfg.Server.GrpcPort)
 	if err != nil {
@@ -72,7 +81,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	authzHandler := authzgrpc.NewAuthzHandler(authzSvc)
+	authzHandler := authzgrpc.NewAuthzHandler(authzSvc, tokenSvc)
 	authzpb.RegisterAuthorizationServiceServer(grpcServer, authzHandler)
 	reflection.Register(grpcServer)
 

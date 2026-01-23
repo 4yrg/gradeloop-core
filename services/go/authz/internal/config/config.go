@@ -14,6 +14,12 @@ type Config struct {
 	Database    DatabaseConfig
 	Redis       RedisConfig
 	Logging     LoggingConfig
+	Auth        AuthConfig
+}
+
+type AuthConfig struct {
+	PrivateKeyPath string
+	ServiceSecrets map[string]string // map[service_id]secret for Day 1 simple auth
 }
 
 type ServerConfig struct {
@@ -72,6 +78,14 @@ func Load() (*Config, error) {
 		},
 		Logging: LoggingConfig{
 			Level: getEnv("LOG_LEVEL", "info"),
+		},
+		Auth: AuthConfig{
+			PrivateKeyPath: getEnv("AUTH_PRIVATE_KEY_PATH", "./certs/private_key.pem"),
+			ServiceSecrets: map[string]string{
+				// In a real app, load these from a secure source or env vars in a loop
+				"identity-service": getEnv("SERVICE_SECRET_IDENTITY", "identity-secret-123"),
+				"email-service":    getEnv("SERVICE_SECRET_EMAIL", "email-secret-123"),
+			},
 		},
 	}
 
