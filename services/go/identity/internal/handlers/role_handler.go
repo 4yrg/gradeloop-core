@@ -35,14 +35,13 @@ func (h *RoleHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoleHandler) GetRole(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", nil)
 		return
 	}
 
-	role, err := h.roleService.GetRoleByID(uint(id))
+	role, err := h.roleService.GetRoleByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "Role not found", err)
 		return
@@ -69,10 +68,9 @@ func (h *RoleHandler) GetAllRoles(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoleHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", nil)
 		return
 	}
 
@@ -82,7 +80,7 @@ func (h *RoleHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	role.ID = uint(id)
+	role.ID = id
 
 	if err := h.roleService.UpdateRole(&role); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update role", err)
@@ -93,14 +91,13 @@ func (h *RoleHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoleHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid role ID", nil)
 		return
 	}
 
-	if err := h.roleService.DeleteRole(uint(id)); err != nil {
+	if err := h.roleService.DeleteRole(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete role", err)
 		return
 	}

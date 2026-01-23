@@ -35,14 +35,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", nil)
 		return
 	}
 
-	user, err := h.userService.GetUserByID(uint(id))
+	user, err := h.userService.GetUserByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "User not found", err)
 		return
@@ -69,10 +68,9 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", nil)
 		return
 	}
 
@@ -82,7 +80,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.ID = uint(id)
+	user.ID = id
 
 	if err := h.userService.UpdateUser(&user); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update user", err)
@@ -93,14 +91,13 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", nil)
 		return
 	}
 
-	if err := h.userService.DeleteUser(uint(id)); err != nil {
+	if err := h.userService.DeleteUser(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete user", err)
 		return
 	}
@@ -109,14 +106,13 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type AssignRolesRequest struct {
-	RoleIDs []uint `json:"role_ids" validate:"required"`
+	RoleIDs []string `json:"role_ids" validate:"required"`
 }
 
 func (h *UserHandler) AssignRoles(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid user ID", nil)
 		return
 	}
 
@@ -126,7 +122,7 @@ func (h *UserHandler) AssignRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.userService.AssignRolesToUser(uint(id), req.RoleIDs); err != nil {
+	if err := h.userService.AssignRolesToUser(id, req.RoleIDs); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to assign roles", err)
 		return
 	}

@@ -72,7 +72,7 @@ func checkDuplicates(db *gorm.DB) {
 
 	// Check for duplicate user_ids in students table
 	var duplicates []struct {
-		UserID uint
+		UserID string
 		Count  int64
 	}
 
@@ -87,7 +87,7 @@ func checkDuplicates(db *gorm.DB) {
 	} else {
 		fmt.Printf("✗ Found %d user(s) with duplicate student records:\n", len(duplicates))
 		for _, dup := range duplicates {
-			fmt.Printf("  - UserID %d has %d student records\n", dup.UserID, dup.Count)
+			fmt.Printf("  - UserID %s has %d student records\n", dup.UserID, dup.Count)
 		}
 	}
 
@@ -107,10 +107,10 @@ func checkDuplicates(db *gorm.DB) {
 
 func listStudents(db *gorm.DB) {
 	var results []struct {
-		UserID     uint
+		UserID     string
 		UserEmail  string
 		UserName   string
-		StudentID  uint
+		StudentID  string
 		StudentNum string
 	}
 
@@ -120,15 +120,15 @@ func listStudents(db *gorm.DB) {
 		Scan(&results)
 
 	fmt.Printf("\nTotal Students: %d\n\n", len(results))
-	fmt.Printf("%-8s | %-30s | %-25s | %-12s | %-15s\n", "UserID", "Email", "Name", "StudentID", "StudentNum")
-	fmt.Println("---------|--------------------------------|---------------------------|--------------|------------------")
+	fmt.Printf("%-36s | %-30s | %-25s | %-36s | %-15s\n", "UserID", "Email", "Name", "StudentID", "StudentNum")
+	fmt.Println("-------------------------------------|--------------------------------|---------------------------|-------------------------------------|------------------")
 
 	for _, r := range results {
 		if r.UserEmail == "" {
 			r.UserEmail = "<orphaned>"
 			r.UserName = "<no user>"
 		}
-		fmt.Printf("%-8d | %-30s | %-25s | %-12d | %-15s\n",
+		fmt.Printf("%-36s | %-30s | %-25s | %-36s | %-15s\n",
 			r.UserID, r.UserEmail, r.UserName, r.StudentID, r.StudentNum)
 	}
 }
@@ -140,7 +140,7 @@ func deleteUserByEmail(db *gorm.DB, email string) {
 		return
 	}
 
-	fmt.Printf("Found user: ID=%d, Email=%s, Name=%s, Type=%s\n",
+	fmt.Printf("Found user: ID=%s, Email=%s, Name=%s, Type=%s\n",
 		user.ID, user.Email, user.Name, user.UserType)
 	fmt.Print("Are you sure you want to delete this user? (yes/no): ")
 
@@ -161,20 +161,14 @@ func deleteUserByEmail(db *gorm.DB, email string) {
 	fmt.Println("✓ User deleted successfully (student record also deleted due to cascade)")
 }
 
-func deleteStudentByUserID(db *gorm.DB, userIDStr string) {
-	var userID uint
-	if _, err := fmt.Sscanf(userIDStr, "%d", &userID); err != nil {
-		fmt.Printf("Error: Invalid user_id '%s'\n", userIDStr)
-		return
-	}
-
+func deleteStudentByUserID(db *gorm.DB, userID string) {
 	var student models.Student
 	if err := db.Where("user_id = ?", userID).First(&student).Error; err != nil {
-		fmt.Printf("Error: Student record with user_id=%d not found\n", userID)
+		fmt.Printf("Error: Student record with user_id=%s not found\n", userID)
 		return
 	}
 
-	fmt.Printf("Found student: ID=%d, UserID=%d, StudentID=%s\n",
+	fmt.Printf("Found student: ID=%s, UserID=%s, StudentID=%s\n",
 		student.ID, student.UserID, student.StudentID)
 	fmt.Print("Are you sure you want to delete this student record? (yes/no): ")
 
@@ -199,11 +193,11 @@ func listAllUsers(db *gorm.DB) {
 	db.Find(&users)
 
 	fmt.Printf("\nTotal Users: %d\n\n", len(users))
-	fmt.Printf("%-6s | %-30s | %-25s | %-15s | %-8s\n", "ID", "Email", "Name", "UserType", "Active")
-	fmt.Println("-------|--------------------------------|---------------------------|-----------------|----------")
+	fmt.Printf("%-36s | %-30s | %-25s | %-15s | %-8s\n", "ID", "Email", "Name", "UserType", "Active")
+	fmt.Println("-------------------------------------|--------------------------------|---------------------------|-----------------|----------")
 
 	for _, u := range users {
-		fmt.Printf("%-6d | %-30s | %-25s | %-15s | %-8t\n",
+		fmt.Printf("%-36s | %-30s | %-25s | %-15s | %-8t\n",
 			u.ID, u.Email, u.Name, u.UserType, u.IsActive)
 	}
 
@@ -217,7 +211,7 @@ func listAllUsers(db *gorm.DB) {
 	for _, s := range students {
 		var userEmail string
 		db.Model(&models.User{}).Select("email").Where("id = ?", s.UserID).Scan(&userEmail)
-		fmt.Printf("  - Student ID=%d, UserID=%d (%s), StudentNum=%s\n", s.ID, s.UserID, userEmail, s.StudentID)
+		fmt.Printf("  - Student ID=%s, UserID=%s (%s), StudentNum=%s\n", s.ID, s.UserID, userEmail, s.StudentID)
 	}
 
 	// Check instructors
@@ -227,7 +221,7 @@ func listAllUsers(db *gorm.DB) {
 	for _, i := range instructors {
 		var userEmail string
 		db.Model(&models.User{}).Select("email").Where("id = ?", i.UserID).Scan(&userEmail)
-		fmt.Printf("  - Instructor ID=%d, UserID=%d (%s), EmployeeID=%s\n", i.ID, i.UserID, userEmail, i.EmployeeID)
+		fmt.Printf("  - Instructor ID=%s, UserID=%s (%s), EmployeeID=%s\n", i.ID, i.UserID, userEmail, i.EmployeeID)
 	}
 
 	// Check system admins
@@ -237,7 +231,7 @@ func listAllUsers(db *gorm.DB) {
 	for _, a := range sysAdmins {
 		var userEmail string
 		db.Model(&models.User{}).Select("email").Where("id = ?", a.UserID).Scan(&userEmail)
-		fmt.Printf("  - SystemAdmin ID=%d, UserID=%d (%s)\n", a.ID, a.UserID, userEmail)
+		fmt.Printf("  - SystemAdmin ID=%s, UserID=%s (%s)\n", a.ID, a.UserID, userEmail)
 	}
 
 	// Check institute admins
@@ -247,24 +241,18 @@ func listAllUsers(db *gorm.DB) {
 	for _, a := range instAdmins {
 		var userEmail string
 		db.Model(&models.User{}).Select("email").Where("id = ?", a.UserID).Scan(&userEmail)
-		fmt.Printf("  - InstituteAdmin ID=%d, UserID=%d (%s), InstituteID=%d\n", a.ID, a.UserID, userEmail, a.InstituteID)
+		fmt.Printf("  - InstituteAdmin ID=%s, UserID=%s (%s), InstituteID=%s\n", a.ID, a.UserID, userEmail, a.InstituteID)
 	}
 }
 
-func fixBrokenUser(db *gorm.DB, userIDStr string) {
-	var userID uint
-	if _, err := fmt.Sscanf(userIDStr, "%d", &userID); err != nil {
-		fmt.Printf("Error: Invalid user_id '%s'\n", userIDStr)
-		return
-	}
-
+func fixBrokenUser(db *gorm.DB, userID string) {
 	var user models.User
-	if err := db.First(&user, userID).Error; err != nil {
-		fmt.Printf("Error: User with ID %d not found\n", userID)
+	if err := db.First(&user, "id = ?", userID).Error; err != nil {
+		fmt.Printf("Error: User with ID %s not found\n", userID)
 		return
 	}
 
-	fmt.Printf("Found user: ID=%d, Email=%s, Name=%s, Type=%s\n",
+	fmt.Printf("Found user: ID=%s, Email=%s, Name=%s, Type=%s\n",
 		user.ID, user.Email, user.Name, user.UserType)
 
 	// Check for orphaned type-specific records
@@ -276,7 +264,7 @@ func fixBrokenUser(db *gorm.DB, userIDStr string) {
 	if user.UserType == models.UserTypeStudent {
 		var instructor models.Instructor
 		if err := db.Where("user_id = ?", userID).First(&instructor).Error; err == nil {
-			fmt.Printf("⚠ Found orphaned Instructor record (ID=%d) for Student user\n", instructor.ID)
+			fmt.Printf("⚠ Found orphaned Instructor record (ID=%s) for Student user\n", instructor.ID)
 			fmt.Print("Delete it? (yes/no): ")
 			var confirm string
 			fmt.Scanln(&confirm)
@@ -289,7 +277,7 @@ func fixBrokenUser(db *gorm.DB, userIDStr string) {
 
 		var sysAdmin models.SystemAdmin
 		if err := db.Where("user_id = ?", userID).First(&sysAdmin).Error; err == nil {
-			fmt.Printf("⚠ Found orphaned SystemAdmin record (ID=%d) for Student user\n", sysAdmin.ID)
+			fmt.Printf("⚠ Found orphaned SystemAdmin record (ID=%s) for Student user\n", sysAdmin.ID)
 			fmt.Print("Delete it? (yes/no): ")
 			var confirm string
 			fmt.Scanln(&confirm)
@@ -302,7 +290,7 @@ func fixBrokenUser(db *gorm.DB, userIDStr string) {
 
 		var instAdmin models.InstituteAdmin
 		if err := db.Where("user_id = ?", userID).First(&instAdmin).Error; err == nil {
-			fmt.Printf("⚠ Found orphaned InstituteAdmin record (ID=%d) for Student user\n", instAdmin.ID)
+			fmt.Printf("⚠ Found orphaned InstituteAdmin record (ID=%s) for Student user\n", instAdmin.ID)
 			fmt.Print("Delete it? (yes/no): ")
 			var confirm string
 			fmt.Scanln(&confirm)

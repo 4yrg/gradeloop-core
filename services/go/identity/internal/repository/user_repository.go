@@ -11,13 +11,13 @@ import (
 
 type UserRepository interface {
 	Create(user *models.User) error
-	GetByID(id uint) (*models.User, error)
+	GetByID(id string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	GetAll(limit, offset int) ([]models.User, int64, error)
 	Update(user *models.User) error
-	UpdatePasswordHash(userID uint, passwordHash string) error
-	Delete(id uint) error
-	AssignRoles(userID uint, roleIDs []uint) error
+	UpdatePasswordHash(userID string, passwordHash string) error
+	Delete(id string) error
+	AssignRoles(userID string, roleIDs []string) error
 }
 
 type userRepository struct {
@@ -38,57 +38,57 @@ func (r *userRepository) Create(user *models.User) error {
 			log.Printf("[REPO ERROR] Failed to create base user: %v", err)
 			return fmt.Errorf("failed to create user: %w", err)
 		}
-		log.Printf("[REPO] Base user created with ID: %d", user.ID)
+		log.Printf("[REPO] Base user created with ID: %s", user.ID)
 
 		// Before creating type-specific records, check if one already exists (from a failed previous transaction)
 		// and clean it up if found
 		switch user.UserType {
 		case models.UserTypeStudent:
 			// Check for orphaned student record
-			log.Printf("[REPO] Checking for orphaned student record for user_id: %d", user.ID)
+			log.Printf("[REPO] Checking for orphaned student record for user_id: %s", user.ID)
 			var existingStudent models.Student
 			if err := tx.Where("user_id = ?", user.ID).First(&existingStudent).Error; err == nil {
 				// Orphaned student record exists, delete it
 				log.Printf("[REPO] Found orphaned student record, deleting...")
 				if err := tx.Delete(&existingStudent).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to clean up orphaned student: %v", err)
-					return fmt.Errorf("failed to clean up orphaned student record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to clean up orphaned student record for user_id %s: %w", user.ID, err)
 				}
 			}
 		case models.UserTypeInstructor:
 			// Check for orphaned instructor record
-			log.Printf("[REPO] Checking for orphaned instructor record for user_id: %d", user.ID)
+			log.Printf("[REPO] Checking for orphaned instructor record for user_id: %s", user.ID)
 			var existingInstructor models.Instructor
 			if err := tx.Where("user_id = ?", user.ID).First(&existingInstructor).Error; err == nil {
 				// Orphaned instructor record exists, delete it
 				log.Printf("[REPO] Found orphaned instructor record, deleting...")
 				if err := tx.Delete(&existingInstructor).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to clean up orphaned instructor: %v", err)
-					return fmt.Errorf("failed to clean up orphaned instructor record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to clean up orphaned instructor record for user_id %s: %w", user.ID, err)
 				}
 			}
 		case models.UserTypeSystemAdmin:
 			// Check for orphaned system admin record
-			log.Printf("[REPO] Checking for orphaned system admin record for user_id: %d", user.ID)
+			log.Printf("[REPO] Checking for orphaned system admin record for user_id: %s", user.ID)
 			var existingSysAdmin models.SystemAdmin
 			if err := tx.Where("user_id = ?", user.ID).First(&existingSysAdmin).Error; err == nil {
 				// Orphaned system admin record exists, delete it
 				log.Printf("[REPO] Found orphaned system admin record, deleting...")
 				if err := tx.Delete(&existingSysAdmin).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to clean up orphaned system admin: %v", err)
-					return fmt.Errorf("failed to clean up orphaned system admin record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to clean up orphaned system admin record for user_id %s: %w", user.ID, err)
 				}
 			}
 		case models.UserTypeInstituteAdmin:
 			// Check for orphaned institute admin record
-			log.Printf("[REPO] Checking for orphaned institute admin record for user_id: %d", user.ID)
+			log.Printf("[REPO] Checking for orphaned institute admin record for user_id: %s", user.ID)
 			var existingInstAdmin models.InstituteAdmin
 			if err := tx.Where("user_id = ?", user.ID).First(&existingInstAdmin).Error; err == nil {
 				// Orphaned institute admin record exists, delete it
 				log.Printf("[REPO] Found orphaned institute admin record, deleting...")
 				if err := tx.Delete(&existingInstAdmin).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to clean up orphaned institute admin: %v", err)
-					return fmt.Errorf("failed to clean up orphaned institute admin record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to clean up orphaned institute admin record for user_id %s: %w", user.ID, err)
 				}
 			}
 		}
@@ -99,60 +99,57 @@ func (r *userRepository) Create(user *models.User) error {
 		case models.UserTypeStudent:
 			if user.Student != nil {
 				user.Student.UserID = user.ID
-				user.Student.ID = 0 // Reset ID to let GORM auto-generate it
-				log.Printf("[REPO] Creating student record with StudentID: %s for user_id: %d", user.Student.StudentID, user.ID)
+				log.Printf("[REPO] Creating student record with StudentID: %s for user_id: %s", user.Student.StudentID, user.ID)
 				if err := tx.Create(user.Student).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to create student record: %v", err)
-					return fmt.Errorf("failed to create student record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to create student record for user_id %s: %w", user.ID, err)
 				}
-				log.Printf("[REPO] Student record created with ID: %d", user.Student.ID)
+				log.Printf("[REPO] Student record created with ID: %s", user.Student.ID)
 			} else {
 				log.Printf("[REPO WARNING] Student data is nil for user_type student")
 			}
 		case models.UserTypeInstructor:
 			if user.Instructor != nil {
 				user.Instructor.UserID = user.ID
-				user.Instructor.ID = 0 // Reset ID to let GORM auto-generate it
-				log.Printf("[REPO] Creating instructor record with EmployeeID: %s for user_id: %d", user.Instructor.EmployeeID, user.ID)
+				log.Printf("[REPO] Creating instructor record with EmployeeID: %s for user_id: %s", user.Instructor.EmployeeID, user.ID)
 				if err := tx.Create(user.Instructor).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to create instructor record: %v", err)
-					return fmt.Errorf("failed to create instructor record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to create instructor record for user_id %s: %w", user.ID, err)
 				}
-				log.Printf("[REPO] Instructor record created with ID: %d", user.Instructor.ID)
+				log.Printf("[REPO] Instructor record created with ID: %s", user.Instructor.ID)
 			} else {
 				log.Printf("[REPO WARNING] Instructor data is nil for user_type instructor")
 			}
 		case models.UserTypeSystemAdmin:
-			log.Printf("[REPO] Creating system admin record for user_id: %d", user.ID)
+			log.Printf("[REPO] Creating system admin record for user_id: %s", user.ID)
 			systemAdmin := &models.SystemAdmin{UserID: user.ID}
 			if err := tx.Create(systemAdmin).Error; err != nil {
 				log.Printf("[REPO ERROR] Failed to create system admin record: %v", err)
-				return fmt.Errorf("failed to create system admin record for user_id %d: %w", user.ID, err)
+				return fmt.Errorf("failed to create system admin record for user_id %s: %w", user.ID, err)
 			}
-			log.Printf("[REPO] System admin record created with ID: %d", systemAdmin.ID)
+			log.Printf("[REPO] System admin record created with ID: %s", systemAdmin.ID)
 		case models.UserTypeInstituteAdmin:
 			if user.InstituteAdmin != nil {
 				user.InstituteAdmin.UserID = user.ID
-				user.InstituteAdmin.ID = 0 // Reset ID to let GORM auto-generate it
-				log.Printf("[REPO] Creating institute admin record with InstituteID: %d for user_id: %d", user.InstituteAdmin.InstituteID, user.ID)
+				log.Printf("[REPO] Creating institute admin record with InstituteID: %s for user_id: %s", user.InstituteAdmin.InstituteID, user.ID)
 				if err := tx.Create(user.InstituteAdmin).Error; err != nil {
 					log.Printf("[REPO ERROR] Failed to create institute admin record: %v", err)
-					return fmt.Errorf("failed to create institute admin record for user_id %d: %w", user.ID, err)
+					return fmt.Errorf("failed to create institute admin record for user_id %s: %w", user.ID, err)
 				}
-				log.Printf("[REPO] Institute admin record created with ID: %d", user.InstituteAdmin.ID)
+				log.Printf("[REPO] Institute admin record created with ID: %s", user.InstituteAdmin.ID)
 			} else {
 				log.Printf("[REPO WARNING] InstituteAdmin data is nil for user_type institute_admin")
 			}
 		}
 
-		log.Printf("[REPO SUCCESS] Transaction completed successfully for user_id: %d, email: %s", user.ID, user.Email)
+		log.Printf("[REPO SUCCESS] Transaction completed successfully for user_id: %s, email: %s", user.ID, user.Email)
 		return nil
 	})
 }
 
-func (r *userRepository) GetByID(id uint) (*models.User, error) {
+func (r *userRepository) GetByID(id string) (*models.User, error) {
 	var user models.User
-	err := r.db.Preload("Roles").First(&user, id).Error
+	err := r.db.Preload("Roles").First(&user, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("user not found")
@@ -181,15 +178,15 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 		return nil, err
 	}
 
-	log.Printf("[REPO] User found with email: %s, ID: %d, password hash length: %d",
+	log.Printf("[REPO] User found with email: %s, ID: %s, password hash length: %d",
 		email, user.ID, len(user.PasswordHash))
 
 	if err := r.loadUserTypeData(&user); err != nil {
-		log.Printf("[REPO ERROR] Failed to load type-specific data for user %d: %v", user.ID, err)
+		log.Printf("[REPO ERROR] Failed to load type-specific data for user %s: %v", user.ID, err)
 		return nil, err
 	}
 
-	log.Printf("[REPO SUCCESS] Successfully retrieved user %d with all data", user.ID)
+	log.Printf("[REPO SUCCESS] Successfully retrieved user %s with all data", user.ID)
 	return &user, nil
 }
 
@@ -249,31 +246,31 @@ func (r *userRepository) Update(user *models.User) error {
 	})
 }
 
-func (r *userRepository) UpdatePasswordHash(userID uint, passwordHash string) error {
-	log.Printf("[REPO] Updating password hash for user_id: %d", userID)
+func (r *userRepository) UpdatePasswordHash(userID string, passwordHash string) error {
+	log.Printf("[REPO] Updating password hash for user_id: %s", userID)
 
 	// Use Model + Updates to only update the password_hash column
 	result := r.db.Model(&models.User{}).Where("id = ?", userID).Update("password_hash", passwordHash)
 
 	if result.Error != nil {
-		log.Printf("[REPO ERROR] Failed to update password hash for user_id %d: %v", userID, result.Error)
+		log.Printf("[REPO ERROR] Failed to update password hash for user_id %s: %v", userID, result.Error)
 		return fmt.Errorf("failed to update password hash: %w", result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		log.Printf("[REPO ERROR] No user found with id %d to update password", userID)
+		log.Printf("[REPO ERROR] No user found with id %s to update password", userID)
 		return fmt.Errorf("user not found")
 	}
 
-	log.Printf("[REPO SUCCESS] Password hash updated for user_id: %d", userID)
+	log.Printf("[REPO SUCCESS] Password hash updated for user_id: %s", userID)
 	return nil
 }
 
-func (r *userRepository) Delete(id uint) error {
-	return r.db.Delete(&models.User{}, id).Error
+func (r *userRepository) Delete(id string) error {
+	return r.db.Delete(&models.User{}, "id = ?", id).Error
 }
 
-func (r *userRepository) AssignRoles(userID uint, roleIDs []uint) error {
+func (r *userRepository) AssignRoles(userID string, roleIDs []string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Delete existing roles
 		if err := tx.Where("user_id = ?", userID).Delete(&models.UserRole{}).Error; err != nil {

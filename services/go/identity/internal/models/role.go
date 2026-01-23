@@ -1,12 +1,13 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Role represents a role in the system for RBAC
 type Role struct {
-	ID          uint           `gorm:"primarykey" json:"id"`
+	ID          string         `gorm:"primarykey" json:"id"`
 	Name        string         `gorm:"uniqueIndex;not null" json:"name" validate:"required"`
 	Description string         `json:"description"`
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
@@ -17,10 +18,17 @@ type Role struct {
 	Users []User `gorm:"many2many:user_roles;" json:"users,omitempty"`
 }
 
+func (r *Role) BeforeCreate(tx *gorm.DB) (err error) {
+	if r.ID == "" {
+		r.ID = uuid.New().String()
+	}
+	return
+}
+
 // UserRole is the join table for many-to-many relationship between User and Role
 type UserRole struct {
-	UserID    uint         `gorm:"primarykey" json:"user_id"`
-	RoleID    uint         `gorm:"primarykey" json:"role_id"`
+	UserID    string       `gorm:"primarykey" json:"user_id"`
+	RoleID    string       `gorm:"primarykey" json:"role_id"`
 	CreatedAt FlexibleTime `json:"created_at"`
 
 	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`

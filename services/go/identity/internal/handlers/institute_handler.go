@@ -35,14 +35,13 @@ func (h *InstituteHandler) CreateInstitute(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *InstituteHandler) GetInstitute(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", nil)
 		return
 	}
 
-	institute, err := h.instituteService.GetInstituteByID(uint(id))
+	institute, err := h.instituteService.GetInstituteByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "Institute not found", err)
 		return
@@ -69,10 +68,9 @@ func (h *InstituteHandler) GetAllInstitutes(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *InstituteHandler) UpdateInstitute(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", nil)
 		return
 	}
 
@@ -82,7 +80,7 @@ func (h *InstituteHandler) UpdateInstitute(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	institute.ID = uint(id)
+	institute.ID = id
 
 	if err := h.instituteService.UpdateInstitute(&institute); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update institute", err)
@@ -93,14 +91,13 @@ func (h *InstituteHandler) UpdateInstitute(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *InstituteHandler) DeleteInstitute(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", nil)
 		return
 	}
 
-	if err := h.instituteService.DeleteInstitute(uint(id)); err != nil {
+	if err := h.instituteService.DeleteInstitute(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete institute", err)
 		return
 	}

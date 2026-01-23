@@ -13,14 +13,14 @@ import (
 
 type UserService interface {
 	CreateUser(user *models.User) error
-	GetUserByID(id uint) (*models.User, error)
+	GetUserByID(id string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetAllUsers(limit, offset int) ([]models.User, int64, error)
 	UpdateUser(user *models.User) error
-	DeleteUser(id uint) error
-	AssignRolesToUser(userID uint, roleIDs []uint) error
+	DeleteUser(id string) error
+	AssignRolesToUser(userID string, roleIDs []string) error
 	ValidateCredentials(email, password string) (*models.User, bool, error)
-	UpdatePassword(userID uint, password string) error
+	UpdatePassword(userID string, password string) error
 }
 
 type userService struct {
@@ -95,11 +95,11 @@ func (s *userService) CreateUser(user *models.User) error {
 		return err
 	}
 
-	log.Printf("[SERVICE SUCCESS] User created successfully with ID: %d, email: %s", user.ID, user.Email)
+	log.Printf("[SERVICE SUCCESS] User created successfully with ID: %s, email: %s", user.ID, user.Email)
 	return nil
 }
 
-func (s *userService) GetUserByID(id uint) (*models.User, error) {
+func (s *userService) GetUserByID(id string) (*models.User, error) {
 	return s.userRepo.GetByID(id)
 }
 
@@ -125,11 +125,11 @@ func (s *userService) UpdateUser(user *models.User) error {
 	return s.userRepo.Update(user)
 }
 
-func (s *userService) DeleteUser(id uint) error {
+func (s *userService) DeleteUser(id string) error {
 	return s.userRepo.Delete(id)
 }
 
-func (s *userService) AssignRolesToUser(userID uint, roleIDs []uint) error {
+func (s *userService) AssignRolesToUser(userID string, roleIDs []string) error {
 	// Verify user exists
 	_, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *userService) ValidateCredentials(email, password string) (*models.User,
 		return nil, false, nil
 	}
 
-	log.Printf("[SERVICE] User found (ID: %d), comparing password hash", user.ID)
+	log.Printf("[SERVICE] User found (ID: %s), comparing password hash", user.ID)
 	log.Printf("[SERVICE] Stored hash length: %d bytes, provided password length: %d chars",
 		len(user.PasswordHash), len(password))
 
@@ -163,26 +163,26 @@ func (s *userService) ValidateCredentials(email, password string) (*models.User,
 		return nil, false, nil
 	}
 
-	log.Printf("[SERVICE SUCCESS] Credentials validated for user ID: %d, email: %s", user.ID, email)
+	log.Printf("[SERVICE SUCCESS] Credentials validated for user ID: %s, email: %s", user.ID, email)
 	return user, true, nil
 }
 
-func (s *userService) UpdatePassword(userID uint, password string) error {
-	log.Printf("[SERVICE] Updating password for user ID: %d", userID)
+func (s *userService) UpdatePassword(userID string, password string) error {
+	log.Printf("[SERVICE] Updating password for user ID: %s", userID)
 
 	// Hash the new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("[SERVICE ERROR] Failed to hash password for user ID %d: %v", userID, err)
+		log.Printf("[SERVICE ERROR] Failed to hash password for user ID %s: %v", userID, err)
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	log.Printf("[SERVICE] Generated password hash for user ID: %d (length: %d bytes)", userID, len(hashedPassword))
+	log.Printf("[SERVICE] Generated password hash for user ID: %s (length: %d bytes)", userID, len(hashedPassword))
 
 	// Verify user exists first
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
-		log.Printf("[SERVICE ERROR] Failed to get user by ID %d: %v", userID, err)
+		log.Printf("[SERVICE ERROR] Failed to get user by ID %s: %v", userID, err)
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (s *userService) UpdatePassword(userID uint, password string) error {
 	// Use dedicated method to update only the password hash field
 	err = s.userRepo.UpdatePasswordHash(userID, string(hashedPassword))
 	if err != nil {
-		log.Printf("[SERVICE ERROR] Failed to update password hash for ID %d: %v", userID, err)
+		log.Printf("[SERVICE ERROR] Failed to update password hash for ID %s: %v", userID, err)
 		return err
 	}
 
@@ -209,6 +209,6 @@ func (s *userService) UpdatePassword(userID uint, password string) error {
 		log.Printf("[SERVICE] Password verification successful!")
 	}
 
-	log.Printf("[SERVICE SUCCESS] Password updated successfully for user ID: %d", userID)
+	log.Printf("[SERVICE SUCCESS] Password updated successfully for user ID: %s", userID)
 	return nil
 }

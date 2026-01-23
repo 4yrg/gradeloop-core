@@ -11,10 +11,10 @@ import (
 // InstituteRepository handles Institute CRUD operations
 type InstituteRepository interface {
 	Create(institute *models.Institute) error
-	GetByID(id uint) (*models.Institute, error)
+	GetByID(id string) (*models.Institute, error)
 	GetAll(limit, offset int) ([]models.Institute, int64, error)
 	Update(institute *models.Institute) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type instituteRepository struct {
@@ -29,9 +29,9 @@ func (r *instituteRepository) Create(institute *models.Institute) error {
 	return r.db.Create(institute).Error
 }
 
-func (r *instituteRepository) GetByID(id uint) (*models.Institute, error) {
+func (r *instituteRepository) GetByID(id string) (*models.Institute, error) {
 	var institute models.Institute
-	err := r.db.Preload("Faculties").First(&institute, id).Error
+	err := r.db.Preload("Faculties").First(&institute, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("institute not found")
@@ -57,17 +57,17 @@ func (r *instituteRepository) Update(institute *models.Institute) error {
 	return r.db.Save(institute).Error
 }
 
-func (r *instituteRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Institute{}, id).Error
+func (r *instituteRepository) Delete(id string) error {
+	return r.db.Delete(&models.Institute{}, "id = ?", id).Error
 }
 
 // FacultyRepository handles Faculty CRUD operations
 type FacultyRepository interface {
 	Create(faculty *models.Faculty) error
-	GetByID(id uint) (*models.Faculty, error)
-	GetByInstituteID(instituteID uint, limit, offset int) ([]models.Faculty, int64, error)
+	GetByID(id string) (*models.Faculty, error)
+	GetByInstituteID(instituteID string, limit, offset int) ([]models.Faculty, int64, error)
 	Update(faculty *models.Faculty) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type facultyRepository struct {
@@ -82,9 +82,9 @@ func (r *facultyRepository) Create(faculty *models.Faculty) error {
 	return r.db.Create(faculty).Error
 }
 
-func (r *facultyRepository) GetByID(id uint) (*models.Faculty, error) {
+func (r *facultyRepository) GetByID(id string) (*models.Faculty, error) {
 	var faculty models.Faculty
-	err := r.db.Preload("Institute").Preload("Departments").First(&faculty, id).Error
+	err := r.db.Preload("Institute").Preload("Departments").First(&faculty, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("faculty not found")
@@ -94,7 +94,7 @@ func (r *facultyRepository) GetByID(id uint) (*models.Faculty, error) {
 	return &faculty, nil
 }
 
-func (r *facultyRepository) GetByInstituteID(instituteID uint, limit, offset int) ([]models.Faculty, int64, error) {
+func (r *facultyRepository) GetByInstituteID(instituteID string, limit, offset int) ([]models.Faculty, int64, error) {
 	var faculties []models.Faculty
 	var total int64
 
@@ -112,17 +112,17 @@ func (r *facultyRepository) Update(faculty *models.Faculty) error {
 	return r.db.Save(faculty).Error
 }
 
-func (r *facultyRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Faculty{}, id).Error
+func (r *facultyRepository) Delete(id string) error {
+	return r.db.Delete(&models.Faculty{}, "id = ?", id).Error
 }
 
 // DepartmentRepository handles Department CRUD operations
 type DepartmentRepository interface {
 	Create(department *models.Department) error
-	GetByID(id uint) (*models.Department, error)
-	GetByFacultyID(facultyID uint, limit, offset int) ([]models.Department, int64, error)
+	GetByID(id string) (*models.Department, error)
+	GetByFacultyID(facultyID string, limit, offset int) ([]models.Department, int64, error)
 	Update(department *models.Department) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type departmentRepository struct {
@@ -137,9 +137,9 @@ func (r *departmentRepository) Create(department *models.Department) error {
 	return r.db.Create(department).Error
 }
 
-func (r *departmentRepository) GetByID(id uint) (*models.Department, error) {
+func (r *departmentRepository) GetByID(id string) (*models.Department, error) {
 	var department models.Department
-	err := r.db.Preload("Faculty").Preload("Classes").First(&department, id).Error
+	err := r.db.Preload("Faculty").Preload("Classes").First(&department, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("department not found")
@@ -149,7 +149,7 @@ func (r *departmentRepository) GetByID(id uint) (*models.Department, error) {
 	return &department, nil
 }
 
-func (r *departmentRepository) GetByFacultyID(facultyID uint, limit, offset int) ([]models.Department, int64, error) {
+func (r *departmentRepository) GetByFacultyID(facultyID string, limit, offset int) ([]models.Department, int64, error) {
 	var departments []models.Department
 	var total int64
 
@@ -167,17 +167,17 @@ func (r *departmentRepository) Update(department *models.Department) error {
 	return r.db.Save(department).Error
 }
 
-func (r *departmentRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Department{}, id).Error
+func (r *departmentRepository) Delete(id string) error {
+	return r.db.Delete(&models.Department{}, "id = ?", id).Error
 }
 
 // ClassRepository handles Class CRUD operations
 type ClassRepository interface {
 	Create(class *models.Class) error
-	GetByID(id uint) (*models.Class, error)
-	GetByDepartmentID(departmentID uint, limit, offset int) ([]models.Class, int64, error)
+	GetByID(id string) (*models.Class, error)
+	GetByDepartmentID(departmentID string, limit, offset int) ([]models.Class, int64, error)
 	Update(class *models.Class) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type classRepository struct {
@@ -192,9 +192,9 @@ func (r *classRepository) Create(class *models.Class) error {
 	return r.db.Create(class).Error
 }
 
-func (r *classRepository) GetByID(id uint) (*models.Class, error) {
+func (r *classRepository) GetByID(id string) (*models.Class, error) {
 	var class models.Class
-	err := r.db.Preload("Department").First(&class, id).Error
+	err := r.db.Preload("Department").First(&class, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("class not found")
@@ -204,7 +204,7 @@ func (r *classRepository) GetByID(id uint) (*models.Class, error) {
 	return &class, nil
 }
 
-func (r *classRepository) GetByDepartmentID(departmentID uint, limit, offset int) ([]models.Class, int64, error) {
+func (r *classRepository) GetByDepartmentID(departmentID string, limit, offset int) ([]models.Class, int64, error) {
 	var classes []models.Class
 	var total int64
 
@@ -222,6 +222,6 @@ func (r *classRepository) Update(class *models.Class) error {
 	return r.db.Save(class).Error
 }
 
-func (r *classRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Class{}, id).Error
+func (r *classRepository) Delete(id string) error {
+	return r.db.Delete(&models.Class{}, "id = ?", id).Error
 }

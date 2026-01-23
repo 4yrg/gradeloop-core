@@ -10,10 +10,10 @@ import (
 
 type RoleService interface {
 	CreateRole(role *models.Role) error
-	GetRoleByID(id uint) (*models.Role, error)
+	GetRoleByID(id string) (*models.Role, error)
 	GetAllRoles(limit, offset int) ([]models.Role, int64, error)
 	UpdateRole(role *models.Role) error
-	DeleteRole(id uint) error
+	DeleteRole(id string) error
 }
 
 type roleService struct {
@@ -35,7 +35,7 @@ func (s *roleService) CreateRole(role *models.Role) error {
 	return s.roleRepo.Create(role)
 }
 
-func (s *roleService) GetRoleByID(id uint) (*models.Role, error) {
+func (s *roleService) GetRoleByID(id string) (*models.Role, error) {
 	return s.roleRepo.GetByID(id)
 }
 
@@ -56,6 +56,6 @@ func (s *roleService) UpdateRole(role *models.Role) error {
 	return s.roleRepo.Update(role)
 }
 
-func (s *roleService) DeleteRole(id uint) error {
+func (s *roleService) DeleteRole(id string) error {
 	return s.roleRepo.Delete(id)
 }

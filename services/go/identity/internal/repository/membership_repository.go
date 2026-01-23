@@ -11,9 +11,9 @@ import (
 
 type MembershipRepository interface {
 	Create(membership *models.StudentMembership) error
-	GetByStudentID(studentID uint) ([]models.StudentMembership, error)
-	GetCurrentByStudentID(studentID uint) (*models.StudentMembership, error)
-	TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID uint) error
+	GetByStudentID(studentID string) ([]models.StudentMembership, error)
+	GetCurrentByStudentID(studentID string) (*models.StudentMembership, error)
+	TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID string) error
 }
 
 type membershipRepository struct {
@@ -28,7 +28,7 @@ func (r *membershipRepository) Create(membership *models.StudentMembership) erro
 	return r.db.Create(membership).Error
 }
 
-func (r *membershipRepository) GetByStudentID(studentID uint) ([]models.StudentMembership, error) {
+func (r *membershipRepository) GetByStudentID(studentID string) ([]models.StudentMembership, error) {
 	var memberships []models.StudentMembership
 	err := r.db.Where("student_id = ?", studentID).
 		Preload("Faculty").
@@ -40,7 +40,7 @@ func (r *membershipRepository) GetByStudentID(studentID uint) ([]models.StudentM
 	return memberships, err
 }
 
-func (r *membershipRepository) GetCurrentByStudentID(studentID uint) (*models.StudentMembership, error) {
+func (r *membershipRepository) GetCurrentByStudentID(studentID string) (*models.StudentMembership, error) {
 	var membership models.StudentMembership
 	err := r.db.Where("student_id = ? AND is_current = ?", studentID, true).
 		Preload("Faculty").
@@ -58,7 +58,7 @@ func (r *membershipRepository) GetCurrentByStudentID(studentID uint) (*models.St
 	return &membership, nil
 }
 
-func (r *membershipRepository) TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID uint) error {
+func (r *membershipRepository) TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// End the current membership
 		now := time.Now()

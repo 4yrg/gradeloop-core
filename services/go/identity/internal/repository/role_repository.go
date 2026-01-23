@@ -10,10 +10,10 @@ import (
 
 type RoleRepository interface {
 	Create(role *models.Role) error
-	GetByID(id uint) (*models.Role, error)
+	GetByID(id string) (*models.Role, error)
 	GetAll(limit, offset int) ([]models.Role, int64, error)
 	Update(role *models.Role) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type roleRepository struct {
@@ -28,9 +28,9 @@ func (r *roleRepository) Create(role *models.Role) error {
 	return r.db.Create(role).Error
 }
 
-func (r *roleRepository) GetByID(id uint) (*models.Role, error) {
+func (r *roleRepository) GetByID(id string) (*models.Role, error) {
 	var role models.Role
-	err := r.db.First(&role, id).Error
+	err := r.db.First(&role, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("role not found")
@@ -56,6 +56,6 @@ func (r *roleRepository) Update(role *models.Role) error {
 	return r.db.Save(role).Error
 }
 
-func (r *roleRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Role{}, id).Error
+func (r *roleRepository) Delete(id string) error {
+	return r.db.Delete(&models.Role{}, "id = ?", id).Error
 }

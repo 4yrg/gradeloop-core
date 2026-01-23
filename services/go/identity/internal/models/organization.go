@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Institute represents an educational institution
 type Institute struct {
-	ID          uint           `gorm:"primarykey" json:"id"`
+	ID          string         `gorm:"primarykey" json:"id"`
 	Name        string         `gorm:"not null" json:"name" validate:"required"`
 	Code        string         `gorm:"uniqueIndex;not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
@@ -23,10 +24,17 @@ type Institute struct {
 	Faculties []Faculty `gorm:"foreignKey:InstituteID;constraint:OnDelete:CASCADE" json:"faculties,omitempty"`
 }
 
+func (i *Institute) BeforeCreate(tx *gorm.DB) (err error) {
+	if i.ID == "" {
+		i.ID = uuid.New().String()
+	}
+	return
+}
+
 // Faculty represents a faculty within an institute
 type Faculty struct {
-	ID          uint           `gorm:"primarykey" json:"id"`
-	InstituteID uint           `gorm:"not null;index" json:"institute_id" validate:"required"`
+	ID          string         `gorm:"primarykey" json:"id"`
+	InstituteID string         `gorm:"not null;index" json:"institute_id" validate:"required"`
 	Name        string         `gorm:"not null" json:"name" validate:"required"`
 	Code        string         `gorm:"not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
@@ -39,10 +47,17 @@ type Faculty struct {
 	Departments []Department `gorm:"foreignKey:FacultyID;constraint:OnDelete:CASCADE" json:"departments,omitempty"`
 }
 
+func (f *Faculty) BeforeCreate(tx *gorm.DB) (err error) {
+	if f.ID == "" {
+		f.ID = uuid.New().String()
+	}
+	return
+}
+
 // Department represents a department within a faculty
 type Department struct {
-	ID          uint           `gorm:"primarykey" json:"id"`
-	FacultyID   uint           `gorm:"not null;index" json:"faculty_id" validate:"required"`
+	ID          string         `gorm:"primarykey" json:"id"`
+	FacultyID   string         `gorm:"not null;index" json:"faculty_id" validate:"required"`
 	Name        string         `gorm:"not null" json:"name" validate:"required"`
 	Code        string         `gorm:"not null" json:"code" validate:"required"`
 	Description string         `json:"description"`
@@ -55,10 +70,17 @@ type Department struct {
 	Classes []Class  `gorm:"foreignKey:DepartmentID;constraint:OnDelete:CASCADE" json:"classes,omitempty"`
 }
 
+func (d *Department) BeforeCreate(tx *gorm.DB) (err error) {
+	if d.ID == "" {
+		d.ID = uuid.New().String()
+	}
+	return
+}
+
 // Class represents a class within a department
 type Class struct {
-	ID           uint           `gorm:"primarykey" json:"id"`
-	DepartmentID uint           `gorm:"not null;index" json:"department_id" validate:"required"`
+	ID           string         `gorm:"primarykey" json:"id"`
+	DepartmentID string         `gorm:"not null;index" json:"department_id" validate:"required"`
 	Name         string         `gorm:"not null" json:"name" validate:"required"`
 	Code         string         `gorm:"not null" json:"code" validate:"required"`
 	Year         int            `gorm:"not null" json:"-" validate:"omitempty,min=1,max=10"`
@@ -69,6 +91,13 @@ type Class struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Department *Department `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
+}
+
+func (c *Class) BeforeCreate(tx *gorm.DB) (err error) {
+	if c.ID == "" {
+		c.ID = uuid.New().String()
+	}
+	return
 }
 
 // FlexibleInt is a custom type that can unmarshal from both string and int
@@ -123,8 +152,8 @@ func (fi FlexibleInt) MarshalJSON() ([]byte, error) {
 
 // classJSON is a helper struct for JSON unmarshaling
 type classJSON struct {
-	ID           uint        `json:"id"`
-	DepartmentID uint        `json:"department_id"`
+	ID           string      `json:"id"`
+	DepartmentID string      `json:"department_id"`
 	Name         string      `json:"name"`
 	Code         string      `json:"code"`
 	Year         FlexibleInt `json:"year"`

@@ -35,14 +35,13 @@ func (h *DepartmentHandler) CreateDepartment(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *DepartmentHandler) GetDepartment(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", nil)
 		return
 	}
 
-	department, err := h.departmentService.GetDepartmentByID(uint(id))
+	department, err := h.departmentService.GetDepartmentByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "Department not found", err)
 		return
@@ -52,10 +51,9 @@ func (h *DepartmentHandler) GetDepartment(w http.ResponseWriter, r *http.Request
 }
 
 func (h *DepartmentHandler) GetDepartmentsByFaculty(w http.ResponseWriter, r *http.Request) {
-	facultyIDStr := chi.URLParam(r, "facultyId")
-	facultyID, err := strconv.ParseUint(facultyIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", err)
+	facultyID := chi.URLParam(r, "facultyId")
+	if facultyID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", nil)
 		return
 	}
 
@@ -66,7 +64,7 @@ func (h *DepartmentHandler) GetDepartmentsByFaculty(w http.ResponseWriter, r *ht
 		limit = 10
 	}
 
-	departments, total, err := h.departmentService.GetDepartmentsByFacultyID(uint(facultyID), limit, offset)
+	departments, total, err := h.departmentService.GetDepartmentsByFacultyID(facultyID, limit, offset)
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to fetch departments", err)
 		return
@@ -76,10 +74,9 @@ func (h *DepartmentHandler) GetDepartmentsByFaculty(w http.ResponseWriter, r *ht
 }
 
 func (h *DepartmentHandler) UpdateDepartment(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", nil)
 		return
 	}
 
@@ -89,7 +86,7 @@ func (h *DepartmentHandler) UpdateDepartment(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	department.ID = uint(id)
+	department.ID = id
 
 	if err := h.departmentService.UpdateDepartment(&department); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update department", err)
@@ -100,14 +97,13 @@ func (h *DepartmentHandler) UpdateDepartment(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *DepartmentHandler) DeleteDepartment(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", nil)
 		return
 	}
 
-	if err := h.departmentService.DeleteDepartment(uint(id)); err != nil {
+	if err := h.departmentService.DeleteDepartment(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete department", err)
 		return
 	}

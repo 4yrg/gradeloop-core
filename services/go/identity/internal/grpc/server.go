@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -40,7 +39,7 @@ func (s *Server) ValidateCredentials(ctx context.Context, req *pb.ValidateCreden
 	return &pb.ValidateCredentialsResponse{
 		Valid: true,
 		User: &pb.UserResponse{
-			UserId: fmtUint(user.ID),
+			UserId: user.ID,
 			Email:  user.Email,
 		},
 	}, nil
@@ -51,12 +50,7 @@ func (s *Server) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordReque
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	id, err := strconv.ParseUint(req.UserId, 10, 32)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
-	}
-
-	if err := s.userService.UpdatePassword(uint(id), req.NewPassword); err != nil {
+	if err := s.userService.UpdatePassword(req.UserId, req.NewPassword); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update password: %v", err)
 	}
 
@@ -68,12 +62,7 @@ func (s *Server) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
-	id, err := strconv.ParseUint(req.UserId, 10, 32)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
-	}
-
-	user, err := s.userService.GetUserByID(uint(id))
+	user, err := s.userService.GetUserByID(req.UserId)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 	}
@@ -82,8 +71,8 @@ func (s *Server) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb
 	instituteID := ""
 
 	// Get institute ID based on user type
-	if user.InstituteAdmin != nil && user.InstituteAdmin.InstituteID > 0 {
-		instituteID = fmtUint(user.InstituteAdmin.InstituteID)
+	if user.InstituteAdmin != nil && user.InstituteAdmin.InstituteID != "" {
+		instituteID = user.InstituteAdmin.InstituteID
 	}
 
 	// Split name into first and last (simple split)
@@ -91,7 +80,7 @@ func (s *Server) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb
 	lastName := ""
 
 	return &pb.UserProfile{
-		Id:          fmtUint(user.ID),
+		Id:          user.ID,
 		FirstName:   firstName,
 		LastName:    lastName,
 		Email:       user.Email,
@@ -174,16 +163,12 @@ func (s *Server) createUserByType(ctx context.Context, req *pb.CreateUserRequest
 			EmployeeID: employeeID,
 		}
 	case models.UserTypeInstituteAdmin:
-		var instituteID uint
-		if req.InstituteId != "" {
-			id, err := strconv.ParseUint(req.InstituteId, 10, 32)
-			if err != nil {
-				log.Printf("[ERROR] Invalid institute_id: %v", err)
-				return nil, status.Errorf(codes.InvalidArgument, "invalid institute_id: %v", err)
-			}
-			instituteID = uint(id)
+		instituteID := req.InstituteId
+		if instituteID == "" {
+			// Should validation fail here if instituteID is empty?
+			// But for now keeping logic same as before just type change
 		}
-		log.Printf("[DEBUG] Creating institute admin with institute ID: %d", instituteID)
+		log.Printf("[DEBUG] Creating institute admin with institute ID: %s", instituteID)
 		user.InstituteAdmin = &models.InstituteAdmin{
 			InstituteID: instituteID,
 		}
@@ -196,17 +181,12 @@ func (s *Server) createUserByType(ctx context.Context, req *pb.CreateUserRequest
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
 
-	log.Printf("[SUCCESS] User created successfully with ID: %d, email: %s", user.ID, user.Email)
+	log.Printf("[SUCCESS] User created successfully with ID: %s, email: %s", user.ID, user.Email)
 	return &pb.UserResponse{
-		UserId:       fmtUint(user.ID),
+		UserId:       user.ID,
 		Email:        user.Email,
 		TempPassword: tempPassword,
 	}, nil
-}
-
-// Helper functions
-func fmtUint(i uint) string {
-	return strconv.FormatUint(uint64(i), 10)
 }
 
 func generateTempPassword() (string, error) {
