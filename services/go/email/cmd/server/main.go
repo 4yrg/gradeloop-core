@@ -13,13 +13,13 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/config"
+	internalgrpc "github.com/4yrg/gradeloop-core/develop/services/go/email/internal/grpc"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/queue"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/routes"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/service"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
 	pb "github.com/4yrg/gradeloop-core/libs/proto/email"
-	"github.com/gradeloop/email-service/internal/config"
-	internalgrpc "github.com/gradeloop/email-service/internal/grpc"
-	"github.com/gradeloop/email-service/internal/queue"
-	"github.com/gradeloop/email-service/internal/routes"
-	"github.com/gradeloop/email-service/internal/service"
-	"github.com/gradeloop/email-service/internal/store"
 )
 
 func main() {

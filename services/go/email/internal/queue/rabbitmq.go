@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gradeloop/email-service/internal/config"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/service"
 	pb "github.com/4yrg/gradeloop-core/libs/proto/email"
-	"github.com/gradeloop/email-service/internal/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

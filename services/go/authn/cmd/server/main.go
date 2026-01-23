@@ -73,6 +73,7 @@ func main() {
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/refresh", authHandler.Refresh)
 	auth.Post("/logout", authHandler.Logout)
+	auth.Post("/register", authHandler.Register)
 
 	// 7. Start Server
 	go func() {

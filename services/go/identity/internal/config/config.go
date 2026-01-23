@@ -42,8 +42,8 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port:     getEnv("SERVER_PORT", "8080"),
-			GrpcPort: getEnv("GRPC_PORT", "50051"),
+			Port:     getEnv("IDENTITY_SERVER_PORT", getEnv("SERVER_PORT", "8080")),
+			GrpcPort: getEnv("IDENTITY_GRPC_PORT", getEnv("GRPC_PORT", "50051")),
 			Host:     getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{

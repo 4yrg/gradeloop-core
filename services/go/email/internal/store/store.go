@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/config"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/models"
 	"github.com/glebarez/sqlite"
-	"github.com/gradeloop/email-service/internal/config"
-	"github.com/gradeloop/email-service/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

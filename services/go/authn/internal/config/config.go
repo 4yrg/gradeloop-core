@@ -61,7 +61,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8083"), // Default port to match Docker/Compose
+			Port: getEnv("AUTHN_SERVER_PORT", getEnv("SERVER_PORT", "8083")), // Default port to match Docker/Compose
 			Host: getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{

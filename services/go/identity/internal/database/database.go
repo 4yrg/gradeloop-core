@@ -6,8 +6,8 @@ import (
 
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/config"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/models"
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )

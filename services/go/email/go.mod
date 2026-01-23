@@ -1,4 +1,4 @@
-module github.com/gradeloop/email-service
+module github.com/4yrg/gradeloop-core/develop/services/go/email
 
 go 1.25.5
 

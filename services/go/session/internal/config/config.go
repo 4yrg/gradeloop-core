@@ -23,9 +23,9 @@ func Load() (*Config, error) {
 	_ = godotenv.Load() // Load .env file if it exists
 
 	cfg := &Config{
-		AppPort:       getEnv("APP_PORT", "8082"),
-		GrpcPort:      getEnv("GRPC_PORT", "50052"),
-		DBDriver:      getEnv("DB_DRIVER", "sqlite"),
+		AppPort:       getEnv("SESSION_SERVER_PORT", getEnv("APP_PORT", "8082")),
+		GrpcPort:      getEnv("SESSION_GRPC_PORT", getEnv("GRPC_PORT", "50052")),
+		DBDriver:      getEnv("SESSION_DB_DRIVER", getEnv("DB_DRIVER", "sqlite")),
 		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		Environment:   getEnv("APP_ENV", "development"),

@@ -1,10 +1,10 @@
 package routes
 
 import (
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/handlers"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/service"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
 	"github.com/gin-gonic/gin"
-	"github.com/gradeloop/email-service/internal/handlers"
-	"github.com/gradeloop/email-service/internal/service"
-	"github.com/gradeloop/email-service/internal/store"
 )
 
 func SetupRouter(s *store.Store, es *service.EmailService) *gin.Engine {

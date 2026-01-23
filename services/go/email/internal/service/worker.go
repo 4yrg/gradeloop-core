@@ -8,10 +8,10 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/gradeloop/email-service/internal/config"
-	"github.com/gradeloop/email-service/internal/models"
-	"github.com/gradeloop/email-service/internal/queue"
-	"github.com/gradeloop/email-service/internal/store"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/config"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/models"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/queue"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
