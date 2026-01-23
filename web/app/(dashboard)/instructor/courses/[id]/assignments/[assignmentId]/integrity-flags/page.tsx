@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
     Flag,
     ShieldAlert,
@@ -25,18 +27,55 @@ import {
     SelectValue
 } from "../../../../../../../../components/ui/select";
 import { Input } from "../../../../../../../../components/ui/input";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+} from "../../../../../../../../components/ui/table";
+import { getFlaggedSubmissions } from "../../../../../../../../lib/mock-submissions-data";
+import { formatDistanceToNow } from "date-fns";
 
 export default function IntegrityFlagsPage() {
+    const router = useRouter();
+    const params = useParams();
+    const courseId = params.id as string;
+    const assignmentId = params.assignmentId as string;
+
+    const [searchTerm, setSearchTerm] = useState("");
+    
+    // Get flagged submissions (integrity score < 50)
+    const flaggedSubmissions = getFlaggedSubmissions();
+
+    const filteredSubmissions = flaggedSubmissions.filter(submission =>
+        submission.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        submission.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleRowClick = (studentId: string) => {
+        router.push(`/instructor/courses/${courseId}/assignments/${assignmentId}/submissions/${studentId}`);
+    };
+
+    const getIntegrityLevel = (score: number) => {
+        if (score < 40) return { label: "Critical", color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20" };
+        return { label: "Medium", color: "text-yellow-600", bg: "bg-yellow-500/10", border: "border-yellow-500/20" };
+    };
+
+    // Calculate stats
+    const criticalFlags = flaggedSubmissions.filter(s => s.overallIntegrityScore < 40).length;
+    const mediumFlags = flaggedSubmissions.length - criticalFlags;
+
     return (
-        <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-12">
+        <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-12">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Integrity Flags</h2>
-                    <p className="text-muted-foreground">Review and resolve academic integrity alerts.</p>
+                    <p className="text-muted-foreground">Review submissions with low keystroke authentication scores (&lt; 50%)</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm">Download Report</Button>
-                    <Button size="sm">Resolve Selected</Button>
                 </div>
             </div>
 
@@ -47,26 +86,26 @@ export default function IntegrityFlagsPage() {
                         <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Total Flags</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">12</div>
-                        <p className="text-[10px] text-muted-foreground mt-1">4 Critical • 8 Medium</p>
+                        <div className="text-3xl font-bold text-red-500">{flaggedSubmissions.length}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1">{criticalFlags} Critical • {mediumFlags} Medium</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase text-muted-foreground">AI Likelihood</CardTitle>
+                        <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Critical</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">5</div>
-                        <p className="text-[10px] text-muted-foreground mt-1">Suspected LLM generation</p>
+                        <div className="text-3xl font-bold text-red-600">{criticalFlags}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1">Score &lt; 40%</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Similarity</CardTitle>
+                        <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Medium</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">4</div>
-                        <p className="text-[10px] text-muted-foreground mt-1">Inter-batch matches</p>
+                        <div className="text-3xl font-bold text-yellow-600">{mediumFlags}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1">Score 40-49%</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -74,8 +113,8 @@ export default function IntegrityFlagsPage() {
                         <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Behavioral</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">3</div>
-                        <p className="text-[10px] text-muted-foreground mt-1">Abnormal dev patterns</p>
+                        <div className="text-3xl font-bold">{flaggedSubmissions.length}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1">Abnormal typing patterns</p>
                     </CardContent>
                 </Card>
             </div>
@@ -87,60 +126,113 @@ export default function IntegrityFlagsPage() {
                         <div className="flex gap-2">
                             <div className="relative">
                                 <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input placeholder="Search students..." className="pl-8 h-8 w-[200px] text-xs" />
+                                <Input 
+                                    placeholder="Search students..." 
+                                    className="pl-8 h-8 w-[200px] text-xs"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
-                            <Select defaultValue="all">
-                                <SelectTrigger className="h-8 w-[120px] text-xs">
-                                    <SelectValue placeholder="Resolution" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Unresolved</SelectItem>
-                                    <SelectItem value="resolved">Resolved</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <ScrollArea className="h-[500px]">
-                        <div className="divide-y">
-                            {[
-                                { student: "Charlie Brown", type: "AI Likelihood", risk: "Critical", score: "94%", detail: "Highly predictable token patterns consistent with GPT-4o.", time: "2h ago" },
-                                { student: "Lucy van Pelt", type: "Similarity", risk: "Critical", score: "88%", detail: "Structural logic match with Linus van Pelt (88%).", time: "5h ago" },
-                                { student: "Linus van Pelt", type: "Similarity", risk: "Critical", score: "88%", detail: "Structural logic match with Lucy van Pelt (88%).", time: "5h ago" },
-                                { student: "Sally Brown", type: "Behavioral", risk: "Medium", score: "High", detail: "Significant code paste detected (400 LOC in 2s).", time: "1d ago" },
-                                { student: "Peppermint Patty", type: "AI Likelihood", risk: "Medium", score: "62%", detail: "Inconsistent code style compared to previous attempts.", time: "2d ago" },
-                            ].map((f, i) => (
-                                <div key={i} className="p-4 flex items-start gap-4 transition-colors hover:bg-muted/30">
-                                    <div className="mt-1">
-                                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${f.risk === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                                            <ShieldAlert className="h-4 w-4" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold">{f.student}</span>
-                                            <Badge variant="outline" className={`text-[10px] px-1 h-4 ${f.risk === 'Critical' ? 'border-red-500/20 text-red-500 bg-red-500/5' : ''}`}>
-                                                {f.type} • {f.score}
-                                            </Badge>
-                                            <span className="text-[10px] text-muted-foreground ml-auto">{f.time}</span>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            {f.detail}
-                                        </p>
-                                        <div className="flex gap-2 pt-2">
-                                            <Button variant="outline" size="sm" className="h-7 text-[10px]">Compare Submissions</Button>
-                                            <Button variant="outline" size="sm" className="h-7 text-[10px]">View IDE Playback</Button>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Button size="sm" className="h-8 px-3 text-[11px] bg-red-600 hover:bg-red-700">Plagiarism</Button>
-                                        <Button size="sm" variant="ghost" className="h-8 px-3 text-[11px]">Clear Flag</Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/5">
+                                    <TableHead className="font-bold">Student</TableHead>
+                                    <TableHead className="font-bold">Student ID</TableHead>
+                                    <TableHead className="font-bold text-center">Risk Level</TableHead>
+                                    <TableHead className="font-bold text-center">Integrity Score</TableHead>
+                                    <TableHead className="font-bold text-center">Latest Score</TableHead>
+                                    <TableHead className="font-bold text-center">Attempts</TableHead>
+                                    <TableHead className="font-bold text-center">Last Updated</TableHead>
+                                    <TableHead className="text-right font-bold">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredSubmissions.length > 0 ? (
+                                    filteredSubmissions.map((submission) => {
+                                        const latestAttempt = submission.attempts[submission.attempts.length - 1];
+                                        const integrityLevel = getIntegrityLevel(submission.overallIntegrityScore);
+                                        
+                                        return (
+                                            <TableRow 
+                                                key={submission.id}
+                                                className="cursor-pointer hover:bg-muted/30 transition-colors"
+                                                onClick={() => handleRowClick(submission.studentId)}
+                                            >
+                                                <TableCell className="font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-muted-foreground" />
+                                                        {submission.studentName}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {submission.studentId}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge 
+                                                        variant="outline" 
+                                                        className={`${integrityLevel.bg} ${integrityLevel.color} ${integrityLevel.border}`}
+                                                    >
+                                                        <ShieldAlert className="h-3 w-3 mr-1" />
+                                                        {integrityLevel.label}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <span className="font-bold text-lg text-red-500">
+                                                            {submission.overallIntegrityScore}%
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <span className="font-bold text-lg">
+                                                        {submission.latestScore}
+                                                    </span>
+                                                    <span className="text-muted-foreground text-sm">/100</span>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant="outline" className="font-mono">
+                                                        {submission.attempts.length}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center text-muted-foreground text-sm">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Clock className="h-3 w-3" />
+                                                        {formatDistanceToNow(new Date(latestAttempt.timestamp), { addSuffix: true })}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-500/10"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRowClick(submission.studentId);
+                                                        }}
+                                                    >
+                                                        Review
+                                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center py-12">
+                                            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+                                            <p className="text-muted-foreground">No integrity flags found - all submissions look good!</p>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

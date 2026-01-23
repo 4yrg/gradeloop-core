@@ -1,0 +1,76 @@
+meta {
+  name: Identity Service API
+  type: collection
+}
+
+docs {
+  # Identity Service API Collection
+
+  A comprehensive Bruno API collection for the GradeLoop Identity Service.
+
+  ## Features
+  - Complete CRUD operations for all entities
+  - Organized by resource type (Users, Institutes, Faculties, etc.)
+  - Environment variables for easy configuration
+  - Inline documentation for each endpoint
+  - Example request bodies
+
+  ## Getting Started
+
+  1. Select the "Local" environment
+  2. Ensure the Identity Service is running on port 8080
+  3. Start with the Health Check endpoint
+  4. Follow the workflow in the README.md
+
+  ## Environment Variables
+
+  - `base_url`: Base URL of the API (default: http://localhost:8080)
+  - `api_version`: API version (default: v1)
+
+  ## Resource Hierarchy
+
+  ```
+  Institute
+    └── Faculty
+        └── Department
+            └── Class
+                └── Membership (Student ↔ Class)
+
+  User (Student | Instructor | Institute Admin | System Admin)
+    └── Role Assignment
+  ```
+
+  ## Common Workflows
+
+  ### Setup Organization Structure
+  1. Create Institute
+  2. Create Faculty (with institute_id)
+  3. Create Department (with faculty_id)
+  4. Create Class (with department_id)
+
+  ### Enroll Student
+  1. Create Student User
+  2. Create Membership (link student to class)
+
+  ### Assign Permissions
+  1. Create Role (with permissions)
+  2. Assign Role to User
+
+  ## Tips
+
+  - All deletions are soft deletes
+  - All list endpoints support pagination (limit/offset)
+  - IDs are UUID strings
+  - Timestamps are in ISO 8601 format
+}
+
+script:pre-request {
+  const uuid = require("uuid");
+  req.setHeader("X-Correlation-ID", uuid.v4());
+  
+  // Inject Auth Token if available and not already set
+  const token = bru.getEnvVar("access_token");
+  if (token && !req.getHeader("Authorization")) {
+      req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}

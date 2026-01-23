@@ -1,0 +1,49 @@
+meta {
+  name: Update Department
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/{{api_version}}/identity/departments/1
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "name": "Computer Science Department - Updated",
+    "code": "CS",
+    "description": "Updated Department of Computer Science and Software Engineering",
+    "faculty_id": "fac-uuid-1",
+    "is_active": true
+  }
+}
+
+docs {
+  # Update Department
+
+  Updates an existing department's information.
+
+  ## Path Parameters
+  - `id`: The unique identifier of the department to update
+
+  ## Request Body
+  - `name` (required): Name of the department
+  - `code` (optional): Unique code/identifier for the department
+  - `description` (optional): Description of the department
+  - `faculty_id` (required): ID of the faculty this department belongs to
+  - `is_active` (optional): Whether the department is active
+
+  ## Response
+  Returns the updated department object with the new information.
+
+  ## Notes
+  - All fields are required in the request body
+  - Updating a department does not affect its associated classes
+  - Cannot move a department to a different faculty via this endpoint
+}

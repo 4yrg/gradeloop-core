@@ -11,9 +11,17 @@ import os
 import numpy as np
 from datetime import datetime
 import asyncio
+import json
+import pika
 
 from feature_extraction import KeystrokeFeatureExtractor
 from typenet_inference import TypeNetAuthenticator
+from behavioral_analysis import (
+    BehavioralAnalyzer, 
+    KeystrokeSessionEvent, 
+    BehavioralAnalysisResult,
+    format_analysis_report
+)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -44,6 +52,9 @@ authenticator = TypeNetAuthenticator(
     device='cpu'  # Change to 'cuda' if GPU available
 )
 
+# Initialize Behavioral Analyzer
+behavioral_analyzer = BehavioralAnalyzer()
+
 # Load user templates if available
 if os.path.exists(typenet_template_path):
     try:
@@ -57,6 +68,43 @@ else:
 
 # In-memory session storage (use Redis in production)
 active_sessions = {}
+
+# RabbitMQ Configuration
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_EXCHANGE = 'keystroke.exchange'
+RABBITMQ_ROUTING_KEY = 'keystroke.auth.result'
+
+def publish_auth_event(event_data: dict):
+    """Publish authentication event to RabbitMQ"""
+    try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=RABBITMQ_HOST)
+        )
+        channel = connection.channel()
+
+        # Declare exchange
+        channel.exchange_declare(
+            exchange=RABBITMQ_EXCHANGE,
+            exchange_type='topic',
+            durable=True
+        )
+
+        # Publish message
+        channel.basic_publish(
+            exchange=RABBITMQ_EXCHANGE,
+            routing_key=RABBITMQ_ROUTING_KEY,
+            body=json.dumps(event_data),
+            properties=pika.BasicProperties(
+                content_type='application/json',
+                delivery_mode=2  # Make message persistent
+            )
+        )
+
+        connection.close()
+        print(f"✅ Published auth event to RabbitMQ for student: {event_data.get('studentId')}")
+    except Exception as e:
+        print(f"⚠️ Failed to publish to RabbitMQ: {e}")
+        # Don't fail the request if RabbitMQ publish fails
 
 
 # ==================== Pydantic Models ====================
@@ -84,6 +132,8 @@ class VerificationRequest(BaseModel):
     userId: str
     keystrokeEvents: List[Dict]
     threshold: Optional[float] = 0.7
+    assignmentId: Optional[str] = None
+    courseId: Optional[str] = None
 
 
 class IdentificationRequest(BaseModel):
@@ -91,9 +141,19 @@ class IdentificationRequest(BaseModel):
     topK: Optional[int] = 3
 
 
+
+
+class BehavioralAnalysisRequest(BaseModel):
+    sessionId: str
+    studentId: str
+    events: List[Dict]
+    finalCode: str
+    includeReport: Optional[bool] = False
 class MonitoringRequest(BaseModel):
     userId: str
     sessionId: str
+    assignmentId: Optional[str] = None
+    courseId: Optional[str] = None
 
 
 # ==================== Health Check ====================
@@ -241,6 +301,22 @@ async def verify_user(request: VerificationRequest):
         # Verify
         result = authenticator.verify_user(user_id, sequence, threshold)
 
+        # Publish auth event to RabbitMQ
+        auth_event = {
+            "studentId": user_id,
+            "assignmentId": request.assignmentId,
+            "courseId": request.courseId,
+            "sessionId": None,
+            "confidenceLevel": result.get('similarity', 0) * 100,  # Convert to percentage
+            "riskScore": result.get('risk_score', 0) * 100,  # Convert to percentage
+            "keystrokeSampleSize": len(events),
+            "timestamp": datetime.now().isoformat(),
+            "authenticated": result.get('authenticated', False),
+            "similarityScore": result.get('similarity', 0) * 100,
+            "metadata": json.dumps({"threshold": threshold})
+        }
+        publish_auth_event(auth_event)
+
         return result
 
     except HTTPException:
@@ -336,6 +412,25 @@ async def monitor_session(request: MonitoringRequest):
         session_data['last_verification'] = datetime.now().isoformat()
         session_data['risk_score'] = result.get('average_risk_score', 0.0)
 
+        # Publish auth event to RabbitMQ
+        auth_event = {
+            "studentId": user_id,
+            "assignmentId": request.assignmentId,
+            "courseId": request.courseId,
+            "sessionId": session_id,
+            "confidenceLevel": (1 - result.get('average_risk_score', 0)) * 100,
+            "riskScore": result.get('average_risk_score', 0) * 100,
+            "keystrokeSampleSize": len(events),
+            "timestamp": datetime.now().isoformat(),
+            "authenticated": result.get('status') == 'AUTHENTICATED',
+            "similarityScore": (1 - result.get('average_risk_score', 0)) * 100,
+            "metadata": json.dumps({
+                "verification_count": len(sequences),
+                "status": result.get('status')
+            })
+        }
+        publish_auth_event(auth_event)
+
         return result
 
     except HTTPException:
@@ -375,6 +470,106 @@ async def end_session(user_id: str, session_id: str):
 
     raise HTTPException(status_code=404, detail="Session not found")
 
+
+
+@app.post("/api/keystroke/analyze")
+async def analyze_behavioral_session(request: BehavioralAnalysisRequest):
+    """
+    Perform comprehensive behavioral analysis on a coding session
+    
+    Analyzes:
+    - Developmental logic & iteration patterns
+    - Cognitive load & behavioral proxies
+    - Authenticity & pattern matching
+    - Provides pedagogical feedback
+    
+    Returns detailed analysis including:
+    - Session metrics
+    - Authenticity indicators
+    - Cognitive analysis
+    - Process scores
+    - Critical anomalies
+    - Pedagogical recommendations
+    """
+    try:
+        # Convert events to KeystrokeSessionEvent objects
+        session_events = []
+        for event in request.events:
+            try:
+                session_event = KeystrokeSessionEvent(
+                    timestamp=event.get('timestamp', 0),
+                    key=event.get('key', ''),
+                    keyCode=event.get('keyCode', 0),
+                    dwellTime=event.get('dwellTime', 0),
+                    flightTime=event.get('flightTime', 0),
+                    action=event.get('action', 'type'),
+                    lineNumber=event.get('lineNumber'),
+                    columnNumber=event.get('columnNumber'),
+                    codeSnapshot=event.get('codeSnapshot')
+                )
+                session_events.append(session_event)
+            except Exception as e:
+                print(f"⚠️  Skipping invalid event: {e}")
+                continue
+        
+        if len(session_events) < 10:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient data for analysis. Need at least 10 valid events. Got: {len(session_events)}"
+            )
+        
+        # Perform behavioral analysis
+        analysis_result = behavioral_analyzer.analyze_session(
+            session_id=request.sessionId,
+            student_id=request.studentId,
+            events=session_events,
+            final_code=request.finalCode
+        )
+        
+        # Convert to dict for JSON response
+        result_dict = analysis_result.model_dump()
+        
+        # Optionally include formatted report
+        if request.includeReport:
+            result_dict['formatted_report'] = format_analysis_report(analysis_result)
+        
+        return {
+            "success": True,
+            "analysis": result_dict
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@app.get("/api/keystroke/analyze/config")
+async def get_analysis_config():
+    """Get current behavioral analysis configuration"""
+    return {
+        "success": True,
+        "config": {
+            "llm_enabled": behavioral_analyzer.model is not None,
+            "llm_model": "gemini-2.5-flash" if behavioral_analyzer.model else None,
+            "analysis_features": [
+                "Developmental Logic & Iteration",
+                "Cognitive Load Analysis",
+                "Authenticity Detection",
+                "Pedagogical Feedback"
+            ],
+            "metrics_tracked": [
+                "Typing speed",
+                "Pause patterns",
+                "Deletion rate",
+                "Copy/paste detection",
+                "Friction points",
+                "Cognitive load timeline"
+            ]
+        }
+    }
 
 @app.get("/api/keystroke/users/enrolled")
 async def list_enrolled_users():

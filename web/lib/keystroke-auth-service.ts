@@ -6,7 +6,7 @@
 import { apiClient } from './axios';
 import type { KeystrokeEvent } from '../hooks/use-keystroke-capture';
 
-const KEYSTROKE_API_URL = process.env.NEXT_PUBLIC_KEYSTROKE_API_URL || 'http://localhost:8002';
+const KEYSTROKE_API_URL = process.env.NEXT_PUBLIC_KEYSTROKE_API_URL || 'http://localhost:8000/api/keystroke';
 
 export interface EnrollmentResult {
   success: boolean;
@@ -53,7 +53,7 @@ class KeystrokeAuthService {
   async enrollUser(userId: string, keystrokeEvents: KeystrokeEvent[]): Promise<EnrollmentResult> {
     try {
       const response = await this.api.post<EnrollmentResult>(
-        `${KEYSTROKE_API_URL}/api/auth/enroll`,
+        `${KEYSTROKE_API_URL}/enroll`,
         {
           userId,
           keystrokeEvents,
@@ -76,7 +76,7 @@ class KeystrokeAuthService {
   ): Promise<VerificationResult> {
     try {
       const response = await this.api.post<VerificationResult>(
-        `${KEYSTROKE_API_URL}/api/auth/verify`,
+        `${KEYSTROKE_API_URL}/verify`,
         {
           userId,
           keystrokeEvents,
@@ -99,21 +99,30 @@ class KeystrokeAuthService {
     topK = 3
   ): Promise<IdentificationResult> {
     try {
-      const response = await this.api.post<IdentificationResult>(
-        `${KEYSTROKE_API_URL}/api/auth/identify`,
+      const response = await this.api.post(
+        `${KEYSTROKE_API_URL}/identify`,
         {
           keystrokeEvents,
           topK,
         }
       );
-      return response.data;
+      
+      // Map Python API response to expected format
+      const data = response.data;
+      return {
+        success: data.success,
+        candidates: data.matches || [],
+        topMatch: data.best_match,
+        confidence_level: data.confidence_level,
+        message: data.message
+      };
     } catch (error: any) {
       console.error('Error identifying user:', error);
       // Check if no users enrolled
       if (error.response?.status === 404) {
         throw new Error('No users enrolled yet. Please train at least one user first.');
       }
-      throw new Error(error.response?.data?.message || 'Identification failed');
+      throw new Error(error.response?.data?.message || error.response?.data?.detail || 'Identification failed');
     }
   }
 
@@ -123,7 +132,7 @@ class KeystrokeAuthService {
   async getEnrolledUsers(): Promise<EnrolledUsersResponse> {
     try {
       const response = await this.api.get<EnrolledUsersResponse>(
-        `${KEYSTROKE_API_URL}/api/auth/users`
+        `${KEYSTROKE_API_URL}/users/enrolled`
       );
       return response.data;
     } catch (error: any) {

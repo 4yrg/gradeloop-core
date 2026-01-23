@@ -1,0 +1,49 @@
+meta {
+  name: AuthN Service API Collection
+  type: collection
+  version: 1.0.0
+}
+
+docs {
+  # GradeLoop AuthN Service API Collection
+
+  This collection provides comprehensive testing for the Authentication microservice.
+
+  ## Service Information
+  - **Service**: authn-service (via Kong)
+  - **Port**: 80 / 443
+  - **Base URL**: http://localhost
+  - **API Version**: v1
+
+  ## Endpoints
+  1. Register - Create new user account
+  2. Login - Authenticate user
+  3. Refresh Token - Get new access token
+  4. Logout - End session
+  5. Forgot Password - Request password reset
+  6. Reset Password - Reset password with token
+  7. Change Password - Update password (authenticated)
+
+  ## Environment
+  Select "Local" environment before testing.
+  Variables:
+  - `base_url`: Kong URL (e.g. http://localhost)
+  - `access_token`: Auto-injected
+  - `refresh_token`: Auto-injected
+  - `session_id`: Auto-injected
+  - `user_id`: Auto-injected
+
+  ## Documentation
+  See README.md for detailed usage instructions.
+}
+
+script:pre-request {
+  const uuid = require("uuid");
+  req.setHeader("X-Correlation-ID", uuid.v4());
+  
+  // Inject Auth Token if available and not already set
+  const token = bru.getEnvVar("access_token");
+  if (token && !req.getHeader("Authorization")) {
+      req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}

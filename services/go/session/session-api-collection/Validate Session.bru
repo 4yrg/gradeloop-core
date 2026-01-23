@@ -1,0 +1,17 @@
+meta {
+  name: Validate Session
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/sessions/validate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "session_id": "REPLACE_WITH_SESSION_ID"
+  }
+}

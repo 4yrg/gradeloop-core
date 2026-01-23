@@ -1,0 +1,40 @@
+meta {
+  name: Get Faculties by Institute
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/identity/institutes/inst-uuid-1/faculties?limit=10&offset=0
+  body: none
+  auth: none
+}
+
+params:path {
+  instituteId: inst-uuid-1
+}
+
+params:query {
+  limit: 10
+  offset: 0
+}
+
+docs {
+  # Get Faculties by Institute
+
+  Retrieves all faculties belonging to a specific institute.
+
+  ## Path Parameters
+  - `instituteId`: The unique identifier of the institute
+
+  ## Query Parameters
+  - `limit` (optional): Number of results to return (default: 10)
+  - `offset` (optional): Number of results to skip (default: 0)
+
+  ## Response
+  Returns an array of faculties associated with the specified institute, along with pagination metadata.
+
+  ## Notes
+  - Only faculties belonging to the specified institute are returned
+  - Results are paginated
+}

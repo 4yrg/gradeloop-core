@@ -1,0 +1,48 @@
+meta {
+  name: Transfer Student
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/identity/students/student-uuid-1/memberships/transfer
+  body: json
+  auth: none
+}
+
+params:path {
+  studentId: student-uuid-1
+}
+
+body:json {
+  {
+    "new_class_id": "class-uuid-2",
+    "transfer_date": "2024-06-01",
+    "reason": "Student transferred to advanced section"
+  }
+}
+
+docs {
+  # Transfer Student
+
+  Transfers a student from their current class to a new class.
+
+  ## Path Parameters
+  - `studentId`: The unique identifier of the student to transfer
+
+  ## Request Body
+  - `new_class_id` (required): ID of the class to transfer the student to
+  - `transfer_date` (optional): Date of the transfer (ISO 8601 format)
+  - `reason` (optional): Reason for the transfer
+
+  ## Response
+  Returns the new membership object created for the transferred student.
+
+  ## Notes
+  - The student must have an active membership in a class to be transferred
+  - The old membership is marked as "transferred" or inactive
+  - A new active membership is created in the new class
+  - Transfer history is maintained through the membership records
+  - The new class must exist and be active
+  - Both old and new memberships remain in the database for historical tracking
+}

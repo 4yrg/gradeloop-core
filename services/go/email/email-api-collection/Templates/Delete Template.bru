@@ -1,0 +1,21 @@
+meta {
+  name: Delete Template
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/{{api_version}}/templates/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: <uuid>
+}
+
+docs {
+  # Delete Template
+
+  Deletes an email template by its UUID.
+}

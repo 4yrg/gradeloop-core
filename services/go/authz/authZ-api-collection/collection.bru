@@ -1,0 +1,33 @@
+meta {
+  name: AuthZ Service
+}
+
+auth {
+  mode: none
+}
+
+vars {
+  ~user_id: 
+  ~tenant_id: 
+}
+
+docs {
+  # Authorization Service (AuthZ) API
+  
+  Internal service for robust permission management using RBAC and ABAC.
+  
+  ## Endpoints
+  - **Admin API (HTTP)**: Managing roles, permissions, and policies.
+  - **Authorize API (gRPC)**: Real-time permission checks. Note: API Collection uses HTTP wrapper/debug endpoints if available.
+}
+
+script:pre-request {
+  const uuid = require("uuid");
+  req.setHeader("X-Correlation-ID", uuid.v4());
+  
+  // Inject Auth Token if available and not already set
+  const token = bru.getEnvVar("access_token");
+  if (token && !req.getHeader("Authorization")) {
+      req.setHeader("Authorization", `Bearer ${token}`);
+  }
+}

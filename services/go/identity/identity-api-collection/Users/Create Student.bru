@@ -1,0 +1,40 @@
+meta {
+  name: Create Student
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/identity/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "alice.student@university.edu",
+    "name": "Alice Johnson",
+    "user_type": "student",
+    "is_active": true,
+    "student": {
+      "student_id": "STU2024001"
+    }
+  }
+}
+
+docs {
+  # Create Student
+
+  Creates a new student user in the system.
+
+  ## Request Body
+  - `email` (required): Student's email address (must be unique)
+  - `name` (required): Student's full name
+  - `user_type` (required): Must be "student"
+  - `is_active` (optional): Whether the user is active (default: true)
+  - `student` (required): Student-specific data
+    - `student_id` (required): Unique student identifier
+
+  ## Response
+  Returns the created user object with student details and auto-generated ID, timestamps.
+}

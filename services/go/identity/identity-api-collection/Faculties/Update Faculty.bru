@@ -1,0 +1,49 @@
+meta {
+  name: Update Faculty
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/{{api_version}}/identity/faculties/1
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "name": "Faculty of Engineering - Updated",
+    "code": "ENG",
+    "description": "Updated Engineering and Technology Programs",
+    "institute_id": "inst-uuid-1",
+    "is_active": true
+  }
+}
+
+docs {
+  # Update Faculty
+
+  Updates an existing faculty's information.
+
+  ## Path Parameters
+  - `id`: The unique identifier of the faculty to update
+
+  ## Request Body
+  - `name` (required): Name of the faculty
+  - `code` (optional): Unique code/identifier for the faculty
+  - `description` (optional): Description of the faculty
+  - `institute_id` (required): ID of the institute this faculty belongs to
+  - `is_active` (optional): Whether the faculty is active
+
+  ## Response
+  Returns the updated faculty object with the new information.
+
+  ## Notes
+  - All fields are required in the request body
+  - Updating a faculty does not affect its associated departments
+  - Cannot move a faculty to a different institute via this endpoint
+}

@@ -1,0 +1,34 @@
+meta {
+  name: Delete Role
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/api/{{api_version}}/identity/roles/role-uuid-1
+  body: none
+  auth: none
+}
+
+params:path {
+  id: role-uuid-1
+}
+
+docs {
+  # Delete Role
+
+  Deletes a role from the system (soft delete).
+
+  ## Path Parameters
+  - `id`: The unique identifier of the role to delete
+
+  ## Response
+  Returns a success message confirming the role was deleted.
+
+  ## Notes
+  - This is a soft delete - the role record remains in the database with DeletedAt timestamp set
+  - Deleted roles will not appear in normal queries
+  - Users assigned to this role will lose the associated permissions
+  - Consider reassigning users to different roles before deleting
+  - Role assignments are typically cleared when a role is deleted
+}

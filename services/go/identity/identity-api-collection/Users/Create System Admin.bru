@@ -1,0 +1,38 @@
+meta {
+  name: Create System Admin
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/identity/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@university.edu",
+    "name": "System Administrator",
+    "user_type": "system_admin",
+    "is_active": true
+  }
+}
+
+docs {
+  # Create System Admin
+
+  Creates a new system administrator user in the system.
+
+  ## Request Body
+  - `email` (required): Admin's email address (must be unique)
+  - `name` (required): Admin's full name
+  - `user_type` (required): Must be "system_admin"
+  - `is_active` (optional): Whether the user is active (default: true)
+
+  ## Response
+  Returns the created user object with system_admin details and auto-generated ID, timestamps.
+
+  ## Notes
+  System admins have the highest level of access in the system.
+}

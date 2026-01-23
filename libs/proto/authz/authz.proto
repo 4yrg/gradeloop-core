@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package authz;
+
+option go_package = "github.com/4yrg/gradeloop-core/libs/proto/authz";
+
+service AuthorizationService {
+  rpc CheckPermission(CheckRequest) returns (CheckResponse);
+  rpc BatchCheck(BatchCheckRequest) returns (BatchCheckResponse);
+}
+
+message CheckRequest {
+  string user_id = 1;
+  repeated string roles = 2;
+  string tenant_id = 3;
+  string resource = 4;
+  string action = 5;
+  map<string, string> attributes = 6;
+}
+
+message CheckResponse {
+  bool allowed = 1;
+  string reason = 2;
+}
+
+message BatchCheckRequest {
+  string user_id = 1;
+  repeated string roles = 2;
+  string tenant_id = 3;
+  repeated CheckItem items = 4;
+}
+
+message CheckItem {
+  string resource = 1;
+  string action = 2;
+  map<string, string> attributes = 3;
+}
+
+message BatchCheckResponse {
+  repeated CheckResponse results = 1;
+}

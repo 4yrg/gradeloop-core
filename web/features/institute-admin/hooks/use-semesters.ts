@@ -50,3 +50,35 @@ export const useSetActiveSemester = () => {
         },
     });
 };
+
+// Relationship Hooks
+
+export const useSemesterCourses = (semesterId: string | null) => {
+    return useQuery({
+        queryKey: ["semester-courses", semesterId],
+        queryFn: () => semestersService.getCoursesForSemester(semesterId!),
+        enabled: !!semesterId,
+    });
+};
+
+export const useAddCourseToSemester = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ semesterId, courseId }: { semesterId: string; courseId: string }) =>
+            semestersService.addCourseToSemester(semesterId, courseId),
+        onSuccess: (_, { semesterId }) => {
+            queryClient.invalidateQueries({ queryKey: ["semester-courses", semesterId] });
+        },
+    });
+};
+
+export const useRemoveCourseFromSemester = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ semesterId, courseId }: { semesterId: string; courseId: string }) =>
+            semestersService.removeCourseFromSemester(semesterId, courseId),
+        onSuccess: (_, { semesterId }) => {
+            queryClient.invalidateQueries({ queryKey: ["semester-courses", semesterId] });
+        },
+    });
+};

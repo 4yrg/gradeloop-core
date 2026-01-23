@@ -15,7 +15,7 @@ import {
 } from "../../../components/ui/dialog";
 
 import { Person } from "../types";
-import { peopleService } from "../api/people-service";
+import { peopleService } from "../api/people.api";
 
 interface AddStudentModalProps {
     open: boolean;
@@ -40,8 +40,7 @@ export function AddStudentModal({
     const availableStudents = students.filter(
         (s) => !currentStudentIds.includes(s.id || "") &&
             s.role === "student" &&
-            (s.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                s.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 s.email.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
@@ -56,7 +55,7 @@ export function AddStudentModal({
     const loadStudents = async () => {
         setLoading(true);
         try {
-            const data = await peopleService.getPeople();
+            const data = await peopleService.getPeople("student");
             setStudents(data);
         } catch (error) {
             console.error("Failed to load students", error);
@@ -136,9 +135,16 @@ export function AddStudentModal({
                                                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                                 />
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium leading-none">
-                                                        {student.firstName} {student.lastName}
-                                                    </p>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-sm font-medium leading-none">
+                                                            {student.fullName}
+                                                        </p>
+                                                        {student.studentId && (
+                                                            <span className="text-[10px] bg-secondary px-1 rounded text-secondary-foreground">
+                                                                {student.studentId}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         {student.email}
                                                     </p>

@@ -40,6 +40,26 @@ export async function createSession(token: string, user: any) {
             path: '/',
         })
     }
+
+    if (user.id) {
+        cookieStore.set('user_id', user.id, {
+            httpOnly: false,
+            secure: true,
+            expires: expiresAt,
+            sameSite: 'lax',
+            path: '/',
+        })
+    }
+
+    if (user.instituteId) {
+        cookieStore.set('institute_id', user.instituteId, {
+            httpOnly: false,
+            secure: true,
+            expires: expiresAt,
+            sameSite: 'lax',
+            path: '/',
+        })
+    }
 }
 
 export async function deleteSession() {
@@ -48,6 +68,8 @@ export async function deleteSession() {
     cookieStore.delete('user_role')
     cookieStore.delete('user_email')
     cookieStore.delete('user_name')
+    cookieStore.delete('user_id')
+    cookieStore.delete('institute_id')
 }
 
 export async function getSession() {
@@ -59,8 +81,10 @@ export async function getSession() {
 export async function getUserFromSession() {
     const cookieStore = await cookies()
     return {
+        id: cookieStore.get('user_id')?.value,
         role: cookieStore.get('user_role')?.value,
         email: cookieStore.get('user_email')?.value,
         name: cookieStore.get('user_name')?.value,
+        instituteId: cookieStore.get('institute_id')?.value,
     }
 }

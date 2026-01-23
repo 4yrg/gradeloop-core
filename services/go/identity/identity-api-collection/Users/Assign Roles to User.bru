@@ -1,0 +1,41 @@
+meta {
+  name: Assign Roles to User
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/api/{{api_version}}/identity/users/user-uuid-1/roles
+  body: json
+  auth: none
+}
+
+params:path {
+  id: user-uuid-1
+}
+
+body:json {
+  {
+    "role_ids": ["role-uuid-1", "role-uuid-2", "role-uuid-3"]
+  }
+}
+
+docs {
+  # Assign Roles to User
+
+  Assigns one or more roles to a specific user.
+
+  ## Path Parameters
+  - `id`: The unique identifier of the user
+
+  ## Request Body
+  - `role_ids` (required): Array of role IDs to assign to the user
+
+  ## Response
+  Returns a success message confirming the roles were assigned.
+
+  ## Notes
+  - Roles must exist in the system before they can be assigned
+  - This endpoint replaces all existing role assignments for the user
+  - To add roles incrementally, first retrieve existing roles and include them in the request
+}

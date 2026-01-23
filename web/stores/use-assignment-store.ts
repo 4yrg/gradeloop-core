@@ -21,7 +21,6 @@ export const useAssignmentStore = create<AssignmentStore>((set) => ({
         enforceTimeLimit: false,
         enableGroupSubmissions: false,
         enableLeaderboard: false,
-        enableAiAssistance: false,
     },
     setOpen: (open) => set({ isOpen: open }),
     setStep: (step) => set({ step }),
@@ -36,7 +35,6 @@ export const useAssignmentStore = create<AssignmentStore>((set) => ({
             enforceTimeLimit: false,
             enableGroupSubmissions: false,
             enableLeaderboard: false,
-            enableAiAssistance: false,
         }
     }),
 }));

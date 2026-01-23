@@ -1,0 +1,18 @@
+meta {
+  name: Refresh Session
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/sessions/refresh
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "session_id": "REPLACE_WITH_SESSION_ID",
+    "refresh_token": "REPLACE_WITH_REFRESH_TOKEN"
+  }
+}

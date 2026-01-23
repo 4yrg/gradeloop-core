@@ -1,0 +1,11 @@
+meta {
+  name: List Roles
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/authz/roles?tenant_id=gradeloop-internal
+  body: none
+  auth: none
+}

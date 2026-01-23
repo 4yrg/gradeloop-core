@@ -1,0 +1,19 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/{{api_version}}/identity/health
+  body: none
+  auth: none
+}
+
+docs {
+  # Health Check
+
+  Simple health check endpoint to verify the service is running.
+
+  Returns "OK" with 200 status code if the service is healthy.
+}

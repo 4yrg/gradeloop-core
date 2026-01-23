@@ -1,14 +1,22 @@
-# Keystroke Dynamics Authentication Service
+# Keystroke Dynamics Authentication & Behavioral Analysis Service
 
-Behavioral biometrics microservice for continuous student authentication using keystroke dynamics.
+Behavioral biometrics microservice for continuous student authentication and advanced behavioral analysis using keystroke dynamics and LLM-powered insights.
 
 ## Features
 
+### Authentication
 - **User Enrollment**: Create behavioral biometric templates from typing patterns
 - **Verification**: Verify user identity based on typing patterns
 - **Identification**: Identify users from typing patterns (1:N matching)
 - **Continuous Monitoring**: Real-time session monitoring with risk assessment
 - **WebSocket Support**: Real-time updates for monitoring sessions
+
+### 🆕 Behavioral Analysis
+- **Authenticity Detection**: Identify copy-paste, AI assistance, and plagiarism patterns
+- **Cognitive Process Analysis**: Evaluate problem-solving approach and learning depth
+- **Friction Point Detection**: Identify struggle areas and conceptual hurdles
+- **Pedagogical Feedback**: AI-powered recommendations for instructors
+- **LLM Integration**: Deep qualitative analysis using Google Gemini
 
 ## Technology Stack
 
@@ -32,16 +40,50 @@ Behavioral biometrics microservice for continuous student authentication using k
 - `DELETE /api/keystroke/session/{user_id}/{session_id}` - End session
 - `GET /api/keystroke/users/enrolled` - List enrolled users
 
+### 🆕 Behavioral Analysis
+- `POST /api/keystroke/analyze` - Analyze complete coding session for behavioral insights
+- `GET /api/keystroke/analyze/config` - Get analysis configuration and capabilities
+
 ### WebSocket
 - `WS /ws/monitor/{user_id}/{session_id}` - Real-time monitoring
 
 ## Running Locally
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+``(Optional) Set up Gemini API for behavioral analysis
+export GEMINI_API_KEY="your-api-key"
 
 # Run the service
+python main.py
+```
+
+The service will be available at `http://localhost:8080`
+
+## Quick Start - Behavioral Analysis
+
+Try the analysis demo:
+
+```bash
+# Start the web frontend
+cd ../../web
+pnpm dev
+
+# Open browser
+open http://localhost:3000/demo/behavioral-analysis
+```
+
+Or use the API directly:
+
+```bash
+curl -X POST http://localhost:8080/api/keystroke/analyze \
+  -H "Content-Type: application/json" \
+  -d @sample_session.json
+```
+
+## Documentation
+
+- **Full Guide**: `../../docs/BEHAVIORAL_ANALYSIS_GUIDE.md`
+- **Quick Start**: `../../docs/BEHAVIORAL_ANALYSIS_QUICKSTART.md`
+- **Integration**: `../../docs/keystroke-service-integration.md
 python main.py
 ```
 
@@ -74,3 +116,11 @@ The service uses TypeNet, a pre-trained LSTM model for keystroke dynamics:
 - Input: Sequences of 70 keystrokes with 5 features each (HL, IL, PL, RL, KeyCode)
 - Output: 128-dimensional embedding for similarity comparison
 - Templates stored in `models/user_templates.pkl`
+
+
+
+the assignment submissions will handle by another service. I can get the assignment id and the student id later after the service created.
+
+I have to display the students continuous auth confident level data to the instructure. therefore want to store continuous auth data with timestamp and the assignment id,course id and student id in a database.
+
+Should i use a seperate sprinboot service or can use the current keystroke service ?

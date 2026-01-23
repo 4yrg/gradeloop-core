@@ -1,0 +1,53 @@
+meta {
+  name: Update Class
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/{{api_version}}/identity/classes/1
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "name": "Software Engineering 2024 - Updated",
+    "code": "CS401",
+    "description": "Updated Advanced Software Engineering Course",
+    "department_id": "dept-uuid-1",
+    "academic_year": "2024",
+    "semester": "Fall",
+    "is_active": true
+  }
+}
+
+docs {
+  # Update Class
+
+  Updates an existing class's information.
+
+  ## Path Parameters
+  - `id`: The unique identifier of the class to update
+
+  ## Request Body
+  - `name` (required): Name of the class
+  - `code` (optional): Unique code/identifier for the class
+  - `description` (optional): Description of the class
+  - `department_id` (required): ID of the department this class belongs to
+  - `academic_year` (optional): Academic year for the class
+  - `semester` (optional): Semester
+  - `is_active` (optional): Whether the class is active
+
+  ## Response
+  Returns the updated class object with the new information.
+
+  ## Notes
+  - All fields are required in the request body
+  - Updating a class does not affect student memberships
+  - Cannot move a class to a different department via this endpoint
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Check Permission
+  type: grpc
+  seq: 1
+}
+
+grpc {
+  host: {{grpc_host}}
+  service: authz.AuthorizationService
+  method: CheckPermission
+  body: json
+}
+
+body:json {
+  {
+    "user_id": "user-123",
+    "roles": ["INSTRUCTOR"],
+    "tenant_id": "gradeloop-internal",
+    "resource": "COURSES",
+    "action": "READ",
+    "attributes": {
+      "institute_id": "inst-001"
+    }
+  }
+}

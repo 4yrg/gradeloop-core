@@ -1,0 +1,11 @@
+meta {
+  name: Revoke Session
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/sessions/REPLACE_WITH_SESSION_ID
+  body: none
+  auth: none
+}
