@@ -61,6 +61,7 @@ func setupTestServer(t *testing.T) (*httptest.Server, *database.Database) {
 		classHandler,
 		membershipHandler,
 		roleHandler,
+		nil,
 	)
 	r := router.Setup()
 

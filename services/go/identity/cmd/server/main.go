@@ -20,6 +20,7 @@ import (
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/repository"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/routes"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/service"
+	"github.com/4yrg/gradeloop-core/libs/security"
 )
 
 func main() {
@@ -88,6 +89,16 @@ func main() {
 		}
 	}()
 
+	// Security
+	pubKey, err := security.LoadPublicKeyFromFile(cfg.Auth.AuthZPublicKeyPath)
+	if err != nil {
+		// Log warning but don't fail Day 1 if file missing (optional)
+		// For now fail hard to ensure correctness
+		log.Fatalf("Failed to load AuthZ public key: %v", err)
+	}
+	verifier := security.NewTokenVerifier(pubKey, "authz-service")
+	mdw := security.ServiceAuthMiddleware(verifier)
+
 	// Setup routes
 	router := routes.NewRouter(
 		userHandler,
@@ -97,6 +108,7 @@ func main() {
 		classHandler,
 		membershipHandler,
 		roleHandler,
+		mdw,
 	)
 	r := router.Setup()
 

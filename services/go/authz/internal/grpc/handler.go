@@ -9,11 +9,24 @@ import (
 
 type AuthzHandler struct {
 	authzpb.UnimplementedAuthorizationServiceServer
-	service service.AuthzService
+	service      service.AuthzService
+	tokenService *service.TokenService
 }
 
-func NewAuthzHandler(svc service.AuthzService) *AuthzHandler {
-	return &AuthzHandler{service: svc}
+func NewAuthzHandler(svc service.AuthzService, tokenSvc *service.TokenService) *AuthzHandler {
+	return &AuthzHandler{service: svc, tokenService: tokenSvc}
+}
+
+func (h *AuthzHandler) IssueServiceToken(ctx context.Context, req *authzpb.IssueServiceTokenRequest) (*authzpb.IssueServiceTokenResponse, error) {
+	token, err := h.tokenService.IssueServiceToken(req.ServiceId, req.ServiceSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authzpb.IssueServiceTokenResponse{
+		Token:     token,
+		ExpiresAt: 0, // In this simple version we're not returning explicit expiry in response body yet, or can extract from token.
+	}, nil
 }
 
 func (h *AuthzHandler) CheckPermission(ctx context.Context, req *authzpb.CheckRequest) (*authzpb.CheckResponse, error) {

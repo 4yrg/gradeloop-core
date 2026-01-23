@@ -17,6 +17,7 @@ type Router struct {
 	classHandler      *handlers.ClassHandler
 	membershipHandler *handlers.MembershipHandler
 	roleHandler       *handlers.RoleHandler
+	authMiddleware    func(http.Handler) http.Handler
 }
 
 func NewRouter(
@@ -27,6 +28,7 @@ func NewRouter(
 	classHandler *handlers.ClassHandler,
 	membershipHandler *handlers.MembershipHandler,
 	roleHandler *handlers.RoleHandler,
+	authMiddleware func(http.Handler) http.Handler,
 ) *Router {
 	return &Router{
 		userHandler:       userHandler,
@@ -36,6 +38,7 @@ func NewRouter(
 		classHandler:      classHandler,
 		membershipHandler: membershipHandler,
 		roleHandler:       roleHandler,
+		authMiddleware:    authMiddleware,
 	}
 }
 
@@ -58,83 +61,90 @@ func (rt *Router) Setup() *chi.Mux {
 
 	// API routes
 	r.Route("/api/v1/identity", func(r chi.Router) {
-		// Health check
+		// Health check (Public)
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("OK"))
 		})
 
-		// User routes
-		r.Route("/users", func(r chi.Router) {
-			r.Post("/", rt.userHandler.CreateUser)
-			r.Get("/", rt.userHandler.GetAllUsers)
-			r.Get("/{id}", rt.userHandler.GetUser)
-			r.Put("/{id}", rt.userHandler.UpdateUser)
-			r.Delete("/{id}", rt.userHandler.DeleteUser)
-			r.Post("/{id}/roles", rt.userHandler.AssignRoles)
-		})
+		// Protected Routes
+		r.Group(func(r chi.Router) {
+			if rt.authMiddleware != nil {
+				r.Use(rt.authMiddleware)
+			}
 
-		// Institute routes
-		r.Route("/institutes", func(r chi.Router) {
-			r.Post("/", rt.instituteHandler.CreateInstitute)
-			r.Get("/", rt.instituteHandler.GetAllInstitutes)
-			r.Get("/{id}", rt.instituteHandler.GetInstitute)
-			r.Put("/{id}", rt.instituteHandler.UpdateInstitute)
-			r.Delete("/{id}", rt.instituteHandler.DeleteInstitute)
-		})
+			// User routes
+			r.Route("/users", func(r chi.Router) {
+				r.Post("/", rt.userHandler.CreateUser)
+				r.Get("/", rt.userHandler.GetAllUsers)
+				r.Get("/{id}", rt.userHandler.GetUser)
+				r.Put("/{id}", rt.userHandler.UpdateUser)
+				r.Delete("/{id}", rt.userHandler.DeleteUser)
+				r.Post("/{id}/roles", rt.userHandler.AssignRoles)
+			})
 
-		// Faculty routes
-		r.Route("/faculties", func(r chi.Router) {
-			r.Post("/", rt.facultyHandler.CreateFaculty)
-			r.Get("/{id}", rt.facultyHandler.GetFaculty)
-			r.Put("/{id}", rt.facultyHandler.UpdateFaculty)
-			r.Delete("/{id}", rt.facultyHandler.DeleteFaculty)
-		})
+			// Institute routes
+			r.Route("/institutes", func(r chi.Router) {
+				r.Post("/", rt.instituteHandler.CreateInstitute)
+				r.Get("/", rt.instituteHandler.GetAllInstitutes)
+				r.Get("/{id}", rt.instituteHandler.GetInstitute)
+				r.Put("/{id}", rt.instituteHandler.UpdateInstitute)
+				r.Delete("/{id}", rt.instituteHandler.DeleteInstitute)
+			})
 
-		// Get faculties by institute
-		r.Get("/institutes/{instituteId}/faculties", rt.facultyHandler.GetFacultiesByInstitute)
+			// Faculty routes
+			r.Route("/faculties", func(r chi.Router) {
+				r.Post("/", rt.facultyHandler.CreateFaculty)
+				r.Get("/{id}", rt.facultyHandler.GetFaculty)
+				r.Put("/{id}", rt.facultyHandler.UpdateFaculty)
+				r.Delete("/{id}", rt.facultyHandler.DeleteFaculty)
+			})
 
-		// Department routes
-		r.Route("/departments", func(r chi.Router) {
-			r.Post("/", rt.departmentHandler.CreateDepartment)
-			r.Get("/{id}", rt.departmentHandler.GetDepartment)
-			r.Put("/{id}", rt.departmentHandler.UpdateDepartment)
-			r.Delete("/{id}", rt.departmentHandler.DeleteDepartment)
-		})
+			// Get faculties by institute
+			r.Get("/institutes/{instituteId}/faculties", rt.facultyHandler.GetFacultiesByInstitute)
 
-		// Get departments by faculty
-		r.Get("/faculties/{facultyId}/departments", rt.departmentHandler.GetDepartmentsByFaculty)
+			// Department routes
+			r.Route("/departments", func(r chi.Router) {
+				r.Post("/", rt.departmentHandler.CreateDepartment)
+				r.Get("/{id}", rt.departmentHandler.GetDepartment)
+				r.Put("/{id}", rt.departmentHandler.UpdateDepartment)
+				r.Delete("/{id}", rt.departmentHandler.DeleteDepartment)
+			})
 
-		// Class routes
-		r.Route("/classes", func(r chi.Router) {
-			r.Post("/", rt.classHandler.CreateClass)
-			r.Get("/{id}", rt.classHandler.GetClass)
-			r.Put("/{id}", rt.classHandler.UpdateClass)
-			r.Delete("/{id}", rt.classHandler.DeleteClass)
-		})
+			// Get departments by faculty
+			r.Get("/faculties/{facultyId}/departments", rt.departmentHandler.GetDepartmentsByFaculty)
 
-		// Get classes by department
-		r.Get("/departments/{departmentId}/classes", rt.classHandler.GetClassesByDepartment)
+			// Class routes
+			r.Route("/classes", func(r chi.Router) {
+				r.Post("/", rt.classHandler.CreateClass)
+				r.Get("/{id}", rt.classHandler.GetClass)
+				r.Put("/{id}", rt.classHandler.UpdateClass)
+				r.Delete("/{id}", rt.classHandler.DeleteClass)
+			})
 
-		// Membership routes
-		r.Route("/memberships", func(r chi.Router) {
-			r.Post("/", rt.membershipHandler.CreateMembership)
-		})
+			// Get classes by department
+			r.Get("/departments/{departmentId}/classes", rt.classHandler.GetClassesByDepartment)
 
-		// Student-specific membership routes
-		r.Route("/students/{studentId}/memberships", func(r chi.Router) {
-			r.Get("/", rt.membershipHandler.GetMembershipsByStudent)
-			r.Get("/current", rt.membershipHandler.GetCurrentMembership)
-			r.Post("/transfer", rt.membershipHandler.TransferStudent)
-		})
+			// Membership routes
+			r.Route("/memberships", func(r chi.Router) {
+				r.Post("/", rt.membershipHandler.CreateMembership)
+			})
 
-		// Role routes
-		r.Route("/roles", func(r chi.Router) {
-			r.Post("/", rt.roleHandler.CreateRole)
-			r.Get("/", rt.roleHandler.GetAllRoles)
-			r.Get("/{id}", rt.roleHandler.GetRole)
-			r.Put("/{id}", rt.roleHandler.UpdateRole)
-			r.Delete("/{id}", rt.roleHandler.DeleteRole)
+			// Student-specific membership routes
+			r.Route("/students/{studentId}/memberships", func(r chi.Router) {
+				r.Get("/", rt.membershipHandler.GetMembershipsByStudent)
+				r.Get("/current", rt.membershipHandler.GetCurrentMembership)
+				r.Post("/transfer", rt.membershipHandler.TransferStudent)
+			})
+
+			// Role routes
+			r.Route("/roles", func(r chi.Router) {
+				r.Post("/", rt.roleHandler.CreateRole)
+				r.Get("/", rt.roleHandler.GetAllRoles)
+				r.Get("/{id}", rt.roleHandler.GetRole)
+				r.Put("/{id}", rt.roleHandler.UpdateRole)
+				r.Delete("/{id}", rt.roleHandler.DeleteRole)
+			})
 		})
 	})
 

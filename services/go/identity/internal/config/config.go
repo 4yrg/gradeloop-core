@@ -13,6 +13,11 @@ type Config struct {
 	Server      ServerConfig
 	Database    DatabaseConfig
 	Logging     LoggingConfig
+	Auth        AuthConfig
+}
+
+type AuthConfig struct {
+	AuthZPublicKeyPath string
 }
 
 type ServerConfig struct {
@@ -58,6 +63,9 @@ func Load() (*Config, error) {
 		},
 		Logging: LoggingConfig{
 			Level: getEnv("LOG_LEVEL", "info"),
+		},
+		Auth: AuthConfig{
+			AuthZPublicKeyPath: getEnv("AUTHZ_PUBLIC_KEY_PATH", "./certs/public_key.pem"),
 		},
 	}
 
