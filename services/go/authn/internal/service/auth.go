@@ -105,15 +105,29 @@ func (s *AuthService) GenerateAccessToken(userID, email, role, sessionID string)
 	return token.SignedString([]byte(s.cfg.JWT.Secret))
 }
 
-func (s *AuthService) Register(ctx context.Context, email, password, firstName, lastName string) (*user.UserResponse, error) {
-	// For now, we'll map Register to CreateInstituteAdmin in Identity Service
-	// as a placeholder until a generic Register is implemented.
-	resp, err := s.identityClient.CreateInstituteAdmin(ctx, &user.CreateUserRequest{
+func (s *AuthService) Register(ctx context.Context, email, password, firstName, lastName, role string) (*user.UserResponse, error) {
+	var resp *user.UserResponse
+	var err error
+
+	// Call the appropriate creation method based on role
+	createReq := &user.CreateUserRequest{
 		Email:     email,
 		FirstName: firstName,
 		LastName:  lastName,
-		// InstituteId: "", // Optional for now? Identity service might fail if empty.
-	})
+	}
+
+	switch role {
+	case "student":
+		resp, err = s.identityClient.CreateStudent(ctx, createReq)
+	case "instructor":
+		resp, err = s.identityClient.CreateInstructor(ctx, createReq)
+	case "admin", "institute_admin":
+		resp, err = s.identityClient.CreateInstituteAdmin(ctx, createReq)
+	default:
+		// Default to student if role is not specified or invalid
+		resp, err = s.identityClient.CreateStudent(ctx, createReq)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to register user: %w", err)
 	}
