@@ -5,19 +5,15 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/auth/logout
+  url: {{base_url}}/api/v1/auth/logout
   body: json
   auth: none
 }
 
-headers {
-  Authorization: Bearer {{authToken}}
-}
-
 body:json {
   {
-    "refresh_token": "{{refreshToken}}",
-    "session_id": "{{sessionId}}"
+    "refresh_token": "{{refresh_token}}",
+    "session_id": "{{session_id}}"
   }
 }
 
@@ -26,10 +22,10 @@ script:post-response {
     console.log("✅ Logout successful");
 
     // Clear all authentication variables
-    bru.setVar("authToken", "");
-    bru.setVar("refreshToken", "");
-    bru.setVar("sessionId", "");
-    bru.setVar("userId", "");
+    bru.setVar("access_token", "");
+    bru.setVar("refresh_token", "");
+    bru.setVar("session_id", "");
+    bru.setVar("user_id", "");
 
     console.log("   All tokens cleared");
     console.log("   Session terminated");
@@ -38,10 +34,10 @@ script:post-response {
     console.log("   Clearing tokens anyway...");
 
     // Clear tokens even on 401 to reset state
-    bru.setVar("authToken", "");
-    bru.setVar("refreshToken", "");
-    bru.setVar("sessionId", "");
-    bru.setVar("userId", "");
+    bru.setVar("access_token", "");
+    bru.setVar("refresh_token", "");
+    bru.setVar("session_id", "");
+    bru.setVar("user_id", "");
   } else {
     console.log("❌ Logout failed:", res.status);
     console.log("   Error:", res.body.error || res.body.message);

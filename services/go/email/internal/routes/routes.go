@@ -13,7 +13,7 @@ func SetupRouter(s *store.Store, es *service.EmailService) *gin.Engine {
 	templateHandler := handlers.NewTemplateHandler(s)
 	emailHandler := handlers.NewEmailHandler(es)
 
-	v1 := r.Group("/api/v1")
+	v1 := r.Group("/api/v1/email")
 	{
 		templates := v1.Group("/templates")
 		{
