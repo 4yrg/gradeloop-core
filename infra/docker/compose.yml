@@ -16,7 +16,7 @@ services:
     volumes:
       - user-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -77,7 +77,7 @@ services:
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: [ "CMD", "mc", "ready", "local" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -124,6 +124,12 @@ services:
       - gradeloop-net
     volumes:
       - identity-data:/app/data
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/identity
+        - action: rebuild
+          path: ../../libs
 
   session-service:
     build:
@@ -141,6 +147,12 @@ services:
       - gradeloop-net
     volumes:
       - session-data:/app/data
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/session
+        - action: rebuild
+          path: ../../libs
 
   email-service-go:
     build:
@@ -158,6 +170,12 @@ services:
       - gradeloop-net
     volumes:
       - email-go-data:/app/data
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/email
+        - action: rebuild
+          path: ../../libs
 
   authn-service:
     build:
@@ -173,6 +191,12 @@ services:
       - email-service-go
     networks:
       - gradeloop-net
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/authn
+        - action: rebuild
+          path: ../../libs
 
   # ============================================================================
   # Python Services
@@ -198,6 +222,11 @@ services:
       - gradeloop-net
     volumes:
       - keystroke-models:/app/models
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../../services/python/keystroke-service
+          target: /app
 
 volumes:
   user-db-data:
@@ -208,6 +237,7 @@ volumes:
   identity-data:
   session-data:
   email-go-data:
+
 
 networks:
   gradeloop-net:
