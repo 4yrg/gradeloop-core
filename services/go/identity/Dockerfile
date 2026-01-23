@@ -1,34 +1,52 @@
-# Build stage
-FROM golang:1.21-alpine AS builder
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+################################################################################
+# Create a stage for building the application.
+ARG GO_VERSION=1.25.5
+FROM golang:${GO_VERSION}-alpine AS builder
 
-# Install dependencies
-RUN apk add --no-cache git
+WORKDIR /src
 
-# Copy go mod files
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy libs first as it's a dependency
+COPY libs /src/libs
+COPY services/go/identity/go.mod services/go/identity/go.sum /src/services/go/identity/
+COPY services/go/identity/vendor /src/services/go/identity/vendor
 
-# Copy source code
-COPY . .
+WORKDIR /src/services/go/identity
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main cmd/server/main.go
+# Build the application using vendored dependencies.
+# Leverage a bind mount to the root directory to find both libs and service source.
+RUN --mount=type=bind,source=.,target=/src \
+    CGO_ENABLED=0 GOOS=linux go build -mod=vendor -a -installsuffix cgo -o /bin/main ./cmd/server/main.go
 
 # Runtime stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates sqlite-libs
+RUN apk --no-cache add ca-certificates sqlite-libs tzdata
 
-WORKDIR /root/
+# Create a non-privileged user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+
+WORKDIR /app
+
+# Create data directory for SQLite with correct permissions
+RUN mkdir -p /app/data && chown appuser:appuser /app/data
 
 # Copy binary from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/.env.example .env.example
+COPY --from=builder /bin/main /app/main
+
+USER appuser
 
 # Expose port
 EXPOSE 8080
 
 # Run the application
-CMD ["./main"]
+CMD ["/app/main"]

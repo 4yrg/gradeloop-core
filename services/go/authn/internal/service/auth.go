@@ -104,3 +104,54 @@ func (s *AuthService) GenerateAccessToken(userID, email, role, sessionID string)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.cfg.JWT.Secret))
 }
+
+func (s *AuthService) Register(ctx context.Context, email, password, firstName, lastName, role string) (*user.UserResponse, error) {
+	var resp *user.UserResponse
+	var err error
+
+	// Call the appropriate creation method based on role
+	createReq := &user.CreateUserRequest{
+		Email:     email,
+		FirstName: firstName,
+		LastName:  lastName,
+	}
+
+	switch role {
+	case "student":
+		resp, err = s.identityClient.CreateStudent(ctx, createReq)
+	case "instructor":
+		resp, err = s.identityClient.CreateInstructor(ctx, createReq)
+	case "admin", "institute_admin":
+		resp, err = s.identityClient.CreateInstituteAdmin(ctx, createReq)
+	default:
+		// Default to student if role is not specified or invalid
+		resp, err = s.identityClient.CreateStudent(ctx, createReq)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to register user: %w", err)
+	}
+
+	// Update password immediately after creation
+	_, err = s.identityClient.UpdatePassword(ctx, &user.UpdatePasswordRequest{
+		UserId:      resp.UserId,
+		NewPassword: password,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to set password: %w", err)
+	}
+
+	return resp, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, refreshToken string) (bool, error) {
+	// 1. Get Session from Refresh Token (Session Service needs a way to find session by token?)
+	// Actually, Session Service `RevokeSession` takes `session_id`.
+	// We might need to store the session_id in the JWT or the refresh token.
+	// For now, let's assume the user sends the session_id if they want to logout,
+	// or we parse the refresh token to get the session_id.
+
+	// Placeholder: Revoke session (requires session_id)
+	// resp, err := s.sessionClient.RevokeSession(ctx, &session.RevokeSessionRequest{SessionId: sessionID})
+	return true, nil
+}

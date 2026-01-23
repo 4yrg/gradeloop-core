@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/gradeloop/email-service/internal/service"
 )
 
 type EmailHandler struct {

@@ -5,18 +5,18 @@ meta {
 }
 
 post {
-  url: {{base_url}}/api/{{api_version}}/users/1/roles
+  url: {{base_url}}/api/{{api_version}}/users/user-uuid-1/roles
   body: json
   auth: none
 }
 
 params:path {
-  id: 1
+  id: user-uuid-1
 }
 
 body:json {
   {
-    "role_ids": [1, 2, 3]
+    "role_ids": ["role-uuid-1", "role-uuid-2", "role-uuid-3"]
   }
 }
 

@@ -5,18 +5,18 @@ meta {
 }
 
 post {
-  url: {{base_url}}/api/{{api_version}}/students/1/memberships/transfer
+  url: {{base_url}}/api/{{api_version}}/students/student-uuid-1/memberships/transfer
   body: json
   auth: none
 }
 
 params:path {
-  studentId: 1
+  studentId: student-uuid-1
 }
 
 body:json {
   {
-    "new_class_id": 2,
+    "new_class_id": "class-uuid-2",
     "transfer_date": "2024-06-01",
     "reason": "Student transferred to advanced section"
   }

@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/models"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/service"
@@ -35,14 +34,13 @@ func (h *MembershipHandler) CreateMembership(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *MembershipHandler) GetMembershipsByStudent(w http.ResponseWriter, r *http.Request) {
-	studentIDStr := chi.URLParam(r, "studentId")
-	studentID, err := strconv.ParseUint(studentIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", err)
+	studentID := chi.URLParam(r, "studentId")
+	if studentID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
-	memberships, err := h.membershipService.GetMembershipsByStudentID(uint(studentID))
+	memberships, err := h.membershipService.GetMembershipsByStudentID(studentID)
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to fetch memberships", err)
 		return
@@ -52,14 +50,13 @@ func (h *MembershipHandler) GetMembershipsByStudent(w http.ResponseWriter, r *ht
 }
 
 func (h *MembershipHandler) GetCurrentMembership(w http.ResponseWriter, r *http.Request) {
-	studentIDStr := chi.URLParam(r, "studentId")
-	studentID, err := strconv.ParseUint(studentIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", err)
+	studentID := chi.URLParam(r, "studentId")
+	if studentID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
-	membership, err := h.membershipService.GetCurrentMembershipByStudentID(uint(studentID))
+	membership, err := h.membershipService.GetCurrentMembershipByStudentID(studentID)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "No current membership found", err)
 		return
@@ -69,16 +66,15 @@ func (h *MembershipHandler) GetCurrentMembership(w http.ResponseWriter, r *http.
 }
 
 type TransferStudentRequest struct {
-	NewFacultyID    uint `json:"new_faculty_id" validate:"required"`
-	NewDepartmentID uint `json:"new_department_id" validate:"required"`
-	NewClassID      uint `json:"new_class_id" validate:"required"`
+	NewFacultyID    string `json:"new_faculty_id" validate:"required"`
+	NewDepartmentID string `json:"new_department_id" validate:"required"`
+	NewClassID      string `json:"new_class_id" validate:"required"`
 }
 
 func (h *MembershipHandler) TransferStudent(w http.ResponseWriter, r *http.Request) {
-	studentIDStr := chi.URLParam(r, "studentId")
-	studentID, err := strconv.ParseUint(studentIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", err)
+	studentID := chi.URLParam(r, "studentId")
+	if studentID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
@@ -88,8 +84,8 @@ func (h *MembershipHandler) TransferStudent(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = h.membershipService.TransferStudent(
-		uint(studentID),
+	err := h.membershipService.TransferStudent(
+		studentID,
 		req.NewFacultyID,
 		req.NewDepartmentID,
 		req.NewClassID,

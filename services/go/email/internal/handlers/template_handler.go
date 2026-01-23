@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/models"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
 	"github.com/gin-gonic/gin"
-	"github.com/gradeloop/email-service/internal/models"
-	"github.com/gradeloop/email-service/internal/store"
 )
 
 type TemplateHandler struct {

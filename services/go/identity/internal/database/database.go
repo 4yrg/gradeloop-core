@@ -6,8 +6,8 @@ import (
 
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/config"
 	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/models"
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -28,7 +28,7 @@ func New(cfg *config.Config) (*Database, error) {
 		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Database.Driver)
 	}
 
-	// Configure GORM logger level
+	// Configure GORM logger level with detailed SQL logging
 	var logLevel logger.LogLevel
 	switch cfg.Logging.Level {
 	case "debug":
@@ -39,8 +39,19 @@ func New(cfg *config.Config) (*Database, error) {
 		logLevel = logger.Error
 	}
 
+	// Enable detailed SQL logging for debugging user creation issues
+	customLogger := logger.New(
+		log.New(log.Writer(), "\r\n", log.LstdFlags),
+		logger.Config{
+			LogLevel:                  logLevel,
+			IgnoreRecordNotFoundError: false,
+			Colorful:                  true,
+			SlowThreshold:             200,
+		},
+	)
+
 	db, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
+		Logger: customLogger,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ const (
 
 // User is the base user model with common fields
 type User struct {
-	ID           uint           `gorm:"primarykey" json:"id"`
+	ID           string         `gorm:"primarykey" json:"id"`
 	Email        string         `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
 	Name         string         `gorm:"not null" json:"name" validate:"required"`
 	UserType     UserType       `gorm:"type:varchar(50);not null" json:"user_type" validate:"required,oneof=system_admin institute_admin student instructor"`
@@ -34,10 +35,17 @@ type User struct {
 	Roles          []Role          `gorm:"many2many:user_roles;" json:"roles,omitempty"`
 }
 
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if u.ID == "" {
+		u.ID = uuid.New().String()
+	}
+	return
+}
+
 // Student holds student-specific fields
 type Student struct {
-	ID        uint         `gorm:"primarykey" json:"id"`
-	UserID    uint         `gorm:"uniqueIndex;not null" json:"user_id"`
+	ID        string       `gorm:"primarykey" json:"id"`
+	UserID    string       `gorm:"uniqueIndex;not null" json:"user_id"`
 	StudentID string       `gorm:"uniqueIndex;not null" json:"student_id" validate:"required"`
 	CreatedAt FlexibleTime `json:"created_at"`
 	UpdatedAt FlexibleTime `json:"updated_at"`
@@ -47,30 +55,58 @@ type Student struct {
 	Memberships       []StudentMembership `gorm:"foreignKey:StudentID;constraint:OnDelete:CASCADE" json:"memberships,omitempty"`
 }
 
+func (s *Student) BeforeCreate(tx *gorm.DB) (err error) {
+	if s.ID == "" {
+		s.ID = uuid.New().String()
+	}
+	return
+}
+
 // Instructor holds instructor-specific fields
 type Instructor struct {
-	ID         uint         `gorm:"primarykey" json:"id"`
-	UserID     uint         `gorm:"uniqueIndex;not null" json:"user_id"`
+	ID         string       `gorm:"primarykey" json:"id"`
+	UserID     string       `gorm:"uniqueIndex;not null" json:"user_id"`
 	EmployeeID string       `gorm:"uniqueIndex;not null" json:"employee_id" validate:"required"`
 	CreatedAt  FlexibleTime `json:"created_at"`
 	UpdatedAt  FlexibleTime `json:"updated_at"`
 }
 
+func (i *Instructor) BeforeCreate(tx *gorm.DB) (err error) {
+	if i.ID == "" {
+		i.ID = uuid.New().String()
+	}
+	return
+}
+
 // SystemAdmin holds system admin specific fields
 type SystemAdmin struct {
-	ID        uint         `gorm:"primarykey" json:"id"`
-	UserID    uint         `gorm:"uniqueIndex;not null" json:"user_id"`
+	ID        string       `gorm:"primarykey" json:"id"`
+	UserID    string       `gorm:"uniqueIndex;not null" json:"user_id"`
 	CreatedAt FlexibleTime `json:"created_at"`
 	UpdatedAt FlexibleTime `json:"updated_at"`
 }
 
+func (sa *SystemAdmin) BeforeCreate(tx *gorm.DB) (err error) {
+	if sa.ID == "" {
+		sa.ID = uuid.New().String()
+	}
+	return
+}
+
 // InstituteAdmin holds institute admin specific fields
 type InstituteAdmin struct {
-	ID          uint         `gorm:"primarykey" json:"id"`
-	UserID      uint         `gorm:"uniqueIndex;not null" json:"user_id"`
-	InstituteID uint         `gorm:"not null" json:"institute_id"`
+	ID          string       `gorm:"primarykey" json:"id"`
+	UserID      string       `gorm:"uniqueIndex;not null" json:"user_id"`
+	InstituteID string       `gorm:"not null" json:"institute_id"`
 	CreatedAt   FlexibleTime `json:"created_at"`
 	UpdatedAt   FlexibleTime `json:"updated_at"`
 
 	Institute *Institute `gorm:"foreignKey:InstituteID" json:"institute,omitempty"`
+}
+
+func (ia *InstituteAdmin) BeforeCreate(tx *gorm.DB) (err error) {
+	if ia.ID == "" {
+		ia.ID = uuid.New().String()
+	}
+	return
 }

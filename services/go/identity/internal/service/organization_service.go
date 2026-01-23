@@ -11,10 +11,10 @@ import (
 // InstituteService handles institute business logic
 type InstituteService interface {
 	CreateInstitute(institute *models.Institute) error
-	GetInstituteByID(id uint) (*models.Institute, error)
+	GetInstituteByID(id string) (*models.Institute, error)
 	GetAllInstitutes(limit, offset int) ([]models.Institute, int64, error)
 	UpdateInstitute(institute *models.Institute) error
-	DeleteInstitute(id uint) error
+	DeleteInstitute(id string) error
 }
 
 type instituteService struct {
@@ -36,7 +36,7 @@ func (s *instituteService) CreateInstitute(institute *models.Institute) error {
 	return s.instituteRepo.Create(institute)
 }
 
-func (s *instituteService) GetInstituteByID(id uint) (*models.Institute, error) {
+func (s *instituteService) GetInstituteByID(id string) (*models.Institute, error) {
 	return s.instituteRepo.GetByID(id)
 }
 
@@ -57,17 +57,17 @@ func (s *instituteService) UpdateInstitute(institute *models.Institute) error {
 	return s.instituteRepo.Update(institute)
 }
 
-func (s *instituteService) DeleteInstitute(id uint) error {
+func (s *instituteService) DeleteInstitute(id string) error {
 	return s.instituteRepo.Delete(id)
 }
 
 // FacultyService handles faculty business logic
 type FacultyService interface {
 	CreateFaculty(faculty *models.Faculty) error
-	GetFacultyByID(id uint) (*models.Faculty, error)
-	GetFacultiesByInstituteID(instituteID uint, limit, offset int) ([]models.Faculty, int64, error)
+	GetFacultyByID(id string) (*models.Faculty, error)
+	GetFacultiesByInstituteID(instituteID string, limit, offset int) ([]models.Faculty, int64, error)
 	UpdateFaculty(faculty *models.Faculty) error
-	DeleteFaculty(id uint) error
+	DeleteFaculty(id string) error
 }
 
 type facultyService struct {
@@ -89,11 +89,11 @@ func (s *facultyService) CreateFaculty(faculty *models.Faculty) error {
 	return s.facultyRepo.Create(faculty)
 }
 
-func (s *facultyService) GetFacultyByID(id uint) (*models.Faculty, error) {
+func (s *facultyService) GetFacultyByID(id string) (*models.Faculty, error) {
 	return s.facultyRepo.GetByID(id)
 }
 
-func (s *facultyService) GetFacultiesByInstituteID(instituteID uint, limit, offset int) ([]models.Faculty, int64, error) {
+func (s *facultyService) GetFacultiesByInstituteID(instituteID string, limit, offset int) ([]models.Faculty, int64, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -110,17 +110,17 @@ func (s *facultyService) UpdateFaculty(faculty *models.Faculty) error {
 	return s.facultyRepo.Update(faculty)
 }
 
-func (s *facultyService) DeleteFaculty(id uint) error {
+func (s *facultyService) DeleteFaculty(id string) error {
 	return s.facultyRepo.Delete(id)
 }
 
 // DepartmentService handles department business logic
 type DepartmentService interface {
 	CreateDepartment(department *models.Department) error
-	GetDepartmentByID(id uint) (*models.Department, error)
-	GetDepartmentsByFacultyID(facultyID uint, limit, offset int) ([]models.Department, int64, error)
+	GetDepartmentByID(id string) (*models.Department, error)
+	GetDepartmentsByFacultyID(facultyID string, limit, offset int) ([]models.Department, int64, error)
 	UpdateDepartment(department *models.Department) error
-	DeleteDepartment(id uint) error
+	DeleteDepartment(id string) error
 }
 
 type departmentService struct {
@@ -142,11 +142,11 @@ func (s *departmentService) CreateDepartment(department *models.Department) erro
 	return s.departmentRepo.Create(department)
 }
 
-func (s *departmentService) GetDepartmentByID(id uint) (*models.Department, error) {
+func (s *departmentService) GetDepartmentByID(id string) (*models.Department, error) {
 	return s.departmentRepo.GetByID(id)
 }
 
-func (s *departmentService) GetDepartmentsByFacultyID(facultyID uint, limit, offset int) ([]models.Department, int64, error) {
+func (s *departmentService) GetDepartmentsByFacultyID(facultyID string, limit, offset int) ([]models.Department, int64, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -163,17 +163,17 @@ func (s *departmentService) UpdateDepartment(department *models.Department) erro
 	return s.departmentRepo.Update(department)
 }
 
-func (s *departmentService) DeleteDepartment(id uint) error {
+func (s *departmentService) DeleteDepartment(id string) error {
 	return s.departmentRepo.Delete(id)
 }
 
 // ClassService handles class business logic
 type ClassService interface {
 	CreateClass(class *models.Class) error
-	GetClassByID(id uint) (*models.Class, error)
-	GetClassesByDepartmentID(departmentID uint, limit, offset int) ([]models.Class, int64, error)
+	GetClassByID(id string) (*models.Class, error)
+	GetClassesByDepartmentID(departmentID string, limit, offset int) ([]models.Class, int64, error)
 	UpdateClass(class *models.Class) error
-	DeleteClass(id uint) error
+	DeleteClass(id string) error
 }
 
 type classService struct {
@@ -195,11 +195,11 @@ func (s *classService) CreateClass(class *models.Class) error {
 	return s.classRepo.Create(class)
 }
 
-func (s *classService) GetClassByID(id uint) (*models.Class, error) {
+func (s *classService) GetClassByID(id string) (*models.Class, error) {
 	return s.classRepo.GetByID(id)
 }
 
-func (s *classService) GetClassesByDepartmentID(departmentID uint, limit, offset int) ([]models.Class, int64, error) {
+func (s *classService) GetClassesByDepartmentID(departmentID string, limit, offset int) ([]models.Class, int64, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -216,6 +216,6 @@ func (s *classService) UpdateClass(class *models.Class) error {
 	return s.classRepo.Update(class)
 }
 
-func (s *classService) DeleteClass(id uint) error {
+func (s *classService) DeleteClass(id string) error {
 	return s.classRepo.Delete(id)
 }

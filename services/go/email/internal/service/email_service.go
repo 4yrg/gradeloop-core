@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/gradeloop/email-service/internal/models"
-	"github.com/gradeloop/email-service/internal/queue"
-	"github.com/gradeloop/email-service/internal/store"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/models"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/queue"
+	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
 )
 
 type EmailService struct {

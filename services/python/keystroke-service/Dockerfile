@@ -9,11 +9,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+# Context is root, so paths are relative to root
+COPY services/python/keystroke-service/requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY services/python/keystroke-service .
 
 # Create models directory if it doesn't exist
 RUN mkdir -p /app/models

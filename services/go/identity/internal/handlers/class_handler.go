@@ -35,14 +35,13 @@ func (h *ClassHandler) CreateClass(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ClassHandler) GetClass(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", nil)
 		return
 	}
 
-	class, err := h.classService.GetClassByID(uint(id))
+	class, err := h.classService.GetClassByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "Class not found", err)
 		return
@@ -52,10 +51,9 @@ func (h *ClassHandler) GetClass(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ClassHandler) GetClassesByDepartment(w http.ResponseWriter, r *http.Request) {
-	departmentIDStr := chi.URLParam(r, "departmentId")
-	departmentID, err := strconv.ParseUint(departmentIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", err)
+	departmentID := chi.URLParam(r, "departmentId")
+	if departmentID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid department ID", nil)
 		return
 	}
 
@@ -66,7 +64,7 @@ func (h *ClassHandler) GetClassesByDepartment(w http.ResponseWriter, r *http.Req
 		limit = 10
 	}
 
-	classes, total, err := h.classService.GetClassesByDepartmentID(uint(departmentID), limit, offset)
+	classes, total, err := h.classService.GetClassesByDepartmentID(departmentID, limit, offset)
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to fetch classes", err)
 		return
@@ -76,10 +74,9 @@ func (h *ClassHandler) GetClassesByDepartment(w http.ResponseWriter, r *http.Req
 }
 
 func (h *ClassHandler) UpdateClass(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", nil)
 		return
 	}
 
@@ -89,7 +86,7 @@ func (h *ClassHandler) UpdateClass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	class.ID = uint(id)
+	class.ID = id
 
 	if err := h.classService.UpdateClass(&class); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update class", err)
@@ -100,14 +97,13 @@ func (h *ClassHandler) UpdateClass(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ClassHandler) DeleteClass(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid class ID", nil)
 		return
 	}
 
-	if err := h.classService.DeleteClass(uint(id)); err != nil {
+	if err := h.classService.DeleteClass(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete class", err)
 		return
 	}

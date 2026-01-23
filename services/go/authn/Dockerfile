@@ -15,21 +15,18 @@ WORKDIR /src
 # Copy libs first as it's a dependency
 COPY libs /src/libs
 COPY services/go/authn/go.mod services/go/authn/go.sum /src/services/go/authn/
+COPY services/go/authn/vendor /src/services/go/authn/vendor
 
 WORKDIR /src/services/go/authn
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
 
 # This is the architecture you're building for, which is passed in by the builder.
 # Placing it here allows the previous steps to be cached across architectures.
 ARG TARGETARCH
 
-# Build the application.
-# Leverage a cache mount to /go/pkg/mod/ to speed up subsequent builds.
+# Build the application using vendored dependencies.
 # Leverage a bind mount to the root directory to find both libs and service source.
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/server
+RUN --mount=type=bind,source=.,target=/src \
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -mod=vendor -o /bin/server ./cmd/server
 
 ################################################################################
 # Create a new stage for running the application that contains the minimal

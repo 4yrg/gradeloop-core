@@ -119,12 +119,9 @@ func TestGetUserAPI(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Get the user via API
-	resp, err := http.Get(server.URL + "/api/v1/users/" + string(rune(user.ID+'0')))
+	resp, err := http.Get(server.URL + "/api/v1/users/" + user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	// Note: This will fail because we're not handling ID conversion properly
-	// In a real scenario, you'd use strconv.Itoa(int(user.ID))
 }
 
 func TestGetAllUsersAPI(t *testing.T) {

@@ -10,10 +10,10 @@ import (
 
 type MembershipService interface {
 	CreateMembership(membership *models.StudentMembership) error
-	GetMembershipsByStudentID(studentID uint) ([]models.StudentMembership, error)
-	GetCurrentMembershipByStudentID(studentID uint) (*models.StudentMembership, error)
-	TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID uint) error
-	EndMembership(membershipID uint) error
+	GetMembershipsByStudentID(studentID string) ([]models.StudentMembership, error)
+	GetCurrentMembershipByStudentID(studentID string) (*models.StudentMembership, error)
+	TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID string) error
+	EndMembership(membershipID string) error
 }
 
 type membershipService struct {
@@ -35,19 +35,19 @@ func (s *membershipService) CreateMembership(membership *models.StudentMembershi
 	return s.membershipRepo.Create(membership)
 }
 
-func (s *membershipService) GetMembershipsByStudentID(studentID uint) ([]models.StudentMembership, error) {
+func (s *membershipService) GetMembershipsByStudentID(studentID string) ([]models.StudentMembership, error) {
 	return s.membershipRepo.GetByStudentID(studentID)
 }
 
-func (s *membershipService) GetCurrentMembershipByStudentID(studentID uint) (*models.StudentMembership, error) {
+func (s *membershipService) GetCurrentMembershipByStudentID(studentID string) (*models.StudentMembership, error) {
 	return s.membershipRepo.GetCurrentByStudentID(studentID)
 }
 
-func (s *membershipService) TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID uint) error {
+func (s *membershipService) TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID string) error {
 	return s.membershipRepo.TransferStudent(studentID, newFacultyID, newDepartmentID, newClassID)
 }
 
-func (s *membershipService) EndMembership(membershipID uint) error {
+func (s *membershipService) EndMembership(membershipID string) error {
 	// This is a custom method to manually end a membership
 	// In practice, this would be implemented in the repository
 	// For now, we'll return an error indicating it needs implementation

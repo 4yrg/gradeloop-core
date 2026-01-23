@@ -35,14 +35,13 @@ func (h *FacultyHandler) CreateFaculty(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacultyHandler) GetFaculty(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", nil)
 		return
 	}
 
-	faculty, err := h.facultyService.GetFacultyByID(uint(id))
+	faculty, err := h.facultyService.GetFacultyByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, "Faculty not found", err)
 		return
@@ -52,10 +51,9 @@ func (h *FacultyHandler) GetFaculty(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacultyHandler) GetFacultiesByInstitute(w http.ResponseWriter, r *http.Request) {
-	instituteIDStr := chi.URLParam(r, "instituteId")
-	instituteID, err := strconv.ParseUint(instituteIDStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", err)
+	instituteID := chi.URLParam(r, "instituteId")
+	if instituteID == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid institute ID", nil)
 		return
 	}
 
@@ -66,7 +64,7 @@ func (h *FacultyHandler) GetFacultiesByInstitute(w http.ResponseWriter, r *http.
 		limit = 10
 	}
 
-	faculties, total, err := h.facultyService.GetFacultiesByInstituteID(uint(instituteID), limit, offset)
+	faculties, total, err := h.facultyService.GetFacultiesByInstituteID(instituteID, limit, offset)
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to fetch faculties", err)
 		return
@@ -76,10 +74,9 @@ func (h *FacultyHandler) GetFacultiesByInstitute(w http.ResponseWriter, r *http.
 }
 
 func (h *FacultyHandler) UpdateFaculty(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", nil)
 		return
 	}
 
@@ -89,7 +86,7 @@ func (h *FacultyHandler) UpdateFaculty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	faculty.ID = uint(id)
+	faculty.ID = id
 
 	if err := h.facultyService.UpdateFaculty(&faculty); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to update faculty", err)
@@ -100,14 +97,13 @@ func (h *FacultyHandler) UpdateFaculty(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacultyHandler) DeleteFaculty(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		utils.SendError(w, http.StatusBadRequest, "Invalid faculty ID", nil)
 		return
 	}
 
-	if err := h.facultyService.DeleteFaculty(uint(id)); err != nil {
+	if err := h.facultyService.DeleteFaculty(id); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, "Failed to delete faculty", err)
 		return
 	}

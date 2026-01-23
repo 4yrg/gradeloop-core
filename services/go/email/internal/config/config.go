@@ -58,8 +58,8 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
 		Server: ServerConfig{
-			Port:     getEnv("SERVER_PORT", "8081"),
-			GrpcPort: getEnv("GRPC_PORT", "50053"), // Distinct port
+			Port:     getEnv("EMAIL_SERVER_PORT", getEnv("SERVER_PORT", "8081")),
+			GrpcPort: getEnv("EMAIL_GRPC_PORT", getEnv("GRPC_PORT", "50053")), // Distinct port
 			Host:     getEnv("SERVER_HOST", "0.0.0.0"),
 		},
 		Database: DatabaseConfig{

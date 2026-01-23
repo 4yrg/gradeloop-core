@@ -1,28 +1,55 @@
 meta {
   name: Register
   type: http
-  seq: 4
+  seq: 1
 }
 
 post {
-  url: {{base_url}}/api/v1/auth/register
+  url: {{baseUrl}}/api/v1/auth/register
   body: json
   auth: none
 }
 
 body:json {
   {
-    "email": "newuser@example.com",
-    "password": "password123",
-    "first_name": "New",
-    "last_name": "User"
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}",
+    "first_name": "Test",
+    "last_name": "User",
+    "role": "student"
   }
 }
 
-vars:pre-request {
-  base_url: http://localhost:8083
+script:post-response {
+  if (res.status === 200 || res.status === 201) {
+    console.log("✅ Registration successful");
+
+    // Store tokens if provided
+    if (res.body.access_token) {
+      bru.setVar("authToken", res.body.access_token);
+      console.log("   Access token stored");
+    }
+
+    if (res.body.refresh_token) {
+      bru.setVar("refreshToken", res.body.refresh_token);
+      console.log("   Refresh token stored");
+    }
+
+    if (res.body.session_id) {
+      bru.setVar("sessionId", res.body.session_id);
+      console.log("   Session ID stored");
+    }
+
+    if (res.body.user_id || res.body.userId) {
+      bru.setVar("userId", res.body.user_id || res.body.userId);
+      console.log("   User ID stored");
+    }
+  } else {
+    console.log("❌ Registration failed:", res.status);
+    console.log("   Error:", res.body.error || res.body.message);
+  }
 }
 
 assert {
-  res.status: eq 200
+  res.status: in [200, 201]
 }

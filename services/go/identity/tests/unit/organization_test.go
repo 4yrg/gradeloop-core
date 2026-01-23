@@ -42,7 +42,7 @@ func TestCreateInstitute(t *testing.T) {
 
 	err := instituteService.CreateInstitute(institute)
 	assert.NoError(t, err)
-	assert.NotZero(t, institute.ID)
+	assert.NotEmpty(t, institute.ID)
 }
 
 func TestCreateFaculty(t *testing.T) {
@@ -74,7 +74,7 @@ func TestCreateFaculty(t *testing.T) {
 
 	err = facultyService.CreateFaculty(faculty)
 	assert.NoError(t, err)
-	assert.NotZero(t, faculty.ID)
+	assert.NotEmpty(t, faculty.ID)
 	assert.Equal(t, institute.ID, faculty.InstituteID)
 }
 
@@ -117,7 +117,7 @@ func TestCreateDepartment(t *testing.T) {
 	}
 	err = departmentService.CreateDepartment(department)
 	assert.NoError(t, err)
-	assert.NotZero(t, department.ID)
+	assert.NotEmpty(t, department.ID)
 	assert.Equal(t, faculty.ID, department.FacultyID)
 }
 
@@ -154,7 +154,7 @@ func TestCreateClass(t *testing.T) {
 
 	err := classService.CreateClass(class)
 	assert.NoError(t, err)
-	assert.NotZero(t, class.ID)
+	assert.NotEmpty(t, class.ID)
 	assert.Equal(t, department.ID, class.DepartmentID)
 }
 

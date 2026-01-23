@@ -31,7 +31,7 @@ func setupMembershipTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func createTestOrganizationHierarchy(t *testing.T, db *gorm.DB) (uint, uint, uint, uint, uint) {
+func createTestOrganizationHierarchy(t *testing.T, db *gorm.DB) (string, string, string, string, string) {
 	// Create organization hierarchy and return IDs
 	instituteRepo := repository.NewInstituteRepository(db)
 	instituteService := service.NewInstituteService(instituteRepo)
@@ -99,7 +99,7 @@ func TestCreateStudentMembership(t *testing.T) {
 
 	err := membershipService.CreateMembership(membership)
 	assert.NoError(t, err)
-	assert.NotZero(t, membership.ID)
+	assert.NotEmpty(t, membership.ID)
 }
 
 func TestGetCurrentMembership(t *testing.T) {
