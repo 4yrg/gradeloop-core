@@ -9,18 +9,14 @@ WORKDIR /src
 # Copy libs first as it's a dependency
 COPY libs /src/libs
 COPY services/go/session/go.mod services/go/session/go.sum /src/services/go/session/
+COPY services/go/session/vendor /src/services/go/session/vendor
 
 WORKDIR /src/services/go/session
 
-# Download dependencies
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
-
-# Build the application.
+# Build the application using vendored dependencies.
 ARG TARGETARCH
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/server
+RUN --mount=type=bind,source=.,target=/src \
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -mod=vendor -o /bin/server ./cmd/server
 
 ################################################################################
 # Runtime stage

@@ -10,19 +10,14 @@ WORKDIR /src
 # Copy libs first as it's a dependency
 COPY libs /src/libs
 COPY services/go/identity/go.mod services/go/identity/go.sum /src/services/go/identity/
+COPY services/go/identity/vendor /src/services/go/identity/vendor
 
 WORKDIR /src/services/go/identity
 
-# Install dependencies
-RUN apk add --no-cache git
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
-
-# Build the application
+# Build the application using vendored dependencies.
 # Leverage a bind mount to the root directory to find both libs and service source.
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /bin/main ./cmd/server/main.go
+RUN --mount=type=bind,source=.,target=/src \
+    CGO_ENABLED=0 GOOS=linux go build -mod=vendor -a -installsuffix cgo -o /bin/main ./cmd/server/main.go
 
 # Runtime stage
 FROM alpine:latest

@@ -197,43 +197,42 @@ services:
           path: ../../services/go/authn
         - action: rebuild
           path: ../../libs
-
   # ============================================================================
   # Python Services
   # ============================================================================
-  keystroke-ml-service:
-    build:
-      context: ../../
-      dockerfile: services/python/keystroke-service/Dockerfile
-    env_file:
-      - ../../.env
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      RABBITMQ_HOST: rabbitmq
-    ports:
-      - "8082:8003"
-    depends_on:
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - gradeloop-net
-    volumes:
-      - keystroke-models:/app/models
-    develop:
-      watch:
-        - action: sync+restart
-          path: ../../services/python/keystroke-service
-          target: /app
+  # keystroke-ml-service:
+  #   build:
+  #     context: ../../
+  #     dockerfile: services/python/keystroke-service/Dockerfile
+  #   env_file:
+  #     - ../../.env
+  #   environment:
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     RABBITMQ_HOST: rabbitmq
+  #   ports:
+  #     - "8082:8003"
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - gradeloop-net
+  #   volumes:
+  #     - keystroke-models:/app/models
+  #   develop:
+  #     watch:
+  #       - action: sync+restart
+  #         path: ../../services/python/keystroke-service
+  #         target: /app
 
 volumes:
   user-db-data:
   minio-data:
   redis-data:
-  rabbitmq-data:
-  keystroke-models:
+  rabbitmq-data: # keystroke-models:
+
   identity-data:
   session-data:
   email-go-data:

@@ -9,18 +9,14 @@ WORKDIR /src
 # Copy libs first as it's a dependency
 COPY libs /src/libs
 COPY services/go/email/go.mod services/go/email/go.sum /src/services/go/email/
+COPY services/go/email/vendor /src/services/go/email/vendor
 
 WORKDIR /src/services/go/email
 
-# Download dependencies
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    go mod download -x
-
-# Build the application.
+# Build the application using vendored dependencies.
 ARG TARGETARCH
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /bin/server ./cmd/server
+RUN --mount=type=bind,source=.,target=/src \
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -mod=vendor -o /bin/server ./cmd/server
 
 ################################################################################
 # Runtime stage
