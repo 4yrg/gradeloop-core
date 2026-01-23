@@ -1,7 +1,7 @@
 meta {
   name: Refresh Token
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
@@ -12,7 +12,40 @@ post {
 
 body:json {
   {
-    "refresh_token": "PASTE_REFRESH_TOKEN_HERE"
+    "refresh_token": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    console.log("✅ Token refreshed successfully");
+
+    // Store new access token
+    if (res.body.access_token) {
+      bru.setVar("authToken", res.body.access_token);
+      console.log("   New access token stored");
+    }
+
+    // Store new refresh token if provided
+    if (res.body.refresh_token) {
+      bru.setVar("refreshToken", res.body.refresh_token);
+      console.log("   New refresh token stored");
+    }
+
+    // Update session ID if provided
+    if (res.body.session_id) {
+      bru.setVar("sessionId", res.body.session_id);
+      console.log("   Session ID updated");
+    }
+
+    // Display token expiry if available
+    if (res.body.expires_in) {
+      console.log("   New token expires in:", res.body.expires_in, "seconds");
+    }
+  } else {
+    console.log("❌ Token refresh failed:", res.status);
+    console.log("   Error:", res.body.error || res.body.message);
+    console.log("   You may need to login again");
   }
 }
 

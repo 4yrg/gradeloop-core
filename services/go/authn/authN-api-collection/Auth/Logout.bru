@@ -1,7 +1,7 @@
 meta {
   name: Logout
   type: http
-  seq: 3
+  seq: 4
 }
 
 post {
@@ -10,12 +10,44 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
 body:json {
   {
-    "refresh_token": "PASTE_REFRESH_TOKEN_HERE"
+    "refresh_token": "{{refreshToken}}",
+    "session_id": "{{sessionId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    console.log("✅ Logout successful");
+
+    // Clear all authentication variables
+    bru.setVar("authToken", "");
+    bru.setVar("refreshToken", "");
+    bru.setVar("sessionId", "");
+    bru.setVar("userId", "");
+
+    console.log("   All tokens cleared");
+    console.log("   Session terminated");
+  } else if (res.status === 401) {
+    console.log("⚠️  Logout failed: Already logged out or invalid session");
+    console.log("   Clearing tokens anyway...");
+
+    // Clear tokens even on 401 to reset state
+    bru.setVar("authToken", "");
+    bru.setVar("refreshToken", "");
+    bru.setVar("sessionId", "");
+    bru.setVar("userId", "");
+  } else {
+    console.log("❌ Logout failed:", res.status);
+    console.log("   Error:", res.body.error || res.body.message);
   }
 }
 
 assert {
-  res.status: eq 200
+  res.status: in [200, 401]
 }

@@ -1,9 +1,32 @@
 meta {
-  name: AuthN Service
-  type: http
-  seq: 1
+  name: AuthN Service API Collection
+  type: collection
+  version: 1.0.0
 }
 
-auth {
-  mode: none
+docs {
+  # GradeLoop AuthN Service API Collection
+
+  This collection provides comprehensive testing for the Authentication microservice.
+
+  ## Service Information
+  - **Service**: authn-service
+  - **Port**: 8083
+  - **Base URL**: http://localhost:8083
+  - **API Version**: v1
+
+  ## Endpoints
+  1. Register - Create new user account
+  2. Login - Authenticate user
+  3. Refresh Token - Get new access token
+  4. Logout - End session
+  5. Forgot Password - Request password reset
+  6. Reset Password - Reset password with token
+  7. Change Password - Update password (authenticated)
+
+  ## Environment
+  Select "Local" environment before testing.
+
+  ## Documentation
+  See README.md for detailed usage instructions.
 }

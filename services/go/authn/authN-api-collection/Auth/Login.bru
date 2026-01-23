@@ -1,7 +1,7 @@
 meta {
   name: Login
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
@@ -12,8 +12,52 @@ post {
 
 body:json {
   {
-    "email": "test@example.com",
-    "password": "password123"
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    console.log("✅ Login successful");
+
+    // Store access token
+    if (res.body.access_token) {
+      bru.setVar("authToken", res.body.access_token);
+      console.log("   Access token stored");
+    }
+
+    // Store refresh token
+    if (res.body.refresh_token) {
+      bru.setVar("refreshToken", res.body.refresh_token);
+      console.log("   Refresh token stored");
+    }
+
+    // Store session ID (handle both snake_case and camelCase)
+    if (res.body.session_id) {
+      bru.setVar("sessionId", res.body.session_id);
+      console.log("   Session ID stored:", res.body.session_id);
+    } else if (res.body.sessionId) {
+      bru.setVar("sessionId", res.body.sessionId);
+      console.log("   Session ID stored:", res.body.sessionId);
+    }
+
+    // Store user ID if provided
+    if (res.body.user_id) {
+      bru.setVar("userId", res.body.user_id);
+      console.log("   User ID stored:", res.body.user_id);
+    } else if (res.body.userId) {
+      bru.setVar("userId", res.body.userId);
+      console.log("   User ID stored:", res.body.userId);
+    }
+
+    // Display token expiry if available
+    if (res.body.expires_in) {
+      console.log("   Token expires in:", res.body.expires_in, "seconds");
+    }
+  } else {
+    console.log("❌ Login failed:", res.status);
+    console.log("   Error:", res.body.error || res.body.message);
   }
 }
 
