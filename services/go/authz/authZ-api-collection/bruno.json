@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "[GradeLoop] AuthZ Service API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

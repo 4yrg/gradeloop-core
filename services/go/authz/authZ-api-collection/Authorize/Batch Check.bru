@@ -1,0 +1,30 @@
+meta {
+  name: Batch Check
+  type: grpc
+  seq: 2
+}
+
+grpc {
+  host: {{grpc_host}}
+  service: authz.AuthorizationService
+  method: BatchCheck
+  body: json
+}
+
+body:json {
+  {
+    "user_id": "user-123",
+    "roles": ["INSTRUCTOR"],
+    "tenant_id": "gradeloop-internal",
+    "items": [
+      {
+        "resource": "COURSES",
+        "action": "READ"
+      },
+      {
+        "resource": "COURSES",
+        "action": "WRITE"
+      }
+    ]
+  }
+}
