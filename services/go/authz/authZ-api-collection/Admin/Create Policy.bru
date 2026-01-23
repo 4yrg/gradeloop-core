@@ -1,0 +1,23 @@
+meta {
+  name: Create Policy
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{http_host}}/policies
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "subject_id": "user-123",
+    "subject_type": "USER",
+    "effect": "ALLOW",
+    "action": "READ",
+    "resource": "COURSES",
+    "conditions": "{\"institute_id\": \"inst-001\"}",
+    "tenant_id": "gradeloop-internal"
+  }
+}
