@@ -137,4 +137,6 @@ type ClassEnrollment struct {
 	StudentID  uuid.UUID `gorm:"type:uuid;primaryKey"` // Composite PK part 1
 	ClassID    uuid.UUID `gorm:"type:uuid;primaryKey"` // Composite PK part 2
 	EnrolledAt time.Time
+
+	Student *User `gorm:"foreignKey:StudentID"`
 }

@@ -1,0 +1,18 @@
+meta {
+  name: Create Class
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/orgs/classes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "department_id": "<INSERT_DEPT_ID>",
+    "name": "CS-101 2024"
+  }
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Enroll Student
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/api/classes/<INSERT_CLASS_ID>/enrollments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "student_id": "<INSERT_STUDENT_USER_ID>"
+  }
+}

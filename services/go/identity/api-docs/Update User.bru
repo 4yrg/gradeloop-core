@@ -1,0 +1,17 @@
+meta {
+  name: Update User
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/api/v1/users/<INSERT_USER_ID>
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "full_name": "Updated Name"
+  }
+}

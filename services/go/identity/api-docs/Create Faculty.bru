@@ -1,0 +1,18 @@
+meta {
+  name: Create Faculty
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/orgs/faculties
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "institute_id": "<INSERT_INSTITUTE_ID>",
+    "name": "Faculty of Engineering"
+  }
+}

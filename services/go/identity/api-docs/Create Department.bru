@@ -1,0 +1,18 @@
+meta {
+  name: Create Department
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/orgs/departments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "faculty_id": "<INSERT_FACULTY_ID>",
+    "name": "Computer Science"
+  }
+}
