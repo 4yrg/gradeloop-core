@@ -1,0 +1,42 @@
+package main
+
+import (
+	"log"
+
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/api"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/service"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+func main() {
+	// 1. Setup DB
+	db, err := gorm.Open(sqlite.Open("identity.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+
+	// 2. Setup Components
+	repo := repository.NewRepository(db)
+
+	// Auto-Migrate (Dev only)
+	if err := repo.AutoMigrate(); err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
+
+	svc := service.NewIdentityService(repo)
+	handler := api.NewHandler(svc)
+
+	// 3. Setup Fiber
+	app := fiber.New()
+	app.Use(logger.New())
+
+	api.SetupRoutes(app, handler)
+
+	// 4. Start
+	log.Println("Identity Service running on :3001")
+	log.Fatal(app.Listen(":3001"))
+}
