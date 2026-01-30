@@ -1,0 +1,18 @@
+meta {
+  name: Refresh Session
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/internal/sessions/refresh
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "session_id": "e980362c-7431-482a-8742-53697ebfb389",
+    "refresh_token": "your_refresh_token_here"
+  }
+}
