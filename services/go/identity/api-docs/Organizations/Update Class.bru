@@ -1,0 +1,17 @@
+meta {
+  name: Update Class
+  type: http
+  seq: 19
+}
+
+put {
+  url: {{baseUrl}}/api/v1/orgs/classes/<INSERT_CLASS_ID>
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Class Name"
+  }
+}

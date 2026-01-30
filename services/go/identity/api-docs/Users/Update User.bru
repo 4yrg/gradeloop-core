@@ -1,0 +1,17 @@
+meta {
+  name: Update User
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/api/v1/users/8c515303-503d-469b-9d01-c7ead550171b
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "full_name": "Dasun Wickramasooriya"
+  }
+}

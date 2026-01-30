@@ -1,0 +1,17 @@
+services:
+  identity-service:
+    build:
+      context: ../../
+      dockerfile: services/go/identity/Dockerfile
+    container_name: identity-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=identity.db
+    volumes:
+      - ../../services/go/identity/identity.db:/app/identity.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/identity
