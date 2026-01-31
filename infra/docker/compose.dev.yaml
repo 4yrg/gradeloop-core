@@ -15,6 +15,34 @@ services:
         - action: rebuild
           path: ../../services/go/identity
 
+  session-service:
+    build:
+      context: ../../
+      dockerfile: services/go/session/Dockerfile
+    container_name: session-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SQLITE_PATH=/app/session.db
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - ../../services/go/session/session.db:/app/session.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/session
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: gradeloop-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   kong:
     image: kong:3.4
     container_name: kong
