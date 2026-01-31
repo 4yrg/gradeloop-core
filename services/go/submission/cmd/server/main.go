@@ -7,6 +7,7 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/submission/internal/api"
 	"github.com/4yrg/gradeloop-core/services/go/submission/internal/repository"
 	"github.com/4yrg/gradeloop-core/services/go/submission/internal/service"
+	"github.com/4yrg/gradeloop-core/services/go/submission/internal/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -36,7 +37,15 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	svc := service.NewSubmissionService(repo)
+	// Initialize storage client
+	storageClient, err := storage.NewSupabaseStorage()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize Supabase storage: %v. File uploads may fail.", err)
+		// We don't fatal here to allow the service to start even if storage config is missing during dev
+		// In production, you might want to fatal error
+	}
+
+	svc := service.NewSubmissionService(repo, storageClient)
 	handler := api.NewHandler(svc)
 
 	// 3. Setup Fiber
