@@ -1,0 +1,20 @@
+meta {
+  name: Check Permission
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/internal/authz/check
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "subject": "user123",
+    "role": "student",
+    "resource": "course:101",
+    "action": "read"
+  }
+}

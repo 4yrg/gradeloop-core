@@ -1,0 +1,15 @@
+meta {
+  name: Validate Token
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/auth/validate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: your_access_token_here
+}
