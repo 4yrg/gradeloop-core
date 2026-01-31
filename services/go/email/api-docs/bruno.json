@@ -1,9 +1,8 @@
 {
   "version": "1",
-  "name": "GradeLoop Email Service",
+  "name": "Email Service API",
   "type": "collection",
   "ignore": [
-    "node_modules",
     ".git"
   ]
 }
