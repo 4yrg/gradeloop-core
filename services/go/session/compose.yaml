@@ -1,0 +1,24 @@
+services:
+  session-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: session-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SQLITE_PATH=/app/session.db
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - ./session.db:/app/session.db
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: session-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

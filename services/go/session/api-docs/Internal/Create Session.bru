@@ -1,0 +1,20 @@
+meta {
+  name: Create Session
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/internal/sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": "user-123",
+    "user_role": "user",
+    "client_ip": "127.0.0.1",
+    "user_agent": "Bruno"
+  }
+}

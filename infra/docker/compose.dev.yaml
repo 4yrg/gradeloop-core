@@ -4,10 +4,9 @@ services:
       context: ../../
       dockerfile: services/go/identity/Dockerfile
     container_name: identity-service
-    ports:
-      - "3001:3001"
     environment:
       - DATABASE_URL=identity.db
+      - PORT=8080
     volumes:
       - ../../services/go/identity/identity.db:/app/identity.db
     restart: unless-stopped
@@ -15,3 +14,51 @@ services:
       watch:
         - action: rebuild
           path: ../../services/go/identity
+
+  session-service:
+    build:
+      context: ../../services/go/session
+      dockerfile: Dockerfile
+    container_name: session-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SQLITE_PATH=/app/session.db
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - ../../services/go/session/session.db:/app/session.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/session
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: gradeloop-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  kong:
+    image: kong:3.4
+    container_name: kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    volumes:
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8444:8444"
+    restart: unless-stopped

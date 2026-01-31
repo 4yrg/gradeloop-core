@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/api"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
@@ -37,6 +38,10 @@ func main() {
 	api.SetupRoutes(app, handler)
 
 	// 4. Start
-	log.Println("Identity Service running on :3001")
-	log.Fatal(app.Listen(":3001"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3001"
+	}
+	log.Printf("Identity Service running on :%s", port)
+	log.Fatal(app.Listen(":" + port))
 }
