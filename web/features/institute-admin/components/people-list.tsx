@@ -57,7 +57,7 @@ export function PeopleList({ data, onEdit, onDelete }: PeopleListProps) {
                         data.map((person) => (
                             <TableRow key={person.id}>
                                 <TableCell className="font-medium">
-                                    {person.fullName}
+                                    {person.fullName || `${person.firstName || ''} ${person.lastName || ''}`.trim() || 'No Name'}
                                 </TableCell>
                                 <TableCell>{person.email}</TableCell>
                                 <TableCell>

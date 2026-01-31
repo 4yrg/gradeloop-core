@@ -91,9 +91,9 @@ export default function DegreesPage() {
     const handleSaveCourses = async (selectedIds: string[]) => {
         if (!managingDegree || !managingDegree.id) return;
 
-        const currentIds = degreeCourses.map(c => c.id);
+        const currentIds = degreeCourses.map(c => c.id).filter((id): id is string => !!id);
         const toAdd = selectedIds.filter(id => !currentIds.includes(id));
-        const toRemove = currentIds.filter(id => !selectedIds.includes(id) && id); // Ensure id exists
+        const toRemove = currentIds.filter(id => !selectedIds.includes(id));
 
         // We can use Promise.allSettled to better handle partial failures, but for now simple Promise.all
         // Note: react-query mutation is async
