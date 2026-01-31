@@ -80,5 +80,5 @@ func (s *EmailService) SendRaw(to, subject, body string) error {
 }
 
 func (s *EmailService) GetLogs() ([]core.EmailRequestLog, error) {
-	return []core.EmailRequestLog{}, nil // Mock
+	return s.repo.GetEmailLogs()
 }

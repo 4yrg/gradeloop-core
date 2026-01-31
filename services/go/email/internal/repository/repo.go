@@ -67,3 +67,12 @@ func (r *Repository) ListTemplates() ([]core.EmailTemplate, error) {
 func (r *Repository) CreateTemplate(tmpl *core.EmailTemplate) error {
 	return r.db.Save(tmpl).Error
 }
+
+// GetEmailLogs retrieves all email request logs
+func (r *Repository) GetEmailLogs() ([]core.EmailRequestLog, error) {
+	var logs []core.EmailRequestLog
+	if err := r.db.Order("created_at DESC").Limit(100).Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
+}
