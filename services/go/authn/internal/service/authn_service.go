@@ -25,7 +25,8 @@ type AuthNService struct {
 
 func NewAuthNService(cfg *config.Config) *AuthNService {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: cfg.RedisAddr,
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
 	})
 
 	return &AuthNService{
@@ -51,13 +52,19 @@ type RegistrationRequest struct {
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	Role         string `json:"role"`
+	Email        string `json:"email"`
+	UserID       string `json:"user_id"`
+	FullName     string `json:"full_name"`
 }
 
 // Internal Service Response Models
 type IdentityVerifyResponse struct {
-	Valid  bool   `json:"valid"`
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	Valid    bool   `json:"valid"`
+	UserID   string `json:"user_id"`
+	Role     string `json:"role"`
+	Email    string `json:"email"`
+	FullName string `json:"full_name"`
 }
 
 type SessionCreateResponse struct {
@@ -146,6 +153,10 @@ func (s *AuthNService) Login(ctx context.Context, email, password string) (*Toke
 	return &TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: encodedRefreshToken,
+		Role:         identityResp.Role,
+		Email:        identityResp.Email,
+		UserID:       identityResp.UserID,
+		FullName:     identityResp.FullName,
 	}, nil
 }
 

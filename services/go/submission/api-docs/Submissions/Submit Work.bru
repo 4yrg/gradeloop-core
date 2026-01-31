@@ -1,0 +1,27 @@
+meta {
+  name: Submit Work
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/submissions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "assignmentId": "3477f091-53e8-4600-ada2-24111f04252f",
+    "studentId": "student-1",
+    "language": "Python",
+    "files": [
+      {
+        "filename": "main.py",
+        "content": "def solve():\n  pass"
+      }
+    ],
+    "authFingerprint": "device-123",
+    "keystrokeAnalytics": "{\"events\": []}"
+  }
+}

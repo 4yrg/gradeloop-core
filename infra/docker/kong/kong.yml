@@ -1,7 +1,7 @@
 _format_version: "3.0"
 services:
   - name: identity-service
-    url: http://identity-service:8080/api/v1
+    url: http://identity-service:8001/internal/identity
     routes:
       - name: identity-users
         paths:
@@ -42,7 +42,7 @@ services:
           policy: local
 
   - name: identity-service-root
-    url: http://identity-service:8080
+    url: http://identity-service:8001
     routes:
       - name: identity-api-v1
         paths:
@@ -64,7 +64,7 @@ services:
           policy: local
 
   - name: identity-tokens-service
-    url: http://identity-service:8080/api/v1/users/validate
+    url: http://identity-service:8001/internal/identity/users/validate
     routes:
       - name: identity-tokens
         paths:
@@ -86,7 +86,7 @@ services:
           policy: local
 
   - name: authn-service
-    url: http://authn-service:4000
+    url: http://authn-service:8003
     routes:
       - name: authn-auth
         paths:
@@ -127,7 +127,7 @@ services:
           policy: local
 
   - name: authz-service
-    url: http://authz-service:4001
+    url: http://authz-service:8004
     routes:
       - name: authz-internal
         paths:
@@ -147,4 +147,30 @@ services:
         config:
           minute: 60
           policy: local
+
+  - name: assignment-service
+    url: http://assignment-service:8005
+    routes:
+      - name: assignment-api
+        paths:
+          - /api/v1/assignments
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+
+  - name: submission-service
+    url: http://submission-service:8006
+    routes:
+      - name: submission-api
+        paths:
+          - /api/v1/submissions
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PATCH", "OPTIONS"]
 

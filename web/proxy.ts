@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export default function proxy(request: NextRequest) {
-        return NextResponse.next();
-    const session = request.cookies.get('session')?.value
-    const role = request.cookies.get('user_role')?.value
+    const session = request.cookies.get('session')?.value ?? ''
+    const role = request.cookies.get('user_role')?.value ?? ''
     const { pathname } = request.nextUrl
 
     // TEMPORARY: AUTH DISABLED FOR DEVELOPMENT
@@ -52,19 +51,22 @@ export default function proxy(request: NextRequest) {
             'STUDENT': '/student'
         }
 
-        const currentRolePath = rolePaths[role]
+        // Type guard: only proceed if role is a valid key in rolePaths
+        if (role in rolePaths) {
+            const currentRolePath = rolePaths[role]
 
-        // If the current path belongs to a DIFFERENT role, redirect to the user's correct dashboard
-        for (const [r, pathPrefix] of Object.entries(rolePaths)) {
-            if (r !== role && pathname.startsWith(pathPrefix)) {
-                // Determine the correct target for the current user
-                let target = '/dashboard'
-                if (role === 'SYSTEM_ADMIN') target = '/system-admin'
-                else if (role === 'INSTITUTE_ADMIN') target = '/institute-admin/dashboard'
-                else if (role === 'INSTRUCTOR') target = '/instructor'
-                else if (role === 'STUDENT') target = '/student'
+            // If the current path belongs to a DIFFERENT role, redirect to the user's correct dashboard
+            for (const [r, pathPrefix] of Object.entries(rolePaths)) {
+                if (r !== role && pathname.startsWith(pathPrefix)) {
+                    // Determine the correct target for the current user
+                    let target = '/dashboard'
+                    if (role === 'SYSTEM_ADMIN') target = '/system-admin'
+                    else if (role === 'INSTITUTE_ADMIN') target = '/institute-admin/dashboard'
+                    else if (role === 'INSTRUCTOR') target = '/instructor'
+                    else if (role === 'STUDENT') target = '/student'
 
-                return NextResponse.redirect(new URL(target, request.url))
+                    return NextResponse.redirect(new URL(target, request.url))
+                }
             }
         }
     }

@@ -63,7 +63,7 @@ export const personSchema = z.object({
     id: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    fullName: z.string().min(1, "Full name is required"),
+    fullName: z.string().optional(),
     email: z.string().email(),
     role: userRoleSchema,
     studentId: z.string().optional(), // For students
