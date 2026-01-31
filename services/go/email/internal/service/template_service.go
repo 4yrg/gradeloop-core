@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/repository"
@@ -27,6 +29,8 @@ func (s *TemplateService) GetTemplate(name string) (*core.EmailTemplate, error) 
 	}
 
 	// 2. Fallback to Filesystem (for dev/init)
+	log.Printf("Template '%s' not found in DB, checking filesystem...", name)
+
 	// Assuming templates are stored in "templates/" directory relative to working dir
 	path := filepath.Join("templates", name+".html")
 	content, err := os.ReadFile(path)
@@ -34,11 +38,25 @@ func (s *TemplateService) GetTemplate(name string) (*core.EmailTemplate, error) 
 		return nil, fmt.Errorf("template not found in DB or FS: %s", name)
 	}
 
-	return &core.EmailTemplate{
+	// Extract Subject from <title>
+	subject := "Subject Placeholder"
+	if matches := regexp.MustCompile(`<title>(.*?)</title>`).FindSubmatch(content); len(matches) > 1 {
+		subject = string(matches[1])
+	}
+
+	newTmpl := &core.EmailTemplate{
 		Name:     name,
-		Subject:  "Subject Placeholder", // FS templates might need frontmatter or separate file for subject
+		Subject:  subject,
 		HTMLBody: string(content),
-	}, nil
+	}
+
+	// 3. Auto-seed to DB
+	if err := s.repo.CreateTemplate(newTmpl); err != nil {
+		fmt.Printf("Failed to seed template %s: %v\n", name, err)
+		// Proceed returning the FS template even if save failed
+	}
+
+	return newTmpl, nil
 }
 
 func (s *TemplateService) Render(tmpl *core.EmailTemplate, data map[string]interface{}) (string, error) {

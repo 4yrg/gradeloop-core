@@ -33,8 +33,13 @@ func NewRepository(dbName string) (*Repository, error) {
 // GetTemplateByName fetches a template by its name
 func (r *Repository) GetTemplateByName(name string) (*core.EmailTemplate, error) {
 	var tmpl core.EmailTemplate
-	if err := r.db.Where("name = ?", name).First(&tmpl).Error; err != nil {
-		return nil, err
+	// Use Find to avoid GORM logger "record not found" error being printed
+	result := r.db.Where("name = ?", name).Limit(1).Find(&tmpl)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 	return &tmpl, nil
 }
