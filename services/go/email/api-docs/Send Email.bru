@@ -5,18 +5,19 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/send
+  url: {{baseUrl}}/internal/email/send
   body: json
   auth: none
 }
 
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
 body:json {
   {
-    "template_name": "welcome",
-    "recipient": "acc.dasunw@gmail.com",
-    "data": {
-      "username": "John Doe",
-      "reset_link": "https://gradeloop.com/reset?token=123"
-    }
+    "to": "acc.dasunw@gmail.com",
+    "subject": "Test Email",
+    "body": "This is a test email from GradeLoop"
   }
 }

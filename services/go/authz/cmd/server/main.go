@@ -17,7 +17,7 @@ func main() {
 	// 1. Config
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "4001"
+		port = "8004"
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {

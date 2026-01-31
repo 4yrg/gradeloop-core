@@ -1,0 +1,23 @@
+meta {
+  name: Create Template
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/internal/email/templates
+  body: json
+  auth: none
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
+body:json {
+  {
+    "name": "welcome",
+    "subject": "Welcome to GradeLoop!",
+    "html_body": "<html><body><h1>Welcome {{user_name}}!</h1><p>Thank you for joining GradeLoop.</p></body></html>"
+  }
+}

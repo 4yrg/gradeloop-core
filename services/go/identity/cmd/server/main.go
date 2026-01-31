@@ -42,7 +42,7 @@ func main() {
 	// 4. Start
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3001"
+		port = "8001"
 	}
 	log.Printf("Identity Service running on :%s", port)
 	log.Fatal(app.Listen(":" + port))

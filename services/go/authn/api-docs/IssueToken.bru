@@ -1,0 +1,23 @@
+meta {
+  name: Issue Token (Internal)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/internal/authn/issue-token
+  body: json
+  auth: none
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
+body:json {
+  {
+    "user_id": "user-123",
+    "role": "student",
+    "permissions": ["user.read", "class.read"]
+  }
+}

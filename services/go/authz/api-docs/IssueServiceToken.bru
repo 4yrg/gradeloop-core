@@ -1,0 +1,21 @@
+meta {
+  name: Issue Service Token
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/internal/authz/service-token
+  body: json
+  auth: none
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
+body:json {
+  {
+    "service_name": "email-service"
+  }
+}
