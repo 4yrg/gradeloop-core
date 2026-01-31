@@ -123,6 +123,8 @@ type RefreshSessionRequest struct {
 type RefreshSessionResponse struct {
 	SessionID       string `json:"session_id"`
 	NewRefreshToken string `json:"new_refresh_token"`
+	UserID          string `json:"user_id"`
+	UserRole        string `json:"user_role"`
 }
 
 func (h *Handler) RefreshSession(c *fiber.Ctx) error {
@@ -144,6 +146,8 @@ func (h *Handler) RefreshSession(c *fiber.Ctx) error {
 	return c.JSON(RefreshSessionResponse{
 		SessionID:       session.ID.String(),
 		NewRefreshToken: newRawToken,
+		UserID:          session.UserID,
+		UserRole:        session.UserRole,
 	})
 }
 
