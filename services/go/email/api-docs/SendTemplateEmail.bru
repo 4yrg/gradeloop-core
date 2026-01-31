@@ -1,0 +1,25 @@
+meta {
+  name: Send Template Email
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/internal/email/send-template
+  body: json
+  auth: none
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
+body:json {
+  {
+    "template_name": "welcome",
+    "recipient": "user@example.com",
+    "data": {
+      "user_name": "John Doe"
+    }
+  }
+}

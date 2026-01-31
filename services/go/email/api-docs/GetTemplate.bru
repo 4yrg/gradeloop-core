@@ -1,0 +1,19 @@
+meta {
+  name: Get Template
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/internal/email/templates/:name
+  body: none
+  auth: none
+}
+
+params:path {
+  name: welcome
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}

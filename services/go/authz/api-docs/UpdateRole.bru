@@ -1,0 +1,25 @@
+meta {
+  name: Update Role
+  type: http
+  seq: 14
+}
+
+patch {
+  url: {{baseUrl}}/internal/authz/roles/:name
+  body: json
+  auth: none
+}
+
+params:path {
+  name: student
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}
+
+body:json {
+  {
+    "description": "Updated description for student role"
+  }
+}
