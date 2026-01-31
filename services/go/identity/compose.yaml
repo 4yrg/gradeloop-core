@@ -1,14 +1,14 @@
 services:
-  authz-service:
+  identity-service:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: authz-service
+    container_name: identity-service
     ports:
-      - "4001:4001"
+      - "4003:4003"
     environment:
-      - PORT=4001
-      - DATABASE_URL=/app/data/authz.db
+      - PORT=4003
+      - DATABASE_URL=/app/data/identity.db
     volumes:
       - ./data:/app/data
     restart: unless-stopped
