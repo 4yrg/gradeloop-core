@@ -1,0 +1,28 @@
+services:
+  authn-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: authn-service
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - REDIS_ADDR=redis:6379
+      - IDENTITY_SERVICE_URL=http://host.docker.internal:8080
+      - SESSION_SERVICE_URL=http://host.docker.internal:3000
+      - EMAIL_SERVICE_URL=http://host.docker.internal:5005
+      - AUTHZ_SERVICE_URL=http://host.docker.internal:4001
+      - JWT_SIGNING_KEY=${JWT_SIGNING_KEY:-insecure-default-key-for-dev}
+    restart: unless-stopped
+    depends_on:
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: authn-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

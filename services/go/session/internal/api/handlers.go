@@ -90,6 +90,31 @@ func (h *Handler) ValidateSession(c *fiber.Ctx) error {
 	})
 }
 
+func (h *Handler) GetSession(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid session id"})
+	}
+
+	session, err := h.useCase.GetSession(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "session not found"})
+	}
+
+	return c.JSON(SessionResponse{
+		ID:              session.ID.String(),
+		UserID:          session.UserID,
+		UserRole:        session.UserRole,
+		UserAgent:       session.UserAgent,
+		ClientIP:        session.ClientIP,
+		RotationCounter: session.RotationCounter,
+		CreatedAt:       session.CreatedAt,
+		ExpiresAt:       session.ExpiresAt,
+		RevokedAt:       session.RevokedAt,
+	})
+}
+
 type RefreshSessionRequest struct {
 	SessionID    string `json:"session_id"`
 	RefreshToken string `json:"refresh_token"`
@@ -98,6 +123,8 @@ type RefreshSessionRequest struct {
 type RefreshSessionResponse struct {
 	SessionID       string `json:"session_id"`
 	NewRefreshToken string `json:"new_refresh_token"`
+	UserID          string `json:"user_id"`
+	UserRole        string `json:"user_role"`
 }
 
 func (h *Handler) RefreshSession(c *fiber.Ctx) error {
@@ -119,6 +146,8 @@ func (h *Handler) RefreshSession(c *fiber.Ctx) error {
 	return c.JSON(RefreshSessionResponse{
 		SessionID:       session.ID.String(),
 		NewRefreshToken: newRawToken,
+		UserID:          session.UserID,
+		UserRole:        session.UserRole,
 	})
 }
 

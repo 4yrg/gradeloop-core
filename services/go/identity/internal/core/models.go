@@ -19,20 +19,20 @@ const (
 
 // User Entity
 type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Email        string    `gorm:"uniqueIndex;not null"`
-	PasswordHash string    `gorm:"not null"`
-	FullName     string    `gorm:"not null"`
-	UserType     UserType  `gorm:"type:text;not null"` // Explicit type for SQLite compatibility
-	IsActive     bool      `gorm:"default:true"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	ID           uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
+	Email        string         `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string         `gorm:"not null" json:"-"`
+	FullName     string         `gorm:"not null" json:"full_name"`
+	UserType     UserType       `gorm:"type:text;not null" json:"user_type"` // Explicit type for SQLite compatibility
+	IsActive     bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// Associations - Pointers to allow nil (0 or 1 relationship)
-	StudentProfile        *StudentProfile        `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	InstructorProfile     *InstructorProfile     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	InstituteAdminProfile *InstituteAdminProfile `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	StudentProfile        *StudentProfile        `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"student_profile,omitempty"`
+	InstructorProfile     *InstructorProfile     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"instructor_profile,omitempty"`
+	InstituteAdminProfile *InstituteAdminProfile `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"institute_admin_profile,omitempty"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
@@ -67,13 +67,13 @@ type InstituteAdminProfile struct {
 // -- Organizational Structure --
 
 type Institute struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name      string    `gorm:"not null"`
-	Code      string    `gorm:"uniqueIndex;not null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Name      string    `gorm:"not null" json:"name"`
+	Code      string    `gorm:"uniqueIndex;not null" json:"code"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
-	Faculties []Faculty `gorm:"foreignKey:InstituteID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Faculties []Faculty `gorm:"foreignKey:InstituteID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"faculties,omitempty"`
 }
 
 func (i *Institute) BeforeCreate(tx *gorm.DB) (err error) {
@@ -84,12 +84,12 @@ func (i *Institute) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Faculty struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	InstituteID uuid.UUID `gorm:"type:uuid;not null"`
-	Name        string    `gorm:"not null"`
-	CreatedAt   time.Time
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	InstituteID uuid.UUID `gorm:"type:uuid;not null" json:"institute_id"`
+	Name        string    `gorm:"not null" json:"name"`
+	CreatedAt   time.Time `json:"created_at"`
 
-	Departments []Department `gorm:"foreignKey:FacultyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Departments []Department `gorm:"foreignKey:FacultyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"departments,omitempty"`
 }
 
 func (f *Faculty) BeforeCreate(tx *gorm.DB) (err error) {
@@ -100,12 +100,12 @@ func (f *Faculty) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Department struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	FacultyID uuid.UUID `gorm:"type:uuid;not null"`
-	Name      string    `gorm:"not null"`
-	CreatedAt time.Time
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	FacultyID uuid.UUID `gorm:"type:uuid;not null" json:"faculty_id"`
+	Name      string    `gorm:"not null" json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 
-	Classes []Class `gorm:"foreignKey:DepartmentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Classes []Class `gorm:"foreignKey:DepartmentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"classes,omitempty"`
 }
 
 func (d *Department) BeforeCreate(tx *gorm.DB) (err error) {
@@ -116,12 +116,12 @@ func (d *Department) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Class struct {
-	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	DepartmentID uuid.UUID `gorm:"type:uuid;not null"`
-	Name         string    `gorm:"not null"`
-	CreatedAt    time.Time
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	DepartmentID uuid.UUID `gorm:"type:uuid;not null" json:"department_id"`
+	Name         string    `gorm:"not null" json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
 
-	Enrollments []ClassEnrollment `gorm:"foreignKey:ClassID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Enrollments []ClassEnrollment `gorm:"foreignKey:ClassID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"enrollments,omitempty"`
 }
 
 func (c *Class) BeforeCreate(tx *gorm.DB) (err error) {
@@ -134,9 +134,9 @@ func (c *Class) BeforeCreate(tx *gorm.DB) (err error) {
 // -- Memberships --
 
 type ClassEnrollment struct {
-	StudentID  uuid.UUID `gorm:"type:uuid;primaryKey"` // Composite PK part 1
-	ClassID    uuid.UUID `gorm:"type:uuid;primaryKey"` // Composite PK part 2
-	EnrolledAt time.Time
+	StudentID  uuid.UUID `gorm:"type:uuid;primaryKey" json:"student_id"` // Composite PK part 1
+	ClassID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"class_id"`   // Composite PK part 2
+	EnrolledAt time.Time `json:"enrolled_at"`
 
-	Student *User `gorm:"foreignKey:StudentID"`
+	Student *User `gorm:"foreignKey:StudentID" json:"student,omitempty"`
 }

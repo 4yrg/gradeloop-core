@@ -9,6 +9,7 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -34,6 +35,7 @@ func main() {
 	// 3. Setup Fiber
 	app := fiber.New()
 	app.Use(logger.New())
+	app.Use(recover.New())
 
 	api.SetupRoutes(app, handler)
 

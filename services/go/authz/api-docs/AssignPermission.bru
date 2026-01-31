@@ -1,0 +1,18 @@
+meta {
+  name: Assign Permission
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/internal/authz/permissions/assign
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "role_name": "teacher",
+    "perm_name": "course.create"
+  }
+}

@@ -71,6 +71,15 @@ func (h *Handler) ListUsers(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
+func (h *Handler) GetUserEnrollments(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	enrollments, err := h.svc.GetUserEnrollments(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(enrollments)
+}
+
 func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
 	type LoginRequest struct {
 		Email    string `json:"email"`
@@ -95,6 +104,32 @@ func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
 		"user_id": user.ID,
 		"role":    user.UserType,
 	})
+}
+
+func (h *Handler) UpdateCredentials(c *fiber.Ctx) error {
+	type Req struct {
+		UserID      string `json:"user_id"`
+		NewPassword string `json:"new_password"`
+	}
+	var req Req
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
+	}
+
+	if err := h.svc.UpdateCredentials(req.UserID, req.NewPassword); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *Handler) GetUserRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+	role, err := h.svc.GetUserRole(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+	return c.JSON(fiber.Map{"role": role})
 }
 
 // -- Organization Handlers --
@@ -302,4 +337,31 @@ func (h *Handler) DeleteClass(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *Handler) GetFaculty(c *fiber.Ctx) error {
+	id := c.Params("id")
+	fac, err := h.svc.GetFaculty(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fac)
+}
+
+func (h *Handler) GetDepartment(c *fiber.Ctx) error {
+	id := c.Params("id")
+	dept, err := h.svc.GetDepartment(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(dept)
+}
+
+func (h *Handler) GetClass(c *fiber.Ctx) error {
+	id := c.Params("id")
+	class, err := h.svc.GetClass(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(class)
 }

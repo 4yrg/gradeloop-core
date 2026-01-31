@@ -96,6 +96,17 @@ func (s *SessionService) ValidateSession(ctx context.Context, sessionID uuid.UUI
 	return session, nil
 }
 
+func (s *SessionService) GetSession(ctx context.Context, sessionID uuid.UUID) (*core.Session, error) {
+	// Try cache first
+	session, err := s.cache.Get(ctx, sessionID)
+	if err == nil && session != nil {
+		return session, nil
+	}
+
+	// Fallback to DB
+	return s.repo.GetByID(ctx, sessionID)
+}
+
 func (s *SessionService) RefreshSession(ctx context.Context, sessionID uuid.UUID, refreshToken string) (*core.Session, string, error) {
 	// Get session
 	session, err := s.ValidateSession(ctx, sessionID)

@@ -1,0 +1,11 @@
+meta {
+  name: Delete Permission
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/internal/authz/permissions/course.create
+  body: none
+  auth: none
+}

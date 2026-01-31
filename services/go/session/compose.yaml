@@ -8,10 +8,10 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - SQLITE_PATH=/app/session.db
+      - SQLITE_PATH=/app/data/session.db
       - REDIS_ADDR=redis:6379
     volumes:
-      - ./session.db:/app/session.db
+      - ./data:/app/data
     restart: unless-stopped
     depends_on:
       - redis
