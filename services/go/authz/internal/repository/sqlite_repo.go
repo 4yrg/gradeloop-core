@@ -90,6 +90,31 @@ func (r *AuthZRepository) AssignPermissionToRole(roleName string, permName strin
 	return r.db.Model(role).Association("Permissions").Append(&perm)
 }
 
+// RevokePermissionFromRole removes a permission from a role
+func (r *AuthZRepository) RevokePermissionFromRole(roleName string, permName string) error {
+	role, err := r.GetRoleByName(roleName)
+	if err != nil {
+		return err
+	}
+
+	var perm domain.Permission
+	if err := r.db.Where("name = ?", permName).First(&perm).Error; err != nil {
+		return err
+	}
+
+	return r.db.Model(role).Association("Permissions").Delete(&perm)
+}
+
+// DeleteRole deletes a role
+func (r *AuthZRepository) DeleteRole(name string) error {
+	return r.db.Where("name = ?", name).Delete(&domain.Role{}).Error
+}
+
+// DeletePermission deletes a permission
+func (r *AuthZRepository) DeletePermission(name string) error {
+	return r.db.Where("name = ?", name).Delete(&domain.Permission{}).Error
+}
+
 // LogAudit saves an audit log entry
 func (r *AuthZRepository) LogAudit(log *domain.AuditLog) error {
 	return r.db.Create(log).Error

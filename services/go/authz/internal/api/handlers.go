@@ -134,7 +134,52 @@ func (h *AuthZHandler) RegisterRoutes(app *fiber.App) {
 	internal.Post("/resolve", h.ResolvePermissions)
 	internal.Post("/roles", h.CreateRole)
 	internal.Get("/roles", h.GetRoles)
+	internal.Delete("/roles/:name", h.DeleteRole)
 	internal.Post("/permissions", h.CreatePermission)
 	internal.Get("/permissions", h.GetPermissions)
+	internal.Delete("/permissions/:name", h.DeletePermission)
 	internal.Post("/permissions/assign", h.AssignPermission)
+	internal.Post("/permissions/revoke", h.RevokePermission)
+}
+
+func (h *AuthZHandler) DeleteRole(c *fiber.Ctx) error {
+	name := c.Params("name")
+	if name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Role name required"})
+	}
+
+	if err := h.svc.DeleteRole(name); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthZHandler) DeletePermission(c *fiber.Ctx) error {
+	name := c.Params("name")
+	if name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Permission name required"})
+	}
+
+	if err := h.svc.DeletePermission(name); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthZHandler) RevokePermission(c *fiber.Ctx) error {
+	var req struct {
+		RoleName string `json:"role_name"`
+		PermName string `json:"perm_name"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := h.svc.RevokePermission(req.RoleName, req.PermName); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }

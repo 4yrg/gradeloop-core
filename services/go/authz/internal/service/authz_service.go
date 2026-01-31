@@ -111,3 +111,15 @@ func (s *AuthZService) ResolvePermissions(userID string, roleName string) ([]str
 
 	return permissions, nil
 }
+
+func (s *AuthZService) DeleteRole(name string) error {
+	return s.repo.DeleteRole(name)
+}
+
+func (s *AuthZService) DeletePermission(name string) error {
+	return s.repo.DeletePermission(name)
+}
+
+func (s *AuthZService) RevokePermission(roleName, permName string) error {
+	return s.repo.RevokePermissionFromRole(roleName, permName)
+}

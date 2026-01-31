@@ -44,3 +44,19 @@ func (s *TokenService) GenerateAccessToken(userID, role string, permissions []st
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(s.signingKey)
 }
+
+func (s *TokenService) ValidateToken(tokenString string) (*UserClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return s.signingKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*UserClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, jwt.ErrTokenInvalidId
+}

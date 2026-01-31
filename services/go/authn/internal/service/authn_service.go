@@ -14,6 +14,7 @@ import (
 type AuthNService struct {
 	cfg   *config.Config
 	redis *redis.Client
+	token *TokenService
 }
 
 func NewAuthNService(cfg *config.Config) *AuthNService {
@@ -24,6 +25,7 @@ func NewAuthNService(cfg *config.Config) *AuthNService {
 	return &AuthNService{
 		cfg:   cfg,
 		redis: rdb,
+		token: NewTokenService(),
 	}
 }
 
@@ -56,11 +58,41 @@ func (s *AuthNService) Login(ctx context.Context, email, password string) (*Toke
 	// 3. Get Permissions via AuthZ Service
 	// TODO: Call AuthZ Service for roles/perms
 
-	// 4. Generate Tokens (Mock for now until JWT util is ready)
+	// 4. Generate Tokens
+	// Mock roles for now
+	accessToken, err := s.token.GenerateAccessToken("user_id_placeholder", "student", []string{"read:courses"})
+	if err != nil {
+		return nil, err
+	}
+
 	return &TokenResponse{
-		AccessToken:  "mock_access_token_" + email,
+		AccessToken:  accessToken,
 		RefreshToken: "mock_refresh_token_" + email,
 	}, nil
+}
+
+func (s *AuthNService) ValidateToken(ctx context.Context, tokenString string) (*UserClaims, error) {
+	return s.token.ValidateToken(tokenString)
+}
+
+func (s *AuthNService) RefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, error) {
+	// TODO: Validate refresh token via Session Service
+
+	// Mock regeneration
+	accessToken, err := s.token.GenerateAccessToken("user_id_placeholder", "student", []string{"read:courses"})
+	if err != nil {
+		return nil, err
+	}
+
+	return &TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken, // Rotate if needed
+	}, nil
+}
+
+func (s *AuthNService) Logout(ctx context.Context, token string) error {
+	// TODO: Blacklist access token or revoke session
+	return nil
 }
 
 // Register Orchestration
