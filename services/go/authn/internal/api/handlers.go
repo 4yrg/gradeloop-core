@@ -87,6 +87,71 @@ func (h *AuthNHandler) ValidateToken(c *fiber.Ctx) error {
 	return c.JSON(claims)
 }
 
+func (h *AuthNHandler) LogoutAll(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(string) // Assuming Auth middleware sets this
+	// If no middleware, maybe passed in body? But safer from token.
+	// Spec says "POST /auth/logout-all".
+
+	if userID == "" {
+		// Fallback to body if testing without full auth middleware setup?
+		// For safety, let's assume we need to extract from token or it's passed.
+		// Detailed impl would parse token here if middleware didn't.
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	if err := h.svc.LogoutAll(c.Context(), userID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthNHandler) ForgotPassword(c *fiber.Ctx) error {
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := h.svc.ForgotPassword(c.Context(), req.Email); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthNHandler) ResetPassword(c *fiber.Ctx) error {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := h.svc.ResetPassword(c.Context(), req.Token, req.NewPassword); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthNHandler) IssueToken(c *fiber.Ctx) error {
+	var req struct {
+		UserID      string   `json:"user_id"`
+		Role        string   `json:"role"`
+		Permissions []string `json:"permissions"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	token, err := h.svc.IssueToken(c.Context(), req.UserID, req.Role, req.Permissions)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(token)
+}
+
 func (h *AuthNHandler) RegisterRoutes(app *fiber.App) {
 	auth := app.Group("/auth")
 
@@ -94,5 +159,11 @@ func (h *AuthNHandler) RegisterRoutes(app *fiber.App) {
 	auth.Post("/register", h.Register)
 	auth.Post("/refresh", h.RefreshToken)
 	auth.Post("/logout", h.Logout)
+	auth.Post("/logout-all", h.LogoutAll) // Middleware needed here in real app
+	auth.Post("/forgot-password", h.ForgotPassword)
+	auth.Post("/reset-password", h.ResetPassword)
 	auth.Get("/validate", h.ValidateToken)
+
+	internal := app.Group("/internal/authn")
+	internal.Post("/issue-token", h.IssueToken)
 }

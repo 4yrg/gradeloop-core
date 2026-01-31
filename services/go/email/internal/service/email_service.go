@@ -74,3 +74,11 @@ func (s *EmailService) failLog(reqLog *core.EmailRequestLog, msg string) {
 	reqLog.ErrorMessage = &msg
 	s.repo.UpdateRequestLog(reqLog)
 }
+
+func (s *EmailService) SendRaw(to, subject, body string) error {
+	return s.provider.SendEmail([]string{to}, subject, body)
+}
+
+func (s *EmailService) GetLogs() ([]core.EmailRequestLog, error) {
+	return []core.EmailRequestLog{}, nil // Mock
+}

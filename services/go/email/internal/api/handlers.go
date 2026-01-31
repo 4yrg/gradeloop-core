@@ -23,7 +23,7 @@ type SendRequest struct {
 	Data         map[string]interface{} `json:"data"`
 }
 
-func (h *Handler) SendEmail(c *fiber.Ctx) error {
+func (h *Handler) SendTemplateEmail(c *fiber.Ctx) error {
 	var req SendRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
@@ -37,7 +37,35 @@ func (h *Handler) SendEmail(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"status": "sent"})
+	return c.JSON(fiber.Map{"status": "queued"})
+}
+
+func (h *Handler) SendRawEmail(c *fiber.Ctx) error {
+	var req struct {
+		To      string `json:"to"`
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if err := h.emailSvc.SendRaw(req.To, req.Subject, req.Body); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *Handler) CreateTemplate(c *fiber.Ctx) error {
+	return c.SendStatus(fiber.StatusNotImplemented)
+}
+
+func (h *Handler) GetLogs(c *fiber.Ctx) error {
+	logs, err := h.emailSvc.GetLogs()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(logs)
 }
 
 func (h *Handler) ListTemplates(c *fiber.Ctx) error {

@@ -10,6 +10,7 @@ func RegisterRoutes(app *fiber.App, handler *Handler) {
 	sessions.Post("/validate", handler.ValidateSession)
 	sessions.Post("/refresh", handler.RefreshSession)
 	sessions.Post("/:id/revoke", handler.RevokeSession)
+	sessions.Get("/:id", handler.GetSession)
 
 	users := internal.Group("/users")
 	users.Post("/:userId/sessions/revoke", handler.RevokeUserSessions)

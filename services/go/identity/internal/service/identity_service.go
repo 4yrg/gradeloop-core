@@ -289,3 +289,26 @@ func (s *IdentityService) GetClass(id string) (*core.Class, error) {
 func (s *IdentityService) GetUserEnrollments(studentID string) ([]core.ClassEnrollment, error) {
 	return s.repo.GetUserEnrollments(studentID)
 }
+
+func (s *IdentityService) UpdateCredentials(userID, newPassword string) error {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = string(hashedBytes)
+	return s.repo.UpdateUser(user)
+}
+
+func (s *IdentityService) GetUserRole(userID string) (string, error) {
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	return string(user.UserType), nil
+}

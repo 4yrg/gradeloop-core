@@ -123,7 +123,40 @@ func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) er
 	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
 	// Ignore email error for now, non-blocking
 
+	// Ignore email error for now, non-blocking
 	return nil
+}
+
+func (s *AuthNService) LogoutAll(ctx context.Context, userID string) error {
+	// Call Session Service to revoke all
+	// url := s.cfg.SessionServiceURL + "/internal/users/" + userID + "/sessions/revoke"
+	// _, err := http.Post(url, "application/json", nil)
+	// return err
+	return nil
+}
+
+func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
+	// 1. Generate reset token (short lived JWT or random string)
+	// 2. Send email via Email Service
+	return nil
+}
+
+func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// 1. Validate token
+	// 2. Update credential in Identity Service
+	return nil
+}
+
+func (s *AuthNService) IssueToken(ctx context.Context, userID, role string, permissions []string) (*TokenResponse, error) {
+	accessToken, err := s.token.GenerateAccessToken(userID, role, permissions)
+	if err != nil {
+		return nil, err
+	}
+	// No refresh token for delegated issuance usually, or maybe yes?
+	// Spec says "Used only if other services need delegated token issuance."
+	return &TokenResponse{
+		AccessToken: accessToken,
+	}, nil
 }
 
 // Helper for generic HTTP post

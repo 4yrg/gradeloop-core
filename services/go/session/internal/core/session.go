@@ -53,6 +53,7 @@ type SessionCache interface {
 type SessionUseCase interface {
 	CreateSession(ctx context.Context, userID, role, ip, userAgent string) (*Session, string, error) // Returns session and raw refresh token
 	ValidateSession(ctx context.Context, sessionID uuid.UUID) (*Session, error)
+	GetSession(ctx context.Context, sessionID uuid.UUID) (*Session, error)                                  // Introspection
 	RefreshSession(ctx context.Context, sessionID uuid.UUID, refreshToken string) (*Session, string, error) // Rotates token
 	RevokeSession(ctx context.Context, sessionID uuid.UUID) error
 	RevokeAllUserSessions(ctx context.Context, userID string) error

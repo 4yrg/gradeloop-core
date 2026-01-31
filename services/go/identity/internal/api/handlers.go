@@ -106,6 +106,32 @@ func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
 	})
 }
 
+func (h *Handler) UpdateCredentials(c *fiber.Ctx) error {
+	type Req struct {
+		UserID      string `json:"user_id"`
+		NewPassword string `json:"new_password"`
+	}
+	var req Req
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
+	}
+
+	if err := h.svc.UpdateCredentials(req.UserID, req.NewPassword); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *Handler) GetUserRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+	role, err := h.svc.GetUserRole(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+	return c.JSON(fiber.Map{"role": role})
+}
+
 // -- Organization Handlers --
 
 func (h *Handler) CreateInstitute(c *fiber.Ctx) error {

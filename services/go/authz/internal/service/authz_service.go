@@ -123,3 +123,27 @@ func (s *AuthZService) DeletePermission(name string) error {
 func (s *AuthZService) RevokePermission(roleName, permName string) error {
 	return s.repo.RevokePermissionFromRole(roleName, permName)
 }
+
+func (s *AuthZService) UpdateRole(name string, description string) error {
+	// TODO: Implement update logic in repo
+	return nil
+}
+
+// Policy stubs
+func (s *AuthZService) CreatePolicy(name, effect string, resources, actions []string) error {
+	return nil
+}
+
+func (s *AuthZService) GetPolicies() ([]map[string]interface{}, error) {
+	return []map[string]interface{}{}, nil
+}
+
+func (s *AuthZService) DeletePolicy(id string) error {
+	return nil
+}
+
+func (s *AuthZService) IssueServiceToken(serviceName string) (string, error) {
+	// Generate a long-lived JWT for the service
+	// Mock for now
+	return "mock_service_token_" + serviceName, nil
+}

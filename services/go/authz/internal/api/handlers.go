@@ -127,19 +127,69 @@ func (h *AuthZHandler) ResolvePermissions(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"permissions": perms})
 }
 
+func (h *AuthZHandler) UpdateRole(c *fiber.Ctx) error {
+	name := c.Params("name") // Using name as ID
+	var req struct {
+		Description string `json:"description"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	if err := h.svc.UpdateRole(name, req.Description); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthZHandler) CreatePolicy(c *fiber.Ctx) error {
+	return c.SendStatus(fiber.StatusNotImplemented)
+}
+
+func (h *AuthZHandler) GetPolicies(c *fiber.Ctx) error {
+	return c.JSON([]string{})
+}
+
+func (h *AuthZHandler) DeletePolicy(c *fiber.Ctx) error {
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *AuthZHandler) ServiceToken(c *fiber.Ctx) error {
+	var req struct {
+		ServiceName string `json:"service_name"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	token, err := h.svc.IssueServiceToken(req.ServiceName)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"token": token})
+
+}
+
 func (h *AuthZHandler) RegisterRoutes(app *fiber.App) {
 	internal := app.Group("/internal/authz", middleware.InternalAuth())
 
 	internal.Post("/check", h.CheckPermission)
 	internal.Post("/resolve", h.ResolvePermissions)
+
 	internal.Post("/roles", h.CreateRole)
 	internal.Get("/roles", h.GetRoles)
+	internal.Patch("/roles/:name", h.UpdateRole)
 	internal.Delete("/roles/:name", h.DeleteRole)
+
 	internal.Post("/permissions", h.CreatePermission)
 	internal.Get("/permissions", h.GetPermissions)
 	internal.Delete("/permissions/:name", h.DeletePermission)
 	internal.Post("/permissions/assign", h.AssignPermission)
 	internal.Post("/permissions/revoke", h.RevokePermission)
+
+	internal.Post("/policies", h.CreatePolicy)
+	internal.Get("/policies", h.GetPolicies)
+	internal.Delete("/policies/:id", h.DeletePolicy)
+
+	internal.Post("/service-token", h.ServiceToken)
 }
 
 func (h *AuthZHandler) DeleteRole(c *fiber.Ctx) error {
