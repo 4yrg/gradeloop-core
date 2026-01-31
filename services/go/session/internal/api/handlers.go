@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/4yrg/gradeloop-core/services/go/session/internal/core"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -47,6 +49,18 @@ type ValidateSessionRequest struct {
 	SessionID string `json:"session_id"`
 }
 
+type SessionResponse struct {
+	ID              string     `json:"id"`
+	UserID          string     `json:"user_id"`
+	UserRole        string     `json:"user_role"`
+	UserAgent       string     `json:"user_agent"`
+	ClientIP        string     `json:"client_ip"`
+	RotationCounter int        `json:"rotation_counter"`
+	CreatedAt       time.Time  `json:"created_at"`
+	ExpiresAt       time.Time  `json:"expires_at"`
+	RevokedAt       *time.Time `json:"revoked_at,omitempty"`
+}
+
 func (h *Handler) ValidateSession(c *fiber.Ctx) error {
 	var req ValidateSessionRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -63,7 +77,17 @@ func (h *Handler) ValidateSession(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(session)
+	return c.JSON(SessionResponse{
+		ID:              session.ID.String(),
+		UserID:          session.UserID,
+		UserRole:        session.UserRole,
+		UserAgent:       session.UserAgent,
+		ClientIP:        session.ClientIP,
+		RotationCounter: session.RotationCounter,
+		CreatedAt:       session.CreatedAt,
+		ExpiresAt:       session.ExpiresAt,
+		RevokedAt:       session.RevokedAt,
+	})
 }
 
 type RefreshSessionRequest struct {

@@ -12,7 +12,7 @@ type Session struct {
 	ID               uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
 	UserID           string     `gorm:"index" json:"user_id"`
 	UserRole         string     `json:"user_role"`
-	RefreshTokenHash string     `json:"-"` // Never return hash
+	RefreshTokenHash string     `json:"refresh_token_hash"` // Never return hash
 	UserAgent        string     `json:"user_agent"`
 	ClientIP         string     `json:"client_ip"`
 	RotationCounter  int        `json:"rotation_counter"`
