@@ -100,9 +100,11 @@ func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"valid":   true,
-		"user_id": user.ID,
-		"role":    user.UserType,
+		"valid":     true,
+		"user_id":   user.ID,
+		"role":      user.UserType,
+		"email":     user.Email,
+		"full_name": user.FullName,
 	})
 }
 

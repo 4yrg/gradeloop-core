@@ -31,12 +31,35 @@ func (h *AuthNHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *AuthNHandler) Register(c *fiber.Ctx) error {
-	var req service.RegistrationRequest
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		FullName string `json:"full_name"`
+		UserType string `json:"user_type"`
+		// Frontend fields
+		Name string `json:"name"`
+		Role string `json:"role"`
+	}
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	if err := h.svc.Register(c.Context(), req); err != nil {
+	// Map fields if names from frontend are used
+	if req.FullName == "" && req.Name != "" {
+		req.FullName = req.Name
+	}
+	if req.UserType == "" && req.Role != "" {
+		req.UserType = strings.ToUpper(req.Role)
+	}
+
+	svcReq := service.RegistrationRequest{
+		Email:    req.Email,
+		Password: req.Password,
+		FullName: req.FullName,
+		UserType: req.UserType,
+	}
+
+	if err := h.svc.Register(c.Context(), svcReq); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 

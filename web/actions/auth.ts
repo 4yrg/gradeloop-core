@@ -65,9 +65,9 @@ export async function login(data: z.infer<typeof loginSchema>) {
             timeout: 5000 // 5 second timeout
         });
 
-        // Backend returns: { message, role, token, email }
-        const { role, email: responseEmail } = response.data;
-        token = response.data.token;
+        // Backend returns: { access_token, refresh_token, role, email, user_id, full_name }
+        const { access_token, role, email: responseEmail, user_id, full_name } = response.data;
+        token = access_token;
 
         if (!token || !role || !responseEmail) {
             console.error('Invalid response structure:', response.data);
@@ -78,38 +78,14 @@ export async function login(data: z.infer<typeof loginSchema>) {
             }
         }
 
-        // Fetch Institute ID for Institute Admins
-        let instituteId = null;
-        if (role === 'INSTITUTE_ADMIN') {
-            try {
-                // Use API Gateway URL to fetch from user-service
-                const gatewayUrl = process.env.API_GATEWAY_URL || "http://localhost:8000";
-
-                // Fetch institute admin from user-service
-                const adminRes = await axios.get(`${gatewayUrl}/users/institute-admins/by-email/${encodeURIComponent(email)}`);
-                instituteId = adminRes.data.instituteId;
-
-                console.log('Fetched institute ID from user-service:', instituteId);
-            } catch (err) {
-                console.error('Failed to fetch institute for admin:', err);
-                // Non-blocking - admin might not have been created in user-service yet
-            }
-        }
-
         // Construct the user object for session creation
         user = {
-            id: response.data.userId?.toString(),
+            id: user_id,
             role: role,
             email: responseEmail,
-            name: responseEmail.split('@')[0],
-            instituteId: instituteId
+            name: full_name,
         }
 
-        // Handle forced reset scenario - do not create full session or mark as partial?
-        // Actually, we likely need a session to allow them to access /change-password endpoint.
-        // But maybe with a flag?
-        // For simplicity, we create the session, but middleware redirects to /force-reset if forceReset is set.
-        // We'll add forceReset to session state?
         if (response.data.forceReset) {
             user.forceReset = true;
             forceReset = true;
@@ -210,7 +186,7 @@ export async function logout() {
             // Spring Security default logout is usually POST /logout
             await axios.post(`${authUrl}/logout`, {}, {
                 headers: {
-                    'Cookie': `JSESSIONID=${token}` // Assuming standard Spring Session
+                    'Authorization': `Bearer ${token}`
                 }
             });
         }
@@ -356,7 +332,7 @@ export async function changePassword(data: { currentPassword: string, newPasswor
             newPassword: data.newPassword,
         }, {
             headers: {
-                'Cookie': `JSESSIONID=${sessionToken}` // Assuming standard Spring Session
+                'Authorization': `Bearer ${sessionToken}`
             }
         });
 
