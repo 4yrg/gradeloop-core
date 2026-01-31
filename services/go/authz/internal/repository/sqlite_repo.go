@@ -115,6 +115,11 @@ func (r *AuthZRepository) DeletePermission(name string) error {
 	return r.db.Where("name = ?", name).Delete(&domain.Permission{}).Error
 }
 
+// UpdateRole updates a role's description
+func (r *AuthZRepository) UpdateRole(name string, description string) error {
+	return r.db.Model(&domain.Role{}).Where("name = ?", name).Update("description", description).Error
+}
+
 // LogAudit saves an audit log entry
 func (r *AuthZRepository) LogAudit(log *domain.AuditLog) error {
 	return r.db.Create(log).Error

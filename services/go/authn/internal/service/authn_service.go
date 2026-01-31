@@ -134,7 +134,7 @@ func (s *AuthNService) Login(ctx context.Context, email, password string) (*Toke
 	}
 
 	// 4. Generate Tokens
-	accessToken, err := s.token.GenerateAccessToken(identityResp.UserID, identityResp.Role, authzResp.Permissions)
+	accessToken, err := s.token.GenerateAccessToken(identityResp.UserID, sessionResp.SessionID, identityResp.Role, authzResp.Permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (s *AuthNService) RefreshToken(ctx context.Context, refreshToken string) (*
 	}
 
 	// 3. Generate New Access Token
-	accessToken, err := s.token.GenerateAccessToken(sessionResp.UserID, sessionResp.UserRole, authzResp.Permissions)
+	accessToken, err := s.token.GenerateAccessToken(sessionResp.UserID, sessionResp.SessionID, sessionResp.UserRole, authzResp.Permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -227,13 +227,24 @@ func (s *AuthNService) RefreshToken(ctx context.Context, refreshToken string) (*
 }
 
 func (s *AuthNService) Logout(ctx context.Context, token string) error {
-	// Extract session ID if possible? Access Token might not have it unless we put it claims.
-	// OR use Refresh Token to logout?
-	// Usually Logout requires Access Token.
-	// We'll require Access Token but we can't revoke session easily without SessionID.
-	// For now, no-op or we need to add SessionID to AccessToken.
-	// Let's assume we can't fully revoke on backend without SessionID, so client must discard.
-	// Alternatively, if token has user_id, we could revoke all? No, that's LogoutAll.
+	// Extract session ID from access token
+	claims, err := s.token.ValidateToken(token)
+	if err != nil {
+		return errors.New("invalid token")
+	}
+
+	// Revoke the session via Session Service
+	url := s.cfg.SessionServiceURL + "/internal/sessions/" + claims.SessionID + "/revoke"
+	resp, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to revoke session")
+	}
+
 	return nil
 }
 
@@ -335,7 +346,8 @@ func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword str
 }
 
 func (s *AuthNService) IssueToken(ctx context.Context, userID, role string, permissions []string) (*TokenResponse, error) {
-	accessToken, err := s.token.GenerateAccessToken(userID, role, permissions)
+	// For delegated token issuance, we don't have a session, so use empty string
+	accessToken, err := s.token.GenerateAccessToken(userID, "", role, permissions)
 	if err != nil {
 		return nil, err
 	}
