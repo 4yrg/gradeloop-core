@@ -1,17 +1,23 @@
-FROM golang:1.25.6-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-COPY services/go/authz/go.mod services/go/authz/go.sum ./
+COPY go.mod go.sum ./
+RUN apk add --no-cache build-base
 RUN go mod download
 
-COPY services/go/authz/ .
+COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o authz-service cmd/server/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o server cmd/server/main.go
 
 FROM alpine:latest
-WORKDIR /app
-COPY --from=builder /app/authz-service .
-RUN apk add --no-cache sqlite-libs
 
-CMD ["./authz-service"]
+WORKDIR /app
+
+RUN apk --no-cache add ca-certificates tzdata sqlite-libs
+
+COPY --from=builder /app/server .
+
+EXPOSE 4001
+
+CMD ["./server"]

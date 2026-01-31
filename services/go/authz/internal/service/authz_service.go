@@ -93,3 +93,21 @@ func (s *AuthZService) SeedDefaults() error {
 
 	return nil
 }
+
+func (s *AuthZService) ResolvePermissions(userID string, roleName string) ([]string, error) {
+	// 1. Get Role and its permissions
+	role, err := s.repo.GetRoleByName(roleName)
+	if err != nil {
+		return nil, err // Return empty if role not found or error
+	}
+
+	// 2. Extract Permission Names
+	var permissions []string
+	for _, p := range role.Permissions {
+		permissions = append(permissions, p.Name)
+	}
+
+	// 3. (Optional) Evaluate Policies if any (Future scope)
+
+	return permissions, nil
+}

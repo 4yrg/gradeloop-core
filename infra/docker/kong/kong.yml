@@ -84,3 +84,67 @@ services:
         config:
           minute: 60
           policy: local
+
+  - name: authn-service
+    url: http://authn-service:4000
+    routes:
+      - name: authn-auth
+        paths:
+          - /auth
+        strip_path: false
+    plugins:
+      - name: correlation-id
+        config:
+          header_name: X-Request-ID
+          generator: uuid
+          echo_downstream: true
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - X-Auth-Token
+          exposed_headers:
+            - X-Auth-Token
+          credentials: true
+          max_age: 3600
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: authz-service
+    url: http://authz-service:4001
+    routes:
+      - name: authz-internal
+        paths:
+          - /internal/authz
+        strip_path: false
+    plugins:
+      - name: correlation-id
+        config:
+          header_name: X-Request-ID
+          generator: uuid
+          echo_downstream: true
+      - name: cors
+        config:
+          origins:
+            - "*"
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+

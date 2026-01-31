@@ -1,0 +1,14 @@
+services:
+  authz-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: authz-service
+    ports:
+      - "4001:4001"
+    environment:
+      - PORT=4001
+      - DATABASE_URL=/app/authz.db
+    volumes:
+      - ./authz.db:/app/authz.db
+    restart: unless-stopped

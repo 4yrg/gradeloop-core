@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/core/domain"
+	"github.com/4yrg/gradeloop-core/services/go/authz/internal/middleware"
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
@@ -107,10 +108,30 @@ func (h *AuthZHandler) AssignPermission(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
+func (h *AuthZHandler) ResolvePermissions(c *fiber.Ctx) error {
+	var req struct {
+		UserID string `json:"user_id"`
+		Role   string `json:"role"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	perms, err := h.svc.ResolvePermissions(req.UserID, req.Role)
+	if err != nil {
+		// If role not found, maybe return valid empty permissions?
+		// For now return error to be safe
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"permissions": perms})
+}
+
 func (h *AuthZHandler) RegisterRoutes(app *fiber.App) {
-	internal := app.Group("/internal/authz")
+	internal := app.Group("/internal/authz", middleware.InternalAuth())
 
 	internal.Post("/check", h.CheckPermission)
+	internal.Post("/resolve", h.ResolvePermissions)
 	internal.Post("/roles", h.CreateRole)
 	internal.Get("/roles", h.GetRoles)
 	internal.Post("/permissions", h.CreatePermission)
