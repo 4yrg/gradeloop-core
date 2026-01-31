@@ -25,7 +25,7 @@ func main() {
 	}
 
 	// 3. Setup Services
-	emailProvider := provider.NewBrevoProvider(cfg)
+	emailProvider := provider.NewSMTPProvider(cfg)
 	templateSvc := service.NewTemplateService(repo)
 	emailSvc := service.NewEmailService(emailProvider, templateSvc, repo)
 

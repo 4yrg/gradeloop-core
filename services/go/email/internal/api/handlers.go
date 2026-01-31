@@ -37,7 +37,7 @@ func (h *Handler) SendEmail(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"status": "queued"})
+	return c.JSON(fiber.Map{"status": "sent"})
 }
 
 func (h *Handler) ListTemplates(c *fiber.Ctx) error {
