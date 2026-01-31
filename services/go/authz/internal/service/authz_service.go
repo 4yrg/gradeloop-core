@@ -8,11 +8,15 @@ import (
 )
 
 type AuthZService struct {
-	repo *repository.AuthZRepository
+	repo     *repository.AuthZRepository
+	tokenSvc *ServiceTokenService
 }
 
 func NewAuthZService(repo *repository.AuthZRepository) *AuthZService {
-	return &AuthZService{repo: repo}
+	return &AuthZService{
+		repo:     repo,
+		tokenSvc: NewServiceTokenService(),
+	}
 }
 
 func (s *AuthZService) Init() error {
@@ -125,8 +129,7 @@ func (s *AuthZService) RevokePermission(roleName, permName string) error {
 }
 
 func (s *AuthZService) UpdateRole(name string, description string) error {
-	// TODO: Implement update logic in repo
-	return nil
+	return s.repo.UpdateRole(name, description)
 }
 
 // Policy Management
@@ -167,7 +170,5 @@ func (s *AuthZService) DeletePolicy(id string) error {
 }
 
 func (s *AuthZService) IssueServiceToken(serviceName string) (string, error) {
-	// Generate a long-lived JWT for the service
-	// Mock for now
-	return "mock_service_token_" + serviceName, nil
+	return s.tokenSvc.GenerateServiceToken(serviceName)
 }

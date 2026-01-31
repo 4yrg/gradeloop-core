@@ -12,16 +12,18 @@ type Config struct {
 	SessionServiceURL  string
 	EmailServiceURL    string
 	AuthZServiceURL    string
+	InternalToken      string
 }
 
 func Load() *Config {
 	return &Config{
-		Port:               getEnv("PORT", "4000"),
+		Port:               getEnv("PORT", "8003"),
 		RedisAddr:          getEnv("REDIS_ADDR", "localhost:6379"),
-		IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "http://localhost:8080"),
-		SessionServiceURL:  getEnv("SESSION_SERVICE_URL", "http://localhost:3000"),
+		IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "http://localhost:8001"),
+		SessionServiceURL:  getEnv("SESSION_SERVICE_URL", "http://localhost:8002"),
 		EmailServiceURL:    getEnv("EMAIL_SERVICE_URL", "http://localhost:5005"),
-		AuthZServiceURL:    getEnv("AUTHZ_SERVICE_URL", "http://localhost:4001"),
+		AuthZServiceURL:    getEnv("AUTHZ_SERVICE_URL", "http://localhost:8004"),
+		InternalToken:      getEnv("INTERNAL_SECRET", "insecure-secret-for-dev"),
 	}
 }
 

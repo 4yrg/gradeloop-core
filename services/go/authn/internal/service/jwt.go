@@ -23,14 +23,16 @@ func NewTokenService() *TokenService {
 
 type UserClaims struct {
 	UserID      string   `json:"sub"`
+	SessionID   string   `json:"session_id"`
 	Role        string   `json:"role"`
 	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
 
-func (s *TokenService) GenerateAccessToken(userID, role string, permissions []string) (string, error) {
+func (s *TokenService) GenerateAccessToken(userID, sessionID, role string, permissions []string) (string, error) {
 	claims := UserClaims{
 		UserID:      userID,
+		SessionID:   sessionID,
 		Role:        role,
 		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{

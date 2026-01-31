@@ -61,5 +61,10 @@ func main() {
 	api.RegisterRoutes(app, handler)
 
 	// 6. Start Server
-	log.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8002"
+	}
+	log.Printf("Session Service starting on port %s", port)
+	log.Fatal(app.Listen(":" + port))
 }

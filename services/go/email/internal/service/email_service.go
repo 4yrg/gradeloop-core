@@ -76,7 +76,14 @@ func (s *EmailService) failLog(reqLog *core.EmailRequestLog, msg string) {
 }
 
 func (s *EmailService) SendRaw(to, subject, body string) error {
-	return s.provider.SendEmail([]string{to}, subject, body)
+	log.Printf("[Email] Attempting to send email to: %s, subject: %s", to, subject)
+	err := s.provider.SendEmail([]string{to}, subject, body)
+	if err != nil {
+		log.Printf("[Email] Failed to send email: %v", err)
+		return err
+	}
+	log.Printf("[Email] Successfully sent email to: %s", to)
+	return nil
 }
 
 func (s *EmailService) GetLogs() ([]core.EmailRequestLog, error) {

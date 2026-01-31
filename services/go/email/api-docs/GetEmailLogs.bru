@@ -1,0 +1,15 @@
+meta {
+  name: Get Email Logs
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/internal/email/logs
+  body: none
+  auth: none
+}
+
+headers {
+  X-Internal-Token: {{internalToken}}
+}

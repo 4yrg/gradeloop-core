@@ -134,7 +134,7 @@ func (s *AuthNService) Login(ctx context.Context, email, password string) (*Toke
 	}
 
 	// 4. Generate Tokens
-	accessToken, err := s.token.GenerateAccessToken(identityResp.UserID, identityResp.Role, authzResp.Permissions)
+	accessToken, err := s.token.GenerateAccessToken(identityResp.UserID, sessionResp.SessionID, identityResp.Role, authzResp.Permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (s *AuthNService) RefreshToken(ctx context.Context, refreshToken string) (*
 	}
 
 	// 3. Generate New Access Token
-	accessToken, err := s.token.GenerateAccessToken(sessionResp.UserID, sessionResp.UserRole, authzResp.Permissions)
+	accessToken, err := s.token.GenerateAccessToken(sessionResp.UserID, sessionResp.SessionID, sessionResp.UserRole, authzResp.Permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -227,20 +227,30 @@ func (s *AuthNService) RefreshToken(ctx context.Context, refreshToken string) (*
 }
 
 func (s *AuthNService) Logout(ctx context.Context, token string) error {
-	// Extract session ID if possible? Access Token might not have it unless we put it claims.
-	// OR use Refresh Token to logout?
-	// Usually Logout requires Access Token.
-	// We'll require Access Token but we can't revoke session easily without SessionID.
-	// For now, no-op or we need to add SessionID to AccessToken.
-	// Let's assume we can't fully revoke on backend without SessionID, so client must discard.
-	// Alternatively, if token has user_id, we could revoke all? No, that's LogoutAll.
+	// Extract session ID from access token
+	claims, err := s.token.ValidateToken(token)
+	if err != nil {
+		return errors.New("invalid token")
+	}
+
+	// Revoke the session via Session Service
+	url := s.cfg.SessionServiceURL + "/internal/sessions/" + claims.SessionID + "/revoke"
+	resp, err := s.postJson(url, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to revoke session")
+	}
+
 	return nil
 }
 
 func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) error {
 	// 1. Create User in Identity Service
-	userPayload, _ := json.Marshal(req)
-	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/identity/users", "application/json", bytes.NewBuffer(userPayload))
+	resp, err := s.postJson(s.cfg.IdentityServiceURL+"/internal/identity/users", req)
 	if err != nil {
 		return err
 	}
@@ -256,15 +266,14 @@ func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) er
 		"subject": "Welcome to GradeLoop",
 		"body":    "Welcome " + req.FullName + "!",
 	}
-	emailBody, _ := json.Marshal(emailPayload)
-	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
+	_, _ = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 
 	return nil
 }
 
 func (s *AuthNService) LogoutAll(ctx context.Context, userID string) error {
 	url := s.cfg.SessionServiceURL + "/internal/users/" + userID + "/sessions/revoke"
-	resp, err := http.Post(url, "application/json", nil)
+	resp, err := s.postJson(url, nil)
 	if err != nil {
 		return err
 	}
@@ -297,9 +306,8 @@ func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
 		"subject": "Password Reset Request",
 		"body":    fmt.Sprintf("Click here to reset your password: %s\n\nThis link expires in 15 minutes.", resetLink),
 	}
-	emailBody, _ := json.Marshal(emailPayload)
 	// Fire-and-forget email sending - don't block on errors
-	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
+	_, _ = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 
 	return nil
 }
@@ -320,8 +328,7 @@ func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword str
 		"user_id":      email, // Identity service should look up by email
 		"new_password": newPassword,
 	}
-	payload, _ := json.Marshal(updatePayload)
-	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/identity/credentials/update", "application/json", bytes.NewBuffer(payload))
+	resp, err := s.postJson(s.cfg.IdentityServiceURL+"/internal/identity/credentials/update", updatePayload)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
@@ -335,7 +342,8 @@ func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword str
 }
 
 func (s *AuthNService) IssueToken(ctx context.Context, userID, role string, permissions []string) (*TokenResponse, error) {
-	accessToken, err := s.token.GenerateAccessToken(userID, role, permissions)
+	// For delegated token issuance, we don't have a session, so use empty string
+	accessToken, err := s.token.GenerateAccessToken(userID, "", role, permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -346,8 +354,16 @@ func (s *AuthNService) IssueToken(ctx context.Context, userID, role string, perm
 	}, nil
 }
 
-// Helper for generic HTTP post
+// Helper for generic HTTP post with internal token
 func (s *AuthNService) postJson(url string, data interface{}) (*http.Response, error) {
 	payload, _ := json.Marshal(data)
-	return http.Post(url, "application/json", bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Internal-Token", s.cfg.InternalToken)
+
+	client := &http.Client{}
+	return client.Do(req)
 }
