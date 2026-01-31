@@ -106,7 +106,6 @@ services:
       - ../../.env
     environment:
       - PORT=8005
-      - ASSIGNMENT_DATABASE_URL=postgres://gradeloop:gradeloop@db:5432/assignment?sslmode=disable
     restart: unless-stopped
     develop:
       watch:
@@ -124,7 +123,6 @@ services:
       - ../../.env
     environment:
       - PORT=8006
-      - SUBMISSION_DATABASE_URL=postgres://gradeloop:gradeloop@db:5432/submission?sslmode=disable
     restart: unless-stopped
     develop:
       watch:
