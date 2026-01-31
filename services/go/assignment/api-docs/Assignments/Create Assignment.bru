@@ -1,0 +1,63 @@
+meta {
+  name: Create Assignment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/assignments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "courseId": "course-123",
+    "title": "Data Structures: AVL Trees",
+    "type": "Lab",
+    "difficulty": "Medium",
+    "problemStatement": "# AVL Trees\nImplement an AVL tree with rotation logic.",
+    "releaseDate": "2026-02-01T00:00:00Z",
+    "dueDate": "2026-02-15T23:59:59Z",
+    "allowLateSubmissions": true,
+    "lateDueDate": "2026-02-20T23:59:59Z",
+    "latePolicy": "10% deduction per day",
+    "totalScore": 100,
+    "autograderPoints": 70,
+    "allowManualGrading": true,
+    "gradingMethod": "Hybrid",
+    "timeLimit": 3600,
+    "memoryLimit": "256MB",
+    "totalAttempts": 5,
+    "enforceTimeLimit": false,
+    "enableGroupSubmissions": false,
+    "enableLeaderboard": true,
+    "vivaEnabled": true,
+    "vivaRequired": true,
+    "vivaWeight": 30,
+    "enableAiAssistance": true,
+    "rubric": [
+      {
+        "criterion": "Correctness",
+        "points": 50
+      },
+      {
+        "criterion": "Efficiency",
+        "points": 20
+      }
+    ],
+    "constraints": [
+      {
+        "content": "Time limit: 1.0s per test case"
+      }
+    ],
+    "allowedLanguages": [
+      {
+        "language": "Python"
+      },
+      {
+        "language": "Java"
+      }
+    ]
+  }
+}
