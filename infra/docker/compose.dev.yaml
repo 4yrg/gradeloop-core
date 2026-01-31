@@ -95,6 +95,42 @@ services:
         - action: rebuild
           path: ../../services/go/authz
 
+  assignment-service:
+    build:
+      context: ../../services/go/assignment
+      dockerfile: Dockerfile
+    container_name: assignment-service
+    ports:
+      - "8005:8005"
+    env_file:
+      - ../../.env
+    environment:
+      - PORT=8005
+      - ASSIGNMENT_DATABASE_URL=postgres://gradeloop:gradeloop@db:5432/assignment?sslmode=disable
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/assignment
+
+  submission-service:
+    build:
+      context: ../../services/go/submission
+      dockerfile: Dockerfile
+    container_name: submission-service
+    ports:
+      - "8006:8006"
+    env_file:
+      - ../../.env
+    environment:
+      - PORT=8006
+      - SUBMISSION_DATABASE_URL=postgres://gradeloop:gradeloop@db:5432/submission?sslmode=disable
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/submission
+
   redis:
     image: redis:7.2-alpine
     container_name: gradeloop-redis

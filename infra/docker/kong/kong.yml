@@ -148,3 +148,29 @@ services:
           minute: 60
           policy: local
 
+  - name: assignment-service
+    url: http://assignment-service:8005
+    routes:
+      - name: assignment-api
+        paths:
+          - /api/v1/assignments
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+
+  - name: submission-service
+    url: http://submission-service:8006
+    routes:
+      - name: submission-api
+        paths:
+          - /api/v1/submissions
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PATCH", "OPTIONS"]
+
