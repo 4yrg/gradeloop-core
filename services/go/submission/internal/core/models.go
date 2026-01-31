@@ -53,7 +53,8 @@ type SubmissionFile struct {
 	ID           uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 	SubmissionID uuid.UUID `gorm:"index" json:"submissionId"`
 	Filename     string    `json:"filename"`
-	Content      string    `gorm:"type:text" json:"content"`
+	StorageURL   string    `json:"storageUrl"` // S3/Supabase storage URL
+	Size         int64     `json:"size"`       // File size in bytes
 }
 
 type VivaTranscriptTurn struct {

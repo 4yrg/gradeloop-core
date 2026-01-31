@@ -25,12 +25,57 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 }
 
 func (h *Handler) Submit(c *fiber.Ctx) error {
-	var submission core.Submission
-	if err := c.BodyParser(&submission); err != nil {
+	// Parse the request body
+	type SubmitRequest struct {
+		AssignmentID       string                   `json:"assignmentId"`
+		StudentID          string                   `json:"studentId"`
+		Language           string                   `json:"language"`
+		Files              []map[string]interface{} `json:"files"` // [{filename: "main.py", content: "..."}]
+		AuthFingerprint    string                   `json:"authFingerprint"`
+		KeystrokeAnalytics string                   `json:"keystrokeAnalytics"`
+	}
+
+	var req SubmitRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
 	}
 
-	if err := h.svc.Submit(&submission); err != nil {
+	// Parse assignment ID
+	assignmentID, err := uuid.Parse(req.AssignmentID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid assignment ID"})
+	}
+
+	// Create submission
+	submission := &core.Submission{
+		AssignmentID:       assignmentID,
+		StudentID:          req.StudentID,
+		Language:           req.Language,
+		AuthFingerprint:    req.AuthFingerprint,
+		KeystrokeAnalytics: req.KeystrokeAnalytics,
+		Files:              make([]core.SubmissionFile, 0),
+	}
+
+	// Extract file contents
+	fileContents := make(map[string][]byte)
+	for _, fileData := range req.Files {
+		filename, ok := fileData["filename"].(string)
+		if !ok {
+			continue
+		}
+		content, ok := fileData["content"].(string)
+		if !ok {
+			continue
+		}
+
+		submission.Files = append(submission.Files, core.SubmissionFile{
+			Filename: filename,
+		})
+		fileContents[filename] = []byte(content)
+	}
+
+	// Submit with file contents
+	if err := h.svc.Submit(c.Context(), submission, fileContents); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
