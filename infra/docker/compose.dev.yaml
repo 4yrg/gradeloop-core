@@ -17,8 +17,8 @@ services:
 
   session-service:
     build:
-      context: ../../
-      dockerfile: services/go/session/Dockerfile
+      context: ../../services/go/session
+      dockerfile: Dockerfile
     container_name: session-service
     ports:
       - "3000:3000"
