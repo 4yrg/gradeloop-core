@@ -72,6 +72,7 @@ services:
       - SESSION_SERVICE_URL=http://session-service:8002
       - EMAIL_SERVICE_URL=http://email-service:5005
       - AUTHZ_SERVICE_URL=http://authz-service:8004
+      - INTERNAL_SECRET=insecure-secret-for-dev
     depends_on:
       - redis
       - identity-service
@@ -118,12 +119,12 @@ services:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_ADMIN_LISTEN: 0.0.0.0:8444, 0.0.0.0:8445 ssl
     volumes:
       - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
     ports:
       - "8000:8000"
       - "8443:8443"
-      - "127.0.0.1:8001:8001"
-      - "127.0.0.1:8444:8444"
+      - "127.0.0.1:8445:8444"
+      - "127.0.0.1:8446:8445"
     restart: unless-stopped

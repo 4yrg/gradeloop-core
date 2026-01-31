@@ -235,7 +235,7 @@ func (s *AuthNService) Logout(ctx context.Context, token string) error {
 
 	// Revoke the session via Session Service
 	url := s.cfg.SessionServiceURL + "/internal/sessions/" + claims.SessionID + "/revoke"
-	resp, err := http.Post(url, "application/json", nil)
+	resp, err := s.postJson(url, nil)
 	if err != nil {
 		return err
 	}
@@ -250,8 +250,7 @@ func (s *AuthNService) Logout(ctx context.Context, token string) error {
 
 func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) error {
 	// 1. Create User in Identity Service
-	userPayload, _ := json.Marshal(req)
-	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/identity/users", "application/json", bytes.NewBuffer(userPayload))
+	resp, err := s.postJson(s.cfg.IdentityServiceURL+"/internal/identity/users", req)
 	if err != nil {
 		return err
 	}
@@ -267,15 +266,14 @@ func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) er
 		"subject": "Welcome to GradeLoop",
 		"body":    "Welcome " + req.FullName + "!",
 	}
-	emailBody, _ := json.Marshal(emailPayload)
-	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
+	_, _ = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 
 	return nil
 }
 
 func (s *AuthNService) LogoutAll(ctx context.Context, userID string) error {
 	url := s.cfg.SessionServiceURL + "/internal/users/" + userID + "/sessions/revoke"
-	resp, err := http.Post(url, "application/json", nil)
+	resp, err := s.postJson(url, nil)
 	if err != nil {
 		return err
 	}
@@ -308,9 +306,8 @@ func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
 		"subject": "Password Reset Request",
 		"body":    fmt.Sprintf("Click here to reset your password: %s\n\nThis link expires in 15 minutes.", resetLink),
 	}
-	emailBody, _ := json.Marshal(emailPayload)
 	// Fire-and-forget email sending - don't block on errors
-	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
+	_, _ = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 
 	return nil
 }
@@ -331,8 +328,7 @@ func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword str
 		"user_id":      email, // Identity service should look up by email
 		"new_password": newPassword,
 	}
-	payload, _ := json.Marshal(updatePayload)
-	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/identity/credentials/update", "application/json", bytes.NewBuffer(payload))
+	resp, err := s.postJson(s.cfg.IdentityServiceURL+"/internal/identity/credentials/update", updatePayload)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
@@ -358,8 +354,16 @@ func (s *AuthNService) IssueToken(ctx context.Context, userID, role string, perm
 	}, nil
 }
 
-// Helper for generic HTTP post
+// Helper for generic HTTP post with internal token
 func (s *AuthNService) postJson(url string, data interface{}) (*http.Response, error) {
 	payload, _ := json.Marshal(data)
-	return http.Post(url, "application/json", bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Internal-Token", s.cfg.InternalToken)
+
+	client := &http.Client{}
+	return client.Do(req)
 }

@@ -12,6 +12,7 @@ type Config struct {
 	SessionServiceURL  string
 	EmailServiceURL    string
 	AuthZServiceURL    string
+	InternalToken      string
 }
 
 func Load() *Config {
@@ -22,6 +23,7 @@ func Load() *Config {
 		SessionServiceURL:  getEnv("SESSION_SERVICE_URL", "http://localhost:8002"),
 		EmailServiceURL:    getEnv("EMAIL_SERVICE_URL", "http://localhost:5005"),
 		AuthZServiceURL:    getEnv("AUTHZ_SERVICE_URL", "http://localhost:8004"),
+		InternalToken:      getEnv("INTERNAL_SECRET", "insecure-secret-for-dev"),
 	}
 }
 
