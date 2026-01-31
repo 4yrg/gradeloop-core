@@ -31,9 +31,12 @@ func main() {
 	}
 
 	// 1. Initialize DB
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("SESSION_DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("DATABASE_URL must be set")
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		log.Fatal("SESSION_DATABASE_URL or DATABASE_URL must be set")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -47,7 +50,8 @@ func main() {
 
 	// 2. Initialize Redis
 	rdb := goredis.NewClient(&goredis.Options{
-		Addr: redisAddr,
+		Addr:     redisAddr,
+		Password: os.Getenv("REDIS_PASSWORD"),
 	})
 
 	// 3. Initialize Repositories

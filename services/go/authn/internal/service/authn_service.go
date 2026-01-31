@@ -25,7 +25,8 @@ type AuthNService struct {
 
 func NewAuthNService(cfg *config.Config) *AuthNService {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: cfg.RedisAddr,
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
 	})
 
 	return &AuthNService{

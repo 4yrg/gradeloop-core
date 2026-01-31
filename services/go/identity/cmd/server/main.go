@@ -16,9 +16,12 @@ import (
 
 func main() {
 	// 1. Setup DB
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("IDENTITY_DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("DATABASE_URL must be set")
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		log.Fatal("IDENTITY_DATABASE_URL or DATABASE_URL must be set")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

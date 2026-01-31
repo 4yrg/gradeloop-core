@@ -19,15 +19,12 @@ func main() {
 	if port == "" {
 		port = "8004"
 	}
-	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		dbUrl = "authz.db"
-	}
-
-	// 2. Database
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("AUTHZ_DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("DATABASE_URL must be set")
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		log.Fatal("AUTHZ_DATABASE_URL or DATABASE_URL must be set")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

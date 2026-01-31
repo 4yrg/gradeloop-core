@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Port               string
 	RedisAddr          string
+	RedisPassword      string
 	IdentityServiceURL string
 	SessionServiceURL  string
 	EmailServiceURL    string
@@ -19,6 +20,7 @@ func Load() *Config {
 	return &Config{
 		Port:               getEnv("PORT", "8003"),
 		RedisAddr:          getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword:      getEnv("REDIS_PASSWORD", ""),
 		IdentityServiceURL: getEnv("IDENTITY_SERVICE_URL", "http://localhost:8001"),
 		SessionServiceURL:  getEnv("SESSION_SERVICE_URL", "http://localhost:8002"),
 		EmailServiceURL:    getEnv("EMAIL_SERVICE_URL", "http://localhost:5005"),

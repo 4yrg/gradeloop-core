@@ -15,9 +15,12 @@ type Repository struct {
 }
 
 func NewRepository(dbName string) (*Repository, error) {
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("EMAIL_DATABASE_URL")
 	if dsn == "" {
-		return nil, fmt.Errorf("DATABASE_URL must be set")
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		return nil, fmt.Errorf("EMAIL_DATABASE_URL or DATABASE_URL must be set")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

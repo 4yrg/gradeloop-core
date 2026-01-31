@@ -9,7 +9,6 @@ services:
     env_file:
       - ../../.env
     environment:
-      - DATABASE_URL=${IDENTITY_DATABASE_URL}
       - PORT=8001
     restart: unless-stopped
     develop:
@@ -28,8 +27,6 @@ services:
       - ../../.env
     environment:
       - PORT=8002
-      - DATABASE_URL=${SESSION_DATABASE_URL}
-      - REDIS_ADDR=${REDIS_ADDR}
     restart: unless-stopped
     develop:
       watch:
@@ -48,14 +45,12 @@ services:
     env_file:
       - ../../.env
     environment:
-      - DATABASE_URL=${EMAIL_DATABASE_URL}
       - EMAIL_DB_NAME=email
     restart: unless-stopped
     develop:
       watch:
         - action: rebuild
           path: ../../services/go/email
-
   authn-service:
     build:
       context: ../../services/go/authn
@@ -63,9 +58,10 @@ services:
     container_name: authn-service
     ports:
       - "8003:8003"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8003
-      - REDIS_ADDR=${REDIS_ADDR}
       - IDENTITY_SERVICE_URL=http://identity-service:8001
       - SESSION_SERVICE_URL=http://session-service:8002
       - EMAIL_SERVICE_URL=http://email-service:5005
@@ -93,7 +89,6 @@ services:
       - ../../.env
     environment:
       - PORT=8004
-      - DATABASE_URL=${AUTHZ_DATABASE_URL}
     restart: unless-stopped
     develop:
       watch:
