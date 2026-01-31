@@ -3,9 +3,10 @@ package repository
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -14,8 +15,11 @@ type Repository struct {
 }
 
 func NewRepository(dbName string) (*Repository, error) {
-	dbPath := fmt.Sprintf("%s.db", dbName)
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		return nil, fmt.Errorf("DATABASE_URL must be set")
+	}
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
@@ -26,7 +30,7 @@ func NewRepository(dbName string) (*Repository, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	log.Printf("Connected to SQLite database: %s", dbPath)
+	log.Printf("Connected to PostgreSQL database")
 	return &Repository{db: db}, nil
 }
 

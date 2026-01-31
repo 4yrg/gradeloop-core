@@ -6,11 +6,11 @@ services:
     container_name: identity-service
     ports:
       - "8001:8001"
+    env_file:
+      - ../../.env
     environment:
-      - DATABASE_URL=identity.db
+      - DATABASE_URL=${IDENTITY_DATABASE_URL}
       - PORT=8001
-    volumes:
-      - ../../services/go/identity/identity.db:/app/identity.db
     restart: unless-stopped
     develop:
       watch:
@@ -24,12 +24,12 @@ services:
     container_name: session-service
     ports:
       - "8002:8002"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8002
-      - SQLITE_PATH=/app/session.db
-      - REDIS_ADDR=redis:6379
-    volumes:
-      - ../../services/go/session/session.db:/app/session.db
+      - DATABASE_URL=${SESSION_DATABASE_URL}
+      - REDIS_ADDR=${REDIS_ADDR}
     restart: unless-stopped
     develop:
       watch:
@@ -48,10 +48,8 @@ services:
     env_file:
       - ../../.env
     environment:
-      - EMAIL_DB_NAME=/app/email_db
-    volumes:
-      - ../../services/go/email/email_db.db:/app/email_db.db
-      - ../../services/go/email/templates:/app/templates
+      - DATABASE_URL=${EMAIL_DATABASE_URL}
+      - EMAIL_DB_NAME=email
     restart: unless-stopped
     develop:
       watch:
@@ -67,7 +65,7 @@ services:
       - "8003:8003"
     environment:
       - PORT=8003
-      - REDIS_ADDR=redis:6379
+      - REDIS_ADDR=${REDIS_ADDR}
       - IDENTITY_SERVICE_URL=http://identity-service:8001
       - SESSION_SERVICE_URL=http://session-service:8002
       - EMAIL_SERVICE_URL=http://email-service:5005
@@ -91,11 +89,11 @@ services:
     container_name: authz-service
     ports:
       - "8004:8004"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8004
-      - DATABASE_URL=authz.db
-    volumes:
-      - ../../services/go/authz/authz.db:/app/authz.db
+      - DATABASE_URL=${AUTHZ_DATABASE_URL}
     restart: unless-stopped
     develop:
       watch:

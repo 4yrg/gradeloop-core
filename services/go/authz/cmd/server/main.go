@@ -9,7 +9,7 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,11 @@ func main() {
 	}
 
 	// 2. Database
-	db, err := gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL must be set")
+	}
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
