@@ -35,13 +35,13 @@ func main() {
 	api.SetupRoutes(app, handler)
 
 	// 5. Start Server
-	log.Printf("Starting Email Service on port 50053 (HTTP)...") // Port from requirements?
+	log.Printf("Starting Email Service on port 5005 (HTTP)...") // Port from requirements?
 	// User didn't specify HTTP port, but .env has EMAIL_GRPC_PORT=50053.
 	// Since we are doing HTTP only as requested ("Expose internal HTTP endpoints only"), I'll use 8080 or similar,
 	// or reusing 50053 for HTTP since gRPC is avoided.
 	// I'll stick to :8080 generally or 3000 (fiber default) but since it's a microservice, maybe 50053 is intended for the service port regardless of protocol.
 	// I'll use :50053 for now to match the "PORT" concept in .env even if it says GRPC.
-	if err := app.Listen(":50053"); err != nil {
+	if err := app.Listen(":5005"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

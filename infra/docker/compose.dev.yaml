@@ -36,6 +36,26 @@ services:
     depends_on:
       - redis
 
+  email-service:
+    build:
+      context: ../../services/go/email
+      dockerfile: Dockerfile
+    container_name: email-service
+    ports:
+      - "5005:5005"
+    env_file:
+      - ../../.env
+    environment:
+      - EMAIL_DB_NAME=/app/email_db
+    volumes:
+      - ../../services/go/email/email_db.db:/app/email_db.db
+      - ../../services/go/email/templates:/app/templates
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/email
+
   redis:
     image: redis:7.2-alpine
     container_name: gradeloop-redis
