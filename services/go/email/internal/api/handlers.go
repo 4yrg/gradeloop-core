@@ -57,7 +57,24 @@ func (h *Handler) SendRawEmail(c *fiber.Ctx) error {
 }
 
 func (h *Handler) CreateTemplate(c *fiber.Ctx) error {
-	return c.SendStatus(fiber.StatusNotImplemented)
+	var req struct {
+		Name     string `json:"name"`
+		Subject  string `json:"subject"`
+		HTMLBody string `json:"html_body"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if req.Name == "" || req.Subject == "" || req.HTMLBody == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name, subject, and html_body are required"})
+	}
+
+	if err := h.tmplSvc.CreateTemplate(req.Name, req.Subject, req.HTMLBody); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusCreated)
 }
 
 func (h *Handler) GetLogs(c *fiber.Ctx) error {
@@ -74,4 +91,17 @@ func (h *Handler) ListTemplates(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(templates)
+}
+
+func (h *Handler) GetTemplate(c *fiber.Ctx) error {
+	name := c.Params("name")
+	if name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "template name required"})
+	}
+
+	template, err := h.tmplSvc.GetTemplate(name)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "template not found"})
+	}
+	return c.JSON(template)
 }

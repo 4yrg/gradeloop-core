@@ -2,11 +2,15 @@ package service
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/4yrg/gradeloop-core/services/go/authn/internal/config"
 	"github.com/redis/go-redis/v9"
@@ -269,18 +273,64 @@ func (s *AuthNService) LogoutAll(ctx context.Context, userID string) error {
 }
 
 func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
+	// Generate cryptographically secure reset token
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return fmt.Errorf("failed to generate reset token: %w", err)
+	}
+	resetToken := hex.EncodeToString(tokenBytes)
+
+	// Store token in Redis with 15-minute expiration, keyed by token
+	// Value is the email address for later validation
+	redisKey := "reset:" + resetToken
+	err := s.redis.Set(ctx, redisKey, email, 15*time.Minute).Err()
+	if err != nil {
+		return fmt.Errorf("failed to store reset token: %w", err)
+	}
+
+	// Build reset link (in production, use actual frontend URL from config)
+	resetLink := fmt.Sprintf("http://localhost:3000/reset-password?token=%s", resetToken)
+
+	// Send email with reset link via Email Service
 	emailPayload := map[string]string{
 		"to":      email,
-		"subject": "Reset Password",
-		"body":    "Click here to reset: http://localhost:3000/reset?token=dummy",
+		"subject": "Password Reset Request",
+		"body":    fmt.Sprintf("Click here to reset your password: %s\n\nThis link expires in 15 minutes.", resetLink),
 	}
 	emailBody, _ := json.Marshal(emailPayload)
+	// Fire-and-forget email sending - don't block on errors
 	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
+
 	return nil
 }
 
 func (s *AuthNService) ResetPassword(ctx context.Context, token, newPassword string) error {
-	// Stub
+	// Validate token exists in Redis
+	redisKey := "reset:" + token
+	email, err := s.redis.Get(ctx, redisKey).Result()
+	if err != nil {
+		return errors.New("invalid or expired reset token")
+	}
+
+	// Delete token immediately (one-time use)
+	s.redis.Del(ctx, redisKey)
+
+	// Call Identity Service to update password
+	updatePayload := map[string]string{
+		"user_id":      email, // Identity service should look up by email
+		"new_password": newPassword,
+	}
+	payload, _ := json.Marshal(updatePayload)
+	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/identity/credentials/update", "application/json", bytes.NewBuffer(payload))
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("failed to update password in identity service")
+	}
+
 	return nil
 }
 

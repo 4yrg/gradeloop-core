@@ -1,10 +1,13 @@
 package api
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/middleware"
+	"github.com/gofiber/fiber/v2"
+)
 
 func SetupRoutes(app *fiber.App, h *Handler) {
-	// Everything is internal/identity per spec
-	identity := app.Group("/internal/identity")
+	// Everything is internal/identity per spec - apply internal auth middleware
+	identity := app.Group("/internal/identity", middleware.InternalAuth())
 
 	// Credentials
 	identity.Post("/credentials/verify", h.ValidateCredentials)

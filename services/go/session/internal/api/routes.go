@@ -1,9 +1,13 @@
 package api
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/4yrg/gradeloop-core/services/go/session/internal/middleware"
+	"github.com/gofiber/fiber/v2"
+)
 
 func RegisterRoutes(app *fiber.App, handler *Handler) {
-	internal := app.Group("/internal")
+	// Apply internal auth middleware to all internal endpoints
+	internal := app.Group("/internal", middleware.InternalAuth())
 
 	sessions := internal.Group("/sessions")
 	sessions.Post("/", handler.CreateSession)

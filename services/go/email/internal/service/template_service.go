@@ -76,3 +76,12 @@ func (s *TemplateService) Render(tmpl *core.EmailTemplate, data map[string]inter
 func (s *TemplateService) ListTemplates() ([]core.EmailTemplate, error) {
 	return s.repo.ListTemplates()
 }
+
+func (s *TemplateService) CreateTemplate(name, subject, htmlBody string) error {
+	template := &core.EmailTemplate{
+		Name:     name,
+		Subject:  subject,
+		HTMLBody: htmlBody,
+	}
+	return s.repo.CreateTemplate(template)
+}

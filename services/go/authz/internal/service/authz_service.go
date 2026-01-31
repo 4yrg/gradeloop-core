@@ -129,16 +129,40 @@ func (s *AuthZService) UpdateRole(name string, description string) error {
 	return nil
 }
 
-// Policy stubs
-func (s *AuthZService) CreatePolicy(name, effect string, resources, actions []string) error {
-	return nil
+// Policy Management
+// Note: In this system, policies are implicit through role-permission assignments.
+// The Policy table is designed for future ABAC (Attribute-Based Access Control) with conditions.
+// For now, we return role-permission mappings as "policies".
+func (s *AuthZService) CreatePolicy(roleName, permissionName string) error {
+	// Creating a "policy" is essentially assigning a permission to a role
+	return s.AssignPermission(roleName, permissionName)
 }
 
 func (s *AuthZService) GetPolicies() ([]map[string]interface{}, error) {
-	return []map[string]interface{}{}, nil
+	// Return all role-permission assignments as policies
+	roles, err := s.repo.GetAllRoles()
+	if err != nil {
+		return nil, err
+	}
+
+	var policies []map[string]interface{}
+	for _, role := range roles {
+		for _, perm := range role.Permissions {
+			policies = append(policies, map[string]interface{}{
+				"id":         role.ID.String() + ":" + perm.ID.String(),
+				"role":       role.Name,
+				"permission": perm.Name,
+				"resource":   perm.Resource,
+				"action":     perm.Action,
+			})
+		}
+	}
+	return policies, nil
 }
 
 func (s *AuthZService) DeletePolicy(id string) error {
+	// For now, this is a no-op since we don't have direct policy deletion
+	// In a full ABAC implementation, this would delete a Policy record
 	return nil
 }
 

@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 
+	"github.com/4yrg/gradeloop-core/services/go/authn/internal/middleware"
 	"github.com/4yrg/gradeloop-core/services/go/authn/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
@@ -164,6 +165,7 @@ func (h *AuthNHandler) RegisterRoutes(app *fiber.App) {
 	auth.Post("/reset-password", h.ResetPassword)
 	auth.Get("/validate", h.ValidateToken)
 
-	internal := app.Group("/internal/authn")
+	// Apply internal auth middleware to internal endpoints
+	internal := app.Group("/internal/authn", middleware.InternalAuth())
 	internal.Post("/issue-token", h.IssueToken)
 }

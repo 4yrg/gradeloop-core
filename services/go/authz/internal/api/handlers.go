@@ -142,14 +142,33 @@ func (h *AuthZHandler) UpdateRole(c *fiber.Ctx) error {
 }
 
 func (h *AuthZHandler) CreatePolicy(c *fiber.Ctx) error {
-	return c.SendStatus(fiber.StatusNotImplemented)
+	var req struct {
+		RoleName       string `json:"role_name"`
+		PermissionName string `json:"permission_name"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := h.svc.CreatePolicy(req.RoleName, req.PermissionName); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusCreated)
 }
 
 func (h *AuthZHandler) GetPolicies(c *fiber.Ctx) error {
-	return c.JSON([]string{})
+	policies, err := h.svc.GetPolicies()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(policies)
 }
 
 func (h *AuthZHandler) DeletePolicy(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := h.svc.DeletePolicy(id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
 	return c.SendStatus(fiber.StatusOK)
 }
 
