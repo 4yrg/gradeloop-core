@@ -4,9 +4,11 @@ services:
       context: ../../
       dockerfile: services/go/identity/Dockerfile
     container_name: identity-service
+    ports:
+      - "8001:8001"
     environment:
       - DATABASE_URL=identity.db
-      - PORT=8080
+      - PORT=8001
     volumes:
       - ../../services/go/identity/identity.db:/app/identity.db
     restart: unless-stopped
@@ -21,9 +23,9 @@ services:
       dockerfile: Dockerfile
     container_name: session-service
     ports:
-      - "3000:3000"
+      - "8002:8002"
     environment:
-      - PORT=3000
+      - PORT=8002
       - SQLITE_PATH=/app/session.db
       - REDIS_ADDR=redis:6379
     volumes:
@@ -62,14 +64,14 @@ services:
       dockerfile: Dockerfile
     container_name: authn-service
     ports:
-      - "4000:4000"
+      - "8003:8003"
     environment:
-      - PORT=4000
+      - PORT=8003
       - REDIS_ADDR=redis:6379
-      - IDENTITY_SERVICE_URL=http://identity-service:8080
-      - SESSION_SERVICE_URL=http://session-service:3000
+      - IDENTITY_SERVICE_URL=http://identity-service:8001
+      - SESSION_SERVICE_URL=http://session-service:8002
       - EMAIL_SERVICE_URL=http://email-service:5005
-      - AUTHZ_SERVICE_URL=http://authz-service:4001
+      - AUTHZ_SERVICE_URL=http://authz-service:8004
     depends_on:
       - redis
       - identity-service
@@ -87,9 +89,9 @@ services:
       dockerfile: Dockerfile
     container_name: authz-service
     ports:
-      - "4001:4001"
+      - "8004:8004"
     environment:
-      - PORT=4001
+      - PORT=8004
       - DATABASE_URL=authz.db
     volumes:
       - ../../services/go/authz/authz.db:/app/authz.db
