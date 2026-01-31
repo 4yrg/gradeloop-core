@@ -273,3 +273,19 @@ func (s *IdentityService) UpdateClass(id, name string) (*core.Class, error) {
 func (s *IdentityService) DeleteClass(id string) error {
 	return s.repo.DeleteClass(id)
 }
+
+func (s *IdentityService) GetFaculty(id string) (*core.Faculty, error) {
+	return s.repo.GetFacultyByID(id)
+}
+
+func (s *IdentityService) GetDepartment(id string) (*core.Department, error) {
+	return s.repo.GetDepartmentByID(id)
+}
+
+func (s *IdentityService) GetClass(id string) (*core.Class, error) {
+	return s.repo.GetClassByID(id)
+}
+
+func (s *IdentityService) GetUserEnrollments(studentID string) ([]core.ClassEnrollment, error) {
+	return s.repo.GetUserEnrollments(studentID)
+}

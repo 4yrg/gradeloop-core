@@ -225,3 +225,9 @@ func (r *Repository) GetClassEnrollments(classID string) ([]core.ClassEnrollment
 	err := r.db.Preload("Student").Where("class_id = ?", classID).Find(&enrollments).Error
 	return enrollments, err
 }
+
+func (r *Repository) GetUserEnrollments(studentID string) ([]core.ClassEnrollment, error) {
+	var enrollments []core.ClassEnrollment
+	err := r.db.Preload("Class").Where("student_id = ?", studentID).Find(&enrollments).Error
+	return enrollments, err
+}

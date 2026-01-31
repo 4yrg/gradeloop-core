@@ -36,10 +36,10 @@ type LoginRequest struct {
 }
 
 type RegistrationRequest struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"full_name"`
+	UserType string `json:"user_type"`
 }
 
 type TokenResponse struct {
@@ -98,6 +98,10 @@ func (s *AuthNService) Logout(ctx context.Context, token string) error {
 // Register Orchestration
 func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) error {
 	// 1. Create User in Identity Service
+	// userPayload, _ := json.Marshal(req) // Pass through directly as it now matches Identity schema more closely
+	// Actually Identity expects: email, password, full_name, user_type.
+	// Our req has these now (except json tags match).
+
 	userPayload, _ := json.Marshal(req)
 	resp, err := http.Post(s.cfg.IdentityServiceURL+"/internal/users", "application/json", bytes.NewBuffer(userPayload))
 	if err != nil {
@@ -113,7 +117,7 @@ func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) er
 	emailPayload := map[string]string{
 		"to":      req.Email,
 		"subject": "Welcome to GradeLoop",
-		"body":    "Welcome " + req.FirstName + "!", // Simple text for now
+		"body":    "Welcome " + req.FullName + "!", // Simple text for now
 	}
 	emailBody, _ := json.Marshal(emailPayload)
 	_, _ = http.Post(s.cfg.EmailServiceURL+"/internal/email/send", "application/json", bytes.NewBuffer(emailBody))
