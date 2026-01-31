@@ -1,0 +1,11 @@
+meta {
+  name: Revoke User Sessions
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/internal/users/user-123/sessions/revoke
+  body: none
+  auth: none
+}

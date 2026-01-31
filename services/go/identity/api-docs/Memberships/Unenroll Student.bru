@@ -1,0 +1,11 @@
+meta {
+  name: Unenroll Student
+  type: http
+  seq: 22
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/classes/<INSERT_CLASS_ID>/enrollments/<INSERT_STUDENT_ID>
+  body: none
+  auth: none
+}

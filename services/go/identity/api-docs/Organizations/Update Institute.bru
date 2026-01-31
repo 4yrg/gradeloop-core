@@ -1,0 +1,18 @@
+meta {
+  name: Update Institute
+  type: http
+  seq: 13
+}
+
+put {
+  url: {{baseUrl}}/api/v1/orgs/institutes/<INSERT_INSTITUTE_ID>
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Institute Name",
+    "code": "UPDATED-001"
+  }
+}

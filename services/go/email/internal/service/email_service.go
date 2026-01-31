@@ -1,95 +1,84 @@
 package service
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
+	"log"
+	"time"
 
-	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/models"
-	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/queue"
-	"github.com/4yrg/gradeloop-core/develop/services/go/email/internal/store"
+	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
+	"github.com/4yrg/gradeloop-core/services/go/email/internal/repository"
 )
 
 type EmailService struct {
-	store *store.Store
-	queue *queue.RabbitMQ
+	provider    core.EmailProvider
+	templateSvc core.TemplateService
+	repo        *repository.Repository
 }
 
-func NewEmailService(s *store.Store, q *queue.RabbitMQ) *EmailService {
+func NewEmailService(provider core.EmailProvider, templateSvc core.TemplateService, repo *repository.Repository) *EmailService {
 	return &EmailService{
-		store: s,
-		queue: q,
+		provider:    provider,
+		templateSvc: templateSvc,
+		repo:        repo,
 	}
 }
 
-type SendEmailRequest struct {
-	TemplateSlug string                 `json:"template_slug" binding:"required"`
-	Recipient    string                 `json:"recipient" binding:"required"`
-	Data         map[string]interface{} `json:"data"`
-}
+func (s *EmailService) SendEmail(templateName string, recipient string, data map[string]interface{}) error {
+	// 1. Log request (pending)
+	payloadBytes, _ := json.Marshal(data)
+	reqLog := &core.EmailRequestLog{
+		TemplateName:   templateName,
+		RecipientEmail: recipient,
+		Payload:        string(payloadBytes),
+		Status:         core.StatusPending,
+		CreatedAt:      time.Now(),
+	}
+	if err := s.repo.CreateRequestLog(reqLog); err != nil {
+		log.Printf("Failed to create request log: %v", err)
+		// Proceed anyway? Or fail? Fail is safer for audit.
+		return fmt.Errorf("failed to log request: %w", err)
+	}
 
-func (s *EmailService) QueueEmail(ctx context.Context, req SendEmailRequest) error {
-	template, err := s.store.GetTemplateBySlug(req.TemplateSlug)
+	// 2. Get Template
+	tmpl, err := s.templateSvc.GetTemplate(templateName)
 	if err != nil {
-		return fmt.Errorf("template not found: %w", err)
+		s.failLog(reqLog, fmt.Sprintf("Template error: %v", err))
+		return err
 	}
 
-	dataJSON, _ := json.Marshal(req.Data)
-
-	log := &models.EmailLog{
-		Recipient:  req.Recipient,
-		TemplateID: template.ID,
-		Status:     models.StatusPending,
-		Data:       string(dataJSON),
+	// 3. Render
+	body, err := s.templateSvc.Render(tmpl, data)
+	if err != nil {
+		s.failLog(reqLog, fmt.Sprintf("Render error: %v", err))
+		return err
 	}
 
-	if err := s.store.CreateLog(log); err != nil {
-		return fmt.Errorf("failed to create log: %w", err)
+	// 4. Send
+	if err := s.provider.SendEmail([]string{recipient}, tmpl.Subject, body); err != nil {
+		s.failLog(reqLog, fmt.Sprintf("Provider error: %v", err))
+		return err
 	}
 
-	// Payload for queue
-	payload := map[string]interface{}{
-		"log_id": log.ID.String(),
-	}
-	payloadJSON, _ := json.Marshal(payload)
-
-	if err := s.queue.Publish(ctx, payloadJSON); err != nil {
-		log.Status = models.StatusFailed
-		log.LastError = err.Error()
-		s.store.UpdateLog(log)
-		return fmt.Errorf("failed to publish to queue: %w", err)
-	}
+	// 5. Update Log (Sent)
+	now := time.Now()
+	reqLog.Status = core.StatusSent
+	reqLog.SentAt = &now
+	s.repo.UpdateRequestLog(reqLog)
 
 	return nil
 }
 
-func (s *EmailService) RenderTemplate(htmlTmpl string, data map[string]interface{}) (string, error) {
-	tmpl, err := template.New("email").Parse(htmlTmpl)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse template: %w", err)
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return "", fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	return buf.String(), nil
+func (s *EmailService) failLog(reqLog *core.EmailRequestLog, msg string) {
+	reqLog.Status = core.StatusFailed
+	reqLog.ErrorMessage = &msg
+	s.repo.UpdateRequestLog(reqLog)
 }
 
-// For multi-recipients
-func (s *EmailService) QueueBulkEmail(ctx context.Context, templateSlug string, recipients []string, data map[string]interface{}) error {
-	for _, recipient := range recipients {
-		req := SendEmailRequest{
-			TemplateSlug: templateSlug,
-			Recipient:    recipient,
-			Data:         data,
-		}
-		if err := s.QueueEmail(ctx, req); err != nil {
-			return err // Or log error and continue
-		}
-	}
-	return nil
+func (s *EmailService) SendRaw(to, subject, body string) error {
+	return s.provider.SendEmail([]string{to}, subject, body)
+}
+
+func (s *EmailService) GetLogs() ([]core.EmailRequestLog, error) {
+	return s.repo.GetEmailLogs()
 }

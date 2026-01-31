@@ -1,0 +1,17 @@
+meta {
+  name: Validate Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/internal/sessions/validate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "session_id": "8edae239-d647-42d6-aac2-e4c991b382ba"
+  }
+}

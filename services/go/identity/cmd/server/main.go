@@ -1,131 +1,49 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"google.golang.org/grpc"
-
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/config"
-	internalgrpc "github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/grpc"
-	pb "github.com/4yrg/gradeloop-core/libs/proto/user"
-
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/database"
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/handlers"
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/repository"
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/routes"
-	"github.com/4yrg/gradeloop-core/develop/services/go/identity/internal/service"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/api"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/service"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
-	// Load configuration
-	cfg, err := config.Load()
+	// 1. Setup DB
+	db, err := gorm.Open(sqlite.Open("identity.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		log.Fatal("Failed to connect to database:", err)
 	}
 
-	log.Printf("Starting Identity Service in %s mode...", cfg.Environment)
+	// 2. Setup Components
+	repo := repository.NewRepository(db)
 
-	// Initialize database
-	db, err := database.New(cfg)
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+	// Auto-Migrate (Dev only)
+	if err := repo.AutoMigrate(); err != nil {
+		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// Run migrations
-	if err := db.AutoMigrate(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+	svc := service.NewIdentityService(repo)
+	handler := api.NewHandler(svc)
+
+	// 3. Setup Fiber
+	app := fiber.New()
+	app.Use(logger.New())
+	app.Use(recover.New())
+
+	api.SetupRoutes(app, handler)
+
+	// 4. Start
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3001"
 	}
-
-	log.Println("Database migrations completed successfully")
-
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db.DB)
-	instituteRepo := repository.NewInstituteRepository(db.DB)
-	facultyRepo := repository.NewFacultyRepository(db.DB)
-	departmentRepo := repository.NewDepartmentRepository(db.DB)
-	classRepo := repository.NewClassRepository(db.DB)
-	membershipRepo := repository.NewMembershipRepository(db.DB)
-	roleRepo := repository.NewRoleRepository(db.DB)
-
-	// Initialize services
-	userService := service.NewUserService(userRepo)
-	instituteService := service.NewInstituteService(instituteRepo)
-	facultyService := service.NewFacultyService(facultyRepo)
-	departmentService := service.NewDepartmentService(departmentRepo)
-	classService := service.NewClassService(classRepo)
-	membershipService := service.NewMembershipService(membershipRepo)
-	roleService := service.NewRoleService(roleRepo)
-
-	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
-	instituteHandler := handlers.NewInstituteHandler(instituteService)
-	facultyHandler := handlers.NewFacultyHandler(facultyService)
-	departmentHandler := handlers.NewDepartmentHandler(departmentService)
-	classHandler := handlers.NewClassHandler(classService)
-	membershipHandler := handlers.NewMembershipHandler(membershipService)
-	roleHandler := handlers.NewRoleHandler(roleService)
-
-	// Initialize gRPC Server
-	grpcServer := grpc.NewServer()
-	identityGrpcServer := internalgrpc.NewServer(userService)
-	pb.RegisterUserServiceServer(grpcServer, identityGrpcServer)
-
-	// Start gRPC server in goroutine
-	go func() {
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Server.GrpcPort))
-		if err != nil {
-			log.Fatalf("failed to listen for gRPC: %v", err)
-		}
-		log.Printf("gRPC server listening on :%s", cfg.Server.GrpcPort)
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("failed to serve gRPC: %v", err)
-		}
-	}()
-
-	// Setup routes
-	router := routes.NewRouter(
-		userHandler,
-		instituteHandler,
-		facultyHandler,
-		departmentHandler,
-		classHandler,
-		membershipHandler,
-		roleHandler,
-	)
-	r := router.Setup()
-
-	// Start server
-	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
-	log.Printf("Server starting on %s", addr)
-
-	// Graceful shutdown
-	server := &http.Server{
-		Addr:    addr,
-		Handler: r,
-	}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to start: %v", err)
-		}
-	}()
-
-	// Wait for interrupt signal
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("Shutting down server...")
-
-	if err := db.Close(); err != nil {
-		log.Printf("Error closing database: %v", err)
-	}
-
-	log.Println("Server stopped")
+	log.Printf("Identity Service running on :%s", port)
+	log.Fatal(app.Listen(":" + port))
 }

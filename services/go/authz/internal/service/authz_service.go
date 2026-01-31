@@ -1,146 +1,173 @@
 package service
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"strings"
+	"time"
 
-	"github.com/4yrg/gradeloop-core/develop/services/go/authz/internal/models"
-	"github.com/4yrg/gradeloop-core/develop/services/go/authz/internal/repository"
+	"github.com/4yrg/gradeloop-core/services/go/authz/internal/core/domain"
+	"github.com/4yrg/gradeloop-core/services/go/authz/internal/repository"
 )
 
-type CheckRequest struct {
-	UserID     string
-	Roles      []string
-	TenantID   string
-	Resource   string
-	Action     string
-	Attributes map[string]string
+type AuthZService struct {
+	repo *repository.AuthZRepository
 }
 
-type CheckResponse struct {
-	Allowed bool
-	Reason  string
+func NewAuthZService(repo *repository.AuthZRepository) *AuthZService {
+	return &AuthZService{repo: repo}
 }
 
-type AuthzService interface {
-	CheckPermission(ctx context.Context, req CheckRequest) (CheckResponse, error)
+func (s *AuthZService) Init() error {
+	return s.repo.AutoMigrate()
 }
 
-type authzService struct {
-	policyRepo     repository.PolicyRepository
-	roleRepo       repository.RoleRepository
-	permissionRepo repository.PermissionRepository
-	auditRepo      repository.AuditRepository
-}
+func (s *AuthZService) CheckPermission(subject string, role string, resource string, action string) (bool, error) {
+	allowed, err := s.repo.CheckPermission(role, resource, action)
 
-func NewAuthzService(
-	policyRepo repository.PolicyRepository,
-	roleRepo repository.RoleRepository,
-	permissionRepo repository.PermissionRepository,
-	auditRepo repository.AuditRepository,
-) AuthzService {
-	return &authzService{
-		policyRepo:     policyRepo,
-		roleRepo:       roleRepo,
-		permissionRepo: permissionRepo,
-		auditRepo:      auditRepo,
+	decision := "DENY"
+	if allowed {
+		decision = "ALLOW"
 	}
+
+	// Async audit logging
+	go func() {
+		_ = s.repo.LogAudit(&domain.AuditLog{
+			Subject:   subject,
+			Resource:  resource,
+			Action:    action,
+			Decision:  decision,
+			Timestamp: time.Now(),
+		})
+	}()
+
+	return allowed, err
 }
 
-func (s *authzService) CheckPermission(ctx context.Context, req CheckRequest) (CheckResponse, error) {
-	// 1. Check direct user policies (ABAC/Fine-grained)
-	userPolicies, err := s.policyRepo.FindBySubject(ctx, req.UserID)
-	if err == nil {
-		for _, p := range userPolicies {
-			if s.evaluatePolicy(p, req) {
-				res := CheckResponse{Allowed: p.Effect == "ALLOW", Reason: "User policy match"}
-				s.logResult(ctx, req, res)
-				return res, nil
-			}
+func (s *AuthZService) CreateRole(name string, scope domain.Scope, description string) error {
+	role := &domain.Role{
+		Name:        name,
+		Scope:       scope,
+		Description: description,
+	}
+	return s.repo.CreateRole(role)
+}
+
+func (s *AuthZService) GetAllRoles() ([]domain.Role, error) {
+	return s.repo.GetAllRoles()
+}
+
+func (s *AuthZService) CreatePermission(name, resource, action, description string) error {
+	perm := &domain.Permission{
+		Name:        name,
+		Resource:    resource,
+		Action:      action,
+		Description: description,
+	}
+	return s.repo.CreatePermission(perm)
+}
+
+func (s *AuthZService) GetAllPermissions() ([]domain.Permission, error) {
+	return s.repo.GetAllPermissions()
+}
+
+func (s *AuthZService) AssignPermission(roleName, permName string) error {
+	return s.repo.AssignPermissionToRole(roleName, permName)
+}
+
+func (s *AuthZService) SeedDefaults() error {
+	// Seed System Admin
+	_ = s.CreateRole("system_admin", domain.ScopeSystem, "Super Administrator")
+
+	// Seed Institute Admin
+	_ = s.CreateRole("institute_admin", domain.ScopeInstitute, "Institute Administrator")
+
+	// Create some base permissions
+	_ = s.CreatePermission("user.create", "user", "create", "Can create users")
+	_ = s.CreatePermission("user.read", "user", "read", "Can read users")
+	_ = s.CreatePermission("user.update", "user", "update", "Can update users")
+	_ = s.CreatePermission("user.delete", "user", "delete", "Can delete users")
+
+	// Assign permissions to System Admin
+	_ = s.AssignPermission("system_admin", "user.create")
+	_ = s.AssignPermission("system_admin", "user.read")
+	_ = s.AssignPermission("system_admin", "user.update")
+	_ = s.AssignPermission("system_admin", "user.delete")
+
+	return nil
+}
+
+func (s *AuthZService) ResolvePermissions(userID string, roleName string) ([]string, error) {
+	// 1. Get Role and its permissions
+	role, err := s.repo.GetRoleByName(roleName)
+	if err != nil {
+		return nil, err // Return empty if role not found or error
+	}
+
+	// 2. Extract Permission Names
+	var permissions []string
+	for _, p := range role.Permissions {
+		permissions = append(permissions, p.Name)
+	}
+
+	// 3. (Optional) Evaluate Policies if any (Future scope)
+
+	return permissions, nil
+}
+
+func (s *AuthZService) DeleteRole(name string) error {
+	return s.repo.DeleteRole(name)
+}
+
+func (s *AuthZService) DeletePermission(name string) error {
+	return s.repo.DeletePermission(name)
+}
+
+func (s *AuthZService) RevokePermission(roleName, permName string) error {
+	return s.repo.RevokePermissionFromRole(roleName, permName)
+}
+
+func (s *AuthZService) UpdateRole(name string, description string) error {
+	// TODO: Implement update logic in repo
+	return nil
+}
+
+// Policy Management
+// Note: In this system, policies are implicit through role-permission assignments.
+// The Policy table is designed for future ABAC (Attribute-Based Access Control) with conditions.
+// For now, we return role-permission mappings as "policies".
+func (s *AuthZService) CreatePolicy(roleName, permissionName string) error {
+	// Creating a "policy" is essentially assigning a permission to a role
+	return s.AssignPermission(roleName, permissionName)
+}
+
+func (s *AuthZService) GetPolicies() ([]map[string]interface{}, error) {
+	// Return all role-permission assignments as policies
+	roles, err := s.repo.GetAllRoles()
+	if err != nil {
+		return nil, err
+	}
+
+	var policies []map[string]interface{}
+	for _, role := range roles {
+		for _, perm := range role.Permissions {
+			policies = append(policies, map[string]interface{}{
+				"id":         role.ID.String() + ":" + perm.ID.String(),
+				"role":       role.Name,
+				"permission": perm.Name,
+				"resource":   perm.Resource,
+				"action":     perm.Action,
+			})
 		}
 	}
-
-	// 2. Check role-based policies
-	for _, roleName := range req.Roles {
-		// Get role permissions
-		role, err := s.roleRepo.FindByName(ctx, roleName, req.TenantID)
-		if err == nil && role != nil {
-			for _, p := range role.Permissions {
-				if p.Action == req.Action && p.ResourceType == req.Resource {
-					res := CheckResponse{Allowed: true, Reason: fmt.Sprintf("Role %s match", roleName)}
-					s.logResult(ctx, req, res)
-					return res, nil
-				}
-			}
-		}
-
-		// Get specific role policies (ABAC for roles)
-		rolePolicies, err := s.policyRepo.FindBySubject(ctx, roleName)
-		if err == nil {
-			for _, p := range rolePolicies {
-				if s.evaluatePolicy(p, req) {
-					res := CheckResponse{Allowed: p.Effect == "ALLOW", Reason: fmt.Sprintf("Role %s policy match", roleName)}
-					s.logResult(ctx, req, res)
-					return res, nil
-				}
-			}
-		}
-	}
-
-	// Default deny
-	res := CheckResponse{Allowed: false, Reason: "No matching policy found"}
-	s.logResult(ctx, req, res)
-	return res, nil
+	return policies, nil
 }
 
-func (s *authzService) evaluatePolicy(p models.Policy, req CheckRequest) bool {
-	// Check action and resource (supports wildcard *)
-	if !matchString(p.Action, req.Action) || !matchString(p.Resource, req.Resource) {
-		return false
-	}
-
-	// Evaluate conditions (ABAC)
-	if p.Conditions != "" {
-		var conditions map[string]interface{}
-		if err := json.Unmarshal([]byte(p.Conditions), &conditions); err == nil {
-			for key, val := range conditions {
-				reqVal, exists := req.Attributes[key]
-				if !exists || fmt.Sprintf("%v", val) != reqVal {
-					return false
-				}
-			}
-		}
-	}
-
-	return true
+func (s *AuthZService) DeletePolicy(id string) error {
+	// For now, this is a no-op since we don't have direct policy deletion
+	// In a full ABAC implementation, this would delete a Policy record
+	return nil
 }
 
-func (s *authzService) logResult(ctx context.Context, req CheckRequest, res CheckResponse) {
-	result := "DENIED"
-	if res.Allowed {
-		result = "ALLOWED"
-	}
-
-	metadata, _ := json.Marshal(map[string]string{
-		"reason":    res.Reason,
-		"tenant_id": req.TenantID,
-	})
-
-	_ = s.auditRepo.Log(ctx, &models.AuditLog{
-		UserID:        req.UserID,
-		Resource:      req.Resource,
-		Action:        req.Action,
-		Result:        result,
-		Metadata:      string(metadata),
-		ServiceOrigin: "authz-service",
-	})
-}
-
-func matchString(pattern, value string) bool {
-	if pattern == "*" {
-		return true
-	}
-	return strings.EqualFold(pattern, value)
+func (s *AuthZService) IssueServiceToken(serviceName string) (string, error) {
+	// Generate a long-lived JWT for the service
+	// Mock for now
+	return "mock_service_token_" + serviceName, nil
 }

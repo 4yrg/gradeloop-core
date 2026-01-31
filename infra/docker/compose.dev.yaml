@@ -1,0 +1,127 @@
+services:
+  identity-service:
+    build:
+      context: ../../
+      dockerfile: services/go/identity/Dockerfile
+    container_name: identity-service
+    environment:
+      - DATABASE_URL=identity.db
+      - PORT=8080
+    volumes:
+      - ../../services/go/identity/identity.db:/app/identity.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/identity
+
+  session-service:
+    build:
+      context: ../../services/go/session
+      dockerfile: Dockerfile
+    container_name: session-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - SQLITE_PATH=/app/session.db
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - ../../services/go/session/session.db:/app/session.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/session
+    depends_on:
+      - redis
+
+  email-service:
+    build:
+      context: ../../services/go/email
+      dockerfile: Dockerfile
+    container_name: email-service
+    ports:
+      - "5005:5005"
+    env_file:
+      - ../../.env
+    environment:
+      - EMAIL_DB_NAME=/app/email_db
+    volumes:
+      - ../../services/go/email/email_db.db:/app/email_db.db
+      - ../../services/go/email/templates:/app/templates
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/email
+
+  authn-service:
+    build:
+      context: ../../services/go/authn
+      dockerfile: Dockerfile
+    container_name: authn-service
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - REDIS_ADDR=redis:6379
+      - IDENTITY_SERVICE_URL=http://identity-service:8080
+      - SESSION_SERVICE_URL=http://session-service:3000
+      - EMAIL_SERVICE_URL=http://email-service:5005
+      - AUTHZ_SERVICE_URL=http://authz-service:4001
+    depends_on:
+      - redis
+      - identity-service
+      - session-service
+      - authz-service
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/authn
+
+  authz-service:
+    build:
+      context: ../../services/go/authz
+      dockerfile: Dockerfile
+    container_name: authz-service
+    ports:
+      - "4001:4001"
+    environment:
+      - PORT=4001
+      - DATABASE_URL=authz.db
+    volumes:
+      - ../../services/go/authz/authz.db:/app/authz.db
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/authz
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: gradeloop-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  kong:
+    image: kong:3.4
+    container_name: kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    volumes:
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8444:8444"
+    restart: unless-stopped

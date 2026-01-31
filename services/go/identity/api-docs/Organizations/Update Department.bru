@@ -1,0 +1,19 @@
+meta {
+  name: Update Department
+  type: http
+  seq: 17
+}
+
+put {
+  url: {{baseUrl}}/api/v1/orgs/departments/<INSERT_DEPT_ID>
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Department Name"
+  }
+}
+
+

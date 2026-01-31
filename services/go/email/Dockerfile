@@ -1,55 +1,26 @@
-# syntax=docker/dockerfile:1
+FROM golang:1.25-alpine AS builder
 
-################################################################################
-# Create a stage for building the application.
-ARG GO_VERSION=1.25.5
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy libs first as it's a dependency
-COPY libs /src/libs
-COPY services/go/email/go.mod services/go/email/go.sum /src/services/go/email/
-COPY services/go/email/vendor /src/services/go/email/vendor
+COPY go.mod go.sum ./
+RUN apk add --no-cache build-base
+RUN go mod download
 
-WORKDIR /src/services/go/email
+COPY . .
 
-# Build the application using vendored dependencies.
-ARG TARGETARCH
-RUN --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -mod=vendor -o /bin/server ./cmd/server
+# Build the binary
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o server cmd/main.go
 
-################################################################################
-# Runtime stage
-FROM alpine:latest AS final
+FROM alpine:latest
 
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add \
-    ca-certificates \
-    tzdata \
-    && \
-    update-ca-certificates
+WORKDIR /app
 
-# Create a non-privileged user
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+# Install runtime dependencies (check if needed for sqlite, usually static linking handles it, but ca-certificates good for SMTP)
+RUN apk --no-cache add ca-certificates tzdata
 
-# Create data directory for SQLite with correct permissions
-RUN mkdir -p /app/data && chown appuser:appuser /app/data
+COPY --from=builder /app/server .
 
-USER appuser
+# Expose port (5005 as per updated main.go)
+EXPOSE 5005
 
-# Copy the executable from the "build" stage.
-COPY --from=build /bin/server /bin/
-
-# Expose the port that the application listens on.
-EXPOSE 8081
-
-# What the container should run when it is started.
-ENTRYPOINT [ "/bin/server" ]
+CMD ["./server"]

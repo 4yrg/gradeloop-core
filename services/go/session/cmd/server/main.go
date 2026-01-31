@@ -1,96 +1,65 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net"
 	"os"
-	"os/signal"
-	"syscall"
+	"time"
 
-	"google.golang.org/grpc"
-
-	pb "github.com/4yrg/gradeloop-core/libs/proto/session"
+	"github.com/4yrg/gradeloop-core/services/go/session/internal/api"
+	"github.com/4yrg/gradeloop-core/services/go/session/internal/core"
+	"github.com/4yrg/gradeloop-core/services/go/session/internal/repository/redis"
+	sqliteRepo "github.com/4yrg/gradeloop-core/services/go/session/internal/repository/sqlite"
+	"github.com/4yrg/gradeloop-core/services/go/session/internal/service"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gradeloop/session-service/internal/cache"
-	"github.com/gradeloop/session-service/internal/config"
-	internalgrpc "github.com/gradeloop/session-service/internal/grpc"
-	"github.com/gradeloop/session-service/internal/handlers"
-	"github.com/gradeloop/session-service/internal/routes"
-	"github.com/gradeloop/session-service/internal/service"
-	"github.com/gradeloop/session-service/internal/store"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	goredis "github.com/redis/go-redis/v9"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
-	// 1. Load Config
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	// Configuration
+	sessionTTL := 24 * time.Hour          // Default session TTL
+	refreshTokenTTL := 7 * 24 * time.Hour // Default refresh token TTL
+	sqlitePath := os.Getenv("SQLITE_PATH")
+	if sqlitePath == "" {
+		sqlitePath = "session.db"
+	}
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
 	}
 
-	// 2. Initialize Database Store
-	storeLayer, err := store.New(cfg)
+	// 1. Initialize SQLite
+	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to initialize store: %v", err)
+		log.Fatalf("failed to connect database: %v", err)
 	}
 
-	// 3. Initialize Redis Cache
-	cacheLayer, err := cache.New(cfg)
-	if err != nil {
-		log.Fatalf("Failed to initialize cache: %v", err)
+	// Auto-migrate the schema
+	if err := db.AutoMigrate(&core.Session{}); err != nil {
+		log.Fatalf("failed to migrate database: %v", err)
 	}
 
-	// 4. Initialize Service
-	svc := service.New(storeLayer, cacheLayer)
-
-	// 5. Initialize Handlers
-	h := handlers.New(svc)
-
-	// 6. Setup Fiber App
-	app := fiber.New(fiber.Config{
-		AppName: "Session Service",
+	// 2. Initialize Redis
+	rdb := goredis.NewClient(&goredis.Options{
+		Addr: redisAddr,
 	})
 
-	routes.SetupRoutes(app, h)
+	// 3. Initialize Repositories
+	sessionRepo := sqliteRepo.NewSessionRepository(db)
+	sessionCache := redis.NewSessionCache(rdb)
 
-	// Start gRPC Server
-	grpcServer := grpc.NewServer()
-	sessionGrpcServer := internalgrpc.NewServer(svc)
-	pb.RegisterSessionServiceServer(grpcServer, sessionGrpcServer)
+	// 4. Initialize Service
+	sessionService := service.NewSessionService(sessionRepo, sessionCache, sessionTTL, refreshTokenTTL)
 
-	go func() {
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GrpcPort))
-		if err != nil {
-			log.Fatalf("failed to listen for gRPC: %v", err)
-		}
-		log.Printf("gRPC server listening on :%s", cfg.GrpcPort)
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("failed to serve gRPC: %v", err)
-		}
-	}()
+	// 5. Initialize Fiber
+	app := fiber.New()
+	app.Use(logger.New())
 
-	// 7. Start Server
-	go func() {
-		addr := fmt.Sprintf(":%s", cfg.AppPort)
-		log.Printf("Starting server on %s", addr)
-		if err := app.Listen(addr); err != nil {
-			log.Fatalf("Server shutdown: %v", err)
-		}
-	}()
+	handler := api.NewHandler(sessionService)
+	api.RegisterRoutes(app, handler)
 
-	// Graceful Shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("Shutting down server...")
-	if err := app.Shutdown(); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	// Close resources if needed (Redis/DB)
-	// GORM and go-redis handle pooling, but explicit Close() is good if exposed.
-	// (Not exposed in my current wrappers, but OS passing helps).
-
-	log.Println("Server exited")
+	// 6. Start Server
+	log.Fatal(app.Listen(":3000"))
 }

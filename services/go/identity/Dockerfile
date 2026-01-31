@@ -1,52 +1,19 @@
-# syntax=docker/dockerfile:1
-
-################################################################################
-# Create a stage for building the application.
-ARG GO_VERSION=1.25.5
-FROM golang:${GO_VERSION}-alpine AS builder
-
-WORKDIR /src
-
-# Copy libs first as it's a dependency
-COPY libs /src/libs
-COPY services/go/identity/go.mod services/go/identity/go.sum /src/services/go/identity/
-COPY services/go/identity/vendor /src/services/go/identity/vendor
-
-WORKDIR /src/services/go/identity
-
-# Build the application using vendored dependencies.
-# Leverage a bind mount to the root directory to find both libs and service source.
-RUN --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOOS=linux go build -mod=vendor -a -installsuffix cgo -o /bin/main ./cmd/server/main.go
-
-# Runtime stage
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates sqlite-libs tzdata
-
-# Create a non-privileged user
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+FROM golang:1.25-alpine
 
 WORKDIR /app
 
-# Create data directory for SQLite with correct permissions
-RUN mkdir -p /app/data && chown appuser:appuser /app/data
+# Install build tools
+RUN apk add --no-cache git build-base
 
-# Copy binary from builder
-COPY --from=builder /bin/main /app/main
+# Copy module files
+COPY services/go/identity/go.mod services/go/identity/go.sum ./
+RUN go mod download
 
-USER appuser
+# Copy source
+COPY services/go/identity/ .
 
-# Expose port
-EXPOSE 8080
+# Build
+RUN go build -o identity-service ./cmd/server/main.go
 
-# Run the application
-CMD ["/app/main"]
+# Run
+CMD ["./identity-service"]

@@ -1,55 +1,21 @@
-# syntax=docker/dockerfile:1
-
-################################################################################
-# Create a stage for building the application.
-ARG GO_VERSION=1.25.5
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
-WORKDIR /src
-
-# Copy libs first as it's a dependency
-COPY libs /src/libs
-COPY services/go/session/go.mod services/go/session/go.sum /src/services/go/session/
-COPY services/go/session/vendor /src/services/go/session/vendor
-
-WORKDIR /src/services/go/session
-
-# Build the application using vendored dependencies.
-ARG TARGETARCH
-RUN --mount=type=bind,source=.,target=/src \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -mod=vendor -o /bin/server ./cmd/server
-
-################################################################################
-# Runtime stage
-FROM alpine:latest AS final
-
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add \
-    ca-certificates \
-    tzdata \
-    && \
-    update-ca-certificates
-
-# Create a non-privileged user
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
-RUN mkdir -p /app/data && chown appuser:appuser /app && chown appuser:appuser /app/data
 
-USER appuser
+COPY go.mod go.sum ./
+RUN apk add --no-cache build-base
+RUN go mod download
 
-# Copy the executable from the "build" stage.
-COPY --from=build /bin/server /bin/
+COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 8082
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o server cmd/server/main.go
 
-# What the container should run when it is started.
-ENTRYPOINT [ "/bin/server" ]
+FROM alpine:latest
+
+WORKDIR /root/
+
+COPY --from=builder /app/server .
+
+EXPOSE 3000
+
+CMD ["./server"]
