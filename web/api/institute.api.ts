@@ -146,12 +146,19 @@ export const instituteApi = {
     },
 
     addAdmin: async (instituteId: string, data: { name: string; email: string; role: 'owner' | 'admin' }): Promise<void> => {
-        // This endpoint would need to be implemented in the backend
         await apiClient.post(`/institutes/${instituteId}/admins`, {
             name: data.name,
             email: data.email,
             role: data.role.toUpperCase(),
         });
+    },
+
+    removeAdmin: async (instituteId: string, adminId: string): Promise<void> => {
+        await apiClient.delete(`/institutes/${instituteId}/admins/${adminId}`);
+    },
+
+    resendAdminInvite: async (instituteId: string, adminId: string): Promise<void> => {
+        await apiClient.post(`/institutes/${instituteId}/admins/${adminId}/resend-invite`);
     },
 
     getActivityLogs: async (): Promise<ActivityLog[]> => {

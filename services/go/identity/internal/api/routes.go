@@ -40,6 +40,8 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 	orgs.Patch("/institutes/:id/deactivate", h.DeactivateInstitute)
 	orgs.Delete("/institutes/:id", h.DeleteInstitute)
 	orgs.Post("/institutes/:id/admins", h.AddInstituteAdmin)
+	orgs.Delete("/institutes/:id/admins/:adminId", h.RemoveInstituteAdmin)
+	orgs.Post("/institutes/:id/admins/:adminId/resend-invite", h.ResendAdminInvite)
 
 	// Faculties
 	orgs.Post("/faculties", h.CreateFaculty)

@@ -162,12 +162,12 @@ services:
           methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
   - name: identity-institutes
-    url: http://identity-service:8001/orgs/institutes
+    url: http://identity-service:8001/orgs
     routes:
       - name: institutes-route
         paths:
           - /institutes
-        strip_path: true
+        strip_path: false
     plugins:
       - name: correlation-id
         config:
@@ -199,4 +199,3 @@ services:
         config:
           origins: ["*"]
           methods: ["GET", "POST", "PATCH", "OPTIONS"]
-

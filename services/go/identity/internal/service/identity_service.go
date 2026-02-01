@@ -448,6 +448,54 @@ func (s *IdentityService) AddInstituteAdmin(instituteId, name, email, role strin
 	return nil
 }
 
+func (s *IdentityService) RemoveInstituteAdmin(instituteId, adminId string) error {
+	// First check if institute exists
+	_, err := s.repo.GetInstituteByID(instituteId)
+	if err != nil {
+		return err
+	}
+	
+	// Remove the admin relationship
+	return s.repo.RemoveInstituteAdmin(instituteId, adminId)
+}
+
+func (s *IdentityService) ResendAdminInvite(instituteId, adminId string) error {
+	// Get institute
+	institute, err := s.repo.GetInstituteByID(instituteId)
+	if err != nil {
+		return err
+	}
+	
+	// Get admin user
+	admin, err := s.repo.GetUserByID(adminId)
+	if err != nil {
+		return err
+	}
+	
+	// Check if user requires password change (meaning they haven't set their password yet)
+	if !admin.RequiresPasswordChange {
+		return errors.New("admin has already activated their account")
+	}
+	
+	// Generate new temporary password
+	tempPassword := s.generateTempPassword()
+	
+	// Update user with new temporary password
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	
+	admin.PasswordHash = string(hashedBytes)
+	admin.RequiresPasswordChange = true
+	if err := s.repo.UpdateUser(admin); err != nil {
+		return err
+	}
+	
+	// Resend invitation email
+	return s.sendAdminInvitationEmail(institute, admin.FullName, admin.Email, tempPassword, false)
+}
+
 // ... similar wrappers could be added for Faculty/Dept/Class updates if needed.
 // For brevity, let's assume direct usage or add them if specific logic is needed.
 // Adding them for completeness as requested.
@@ -602,6 +650,20 @@ GradeLoop Team`, adminName, institute.Name, loginURL)
 	
 	fmt.Printf("[Identity] Admin invitation email sent successfully to %s\n", adminEmail)
 	return nil
+}
+
+// generateTempPassword generates a secure temporary password
+func (s *IdentityService) generateTempPassword() string {
+	// Generate 16 random bytes
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to a default if random generation fails
+		return "TempPass123!"
+	}
+	
+	// Convert to hex and take first 12 characters, add suffix for complexity requirements
+	tempPass := hex.EncodeToString(bytes)[:12]
+	return tempPass + "A1!"
 }
 
 // HTTP client utility for calling email service

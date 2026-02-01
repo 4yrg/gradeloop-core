@@ -202,6 +202,23 @@ func (r *Repository) AddInstituteAdmin(instituteID string, userID string, role s
 	return r.db.Create(adminProfile).Error
 }
 
+func (r *Repository) RemoveInstituteAdmin(instituteID string, userID string) error {
+	// Parse UUIDs
+	instituteUUID, err := uuid.Parse(instituteID)
+	if err != nil {
+		return err
+	}
+	
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	
+	// Remove the institute admin profile
+	return r.db.Where("user_id = ? AND institute_id = ?", userUUID, instituteUUID).
+		Delete(&core.InstituteAdminProfile{}).Error
+}
+
 func (r *Repository) CreateFaculty(faculty *core.Faculty) error {
 	return r.db.Create(faculty).Error
 }

@@ -330,6 +330,32 @@ func (h *Handler) AddInstituteAdmin(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Admin added successfully"})
 }
 
+func (h *Handler) RemoveInstituteAdmin(c *fiber.Ctx) error {
+	instituteId := c.Params("id")
+	adminId := c.Params("adminId")
+	
+	if err := h.svc.RemoveInstituteAdmin(instituteId, adminId); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Admin removed successfully"})
+}
+
+func (h *Handler) ResendAdminInvite(c *fiber.Ctx) error {
+	instituteId := c.Params("id")
+	adminId := c.Params("adminId")
+	
+	if err := h.svc.ResendAdminInvite(instituteId, adminId); err != nil {
+		// Check if it's a business logic error that should return 400
+		if err.Error() == "admin has already activated their account" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Invitation resent successfully"})
+}
+
 // Similar for Faculty, Dept, Class...
 func (h *Handler) UpdateFaculty(c *fiber.Ctx) error {
 	id := c.Params("id")
