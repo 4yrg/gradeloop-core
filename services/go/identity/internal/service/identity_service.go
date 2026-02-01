@@ -61,6 +61,7 @@ type InstituteAdmin struct {
 	Name   string `json:"name"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
+	Status string `json:"status"` // Active or Pending
 }
 
 type InstituteWithAdminsResponse struct {
@@ -254,12 +255,18 @@ func (s *IdentityService) GetInstitute(id string) (*InstituteWithAdminsResponse,
 
 	var adminResponse []InstituteAdmin
 	for _, admin := range admins {
+		status := "Active"
+		if admin.RequiresPasswordChange {
+			status = "Pending"
+		}
+		
 		adminResponse = append(adminResponse, InstituteAdmin{
 			ID:     admin.ID.String(),
 			UserID: admin.ID.String(),
 			Name:   admin.FullName,
 			Email:  admin.Email,
 			Role:   "ADMIN", // For now, we'll assume all are admins. Could be enhanced later
+			Status: status,
 		})
 	}
 

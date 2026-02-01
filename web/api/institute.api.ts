@@ -28,6 +28,7 @@ interface InstituteResponse {
         name: string;
         email: string;
         role: 'OWNER' | 'ADMIN';
+        status: 'Active' | 'Pending'; // Added status from backend
     }>;
     created_at: string;
 }
@@ -46,6 +47,7 @@ const transformInstituteResponse = (response: InstituteResponse): Institute => {
             name: admin.name,
             email: admin.email,
             role: admin.role.toLowerCase() as 'owner' | 'admin',
+            status: admin.status?.toLowerCase() as 'active' | 'pending' || 'active', // Map backend status
         })) || [], // Default to empty array if admins is undefined
         setupProgress: 0, // Default progress
         createdAt: response.created_at,

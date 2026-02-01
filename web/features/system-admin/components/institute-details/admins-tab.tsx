@@ -102,6 +102,7 @@ export function AdminsTab({ admins, instituteId, onRefresh }: AdminsTabProps) {
               <TableHead>Admin Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,13 +116,29 @@ export function AdminsTab({ admins, instituteId, onRefresh }: AdminsTabProps) {
                     {admin.role}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={admin.status === 'active' ? "default" : "secondary"}
+                    className={admin.status === 'active' ? "bg-green-600 hover:bg-green-700" : "bg-yellow-600 hover:bg-yellow-700 text-white"}
+                  >
+                    {admin.status === 'active' ? (
+                      <span className="flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> Pending
+                      </span>
+                    )}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Resend Invite"
+                    title={admin.status === 'active' ? "Account already active" : "Resend Invite"}
                     onClick={() => handleResendInvite(admin)}
-                    disabled={resendInvite.isPending}
+                    disabled={resendInvite.isPending || admin.status === 'active'}
                   >
                     {resendInvite.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
