@@ -10,11 +10,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
+	// 0. Load .env with robust path searching
+	_ = godotenv.Load(".env", "../.env", "../../.env", "../../../.env", "../../../../.env", "../../../../../.env")
+
 	// 1. Setup DB
 	dsn := os.Getenv("IDENTITY_DATABASE_URL")
 	if dsn == "" {

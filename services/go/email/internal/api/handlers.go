@@ -1,6 +1,8 @@
 package api
 
 import (
+	"log"
+
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
@@ -49,6 +51,8 @@ func (h *Handler) SendRawEmail(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
+
+	log.Printf("[Email Handler] Received Raw Email request to: %s", req.To)
 
 	if err := h.emailSvc.SendRaw(req.To, req.Subject, req.Body); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

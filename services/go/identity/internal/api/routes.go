@@ -20,6 +20,7 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 	identity.Delete("/users/:id", h.DeleteUser)
 	identity.Get("/users/:id/role", h.GetUserRole)
 	identity.Get("/users", h.ListUsers) // Added for completeness/debugging
+	identity.Post("/users/lookup", h.LookupUser)
 
 	// User Enrollments (keeping this accessible internally if needed, or maybe it belongs to Org?)
 	identity.Get("/users/:user_id/enrollments", h.GetUserEnrollments)

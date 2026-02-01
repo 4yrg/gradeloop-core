@@ -32,8 +32,6 @@ services:
       watch:
         - action: rebuild
           path: ../../services/go/session
-    depends_on:
-      - redis
 
   email-service:
     build:
@@ -68,7 +66,6 @@ services:
       - AUTHZ_SERVICE_URL=http://authz-service:8004
       - INTERNAL_SECRET=insecure-secret-for-dev
     depends_on:
-      - redis
       - identity-service
       - session-service
       - authz-service
@@ -128,13 +125,6 @@ services:
       watch:
         - action: rebuild
           path: ../../services/go/submission
-
-  redis:
-    image: redis:7.2-alpine
-    container_name: gradeloop-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
 
   kong:
     image: kong:3.4

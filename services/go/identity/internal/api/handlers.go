@@ -71,6 +71,22 @@ func (h *Handler) ListUsers(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
+func (h *Handler) LookupUser(c *fiber.Ctx) error {
+	type Req struct {
+		Email string `json:"email"`
+	}
+	var req Req
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON"})
+	}
+
+	user, err := h.svc.LookupUser(req.Email)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+	return c.JSON(user)
+}
+
 func (h *Handler) GetUserEnrollments(c *fiber.Ctx) error {
 	userID := c.Params("user_id")
 	enrollments, err := h.svc.GetUserEnrollments(userID)
@@ -100,11 +116,12 @@ func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"valid":     true,
-		"user_id":   user.ID,
-		"role":      user.UserType,
-		"email":     user.Email,
-		"full_name": user.FullName,
+		"valid":       true,
+		"user_id":     user.ID,
+		"role":        user.UserType,
+		"email":       user.Email,
+		"full_name":   user.FullName,
+		"force_reset": user.RequiresPasswordChange,
 	})
 }
 
