@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	
+
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/core"
 	"gorm.io/gorm"
 )
