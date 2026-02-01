@@ -9,9 +9,13 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/service"
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/service/provider"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// 0. Load .env
+	_ = godotenv.Load(".env", "../.env", "../../.env", "../../../.env", "../../../../.env", "../../../../../.env")
+
 	// 1. Load Config
 	cfg, err := core.LoadConfig()
 	if err != nil {

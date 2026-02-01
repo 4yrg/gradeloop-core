@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -29,6 +30,17 @@ func main() {
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
+	redisUsername := os.Getenv("REDIS_USERNAME")
+	if redisUsername == "" {
+		redisUsername = "default"
+	}
+	redisDB := 0
+	if dbStr := os.Getenv("REDIS_DB"); dbStr != "" {
+		var i int
+		if _, err := fmt.Sscanf(dbStr, "%d", &i); err == nil {
+			redisDB = i
+		}
+	}
 
 	// 1. Initialize DB
 	dsn := os.Getenv("SESSION_DATABASE_URL")
@@ -51,7 +63,9 @@ func main() {
 	// 2. Initialize Redis
 	rdb := goredis.NewClient(&goredis.Options{
 		Addr:     redisAddr,
+		Username: redisUsername,
 		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       redisDB,
 	})
 
 	// 3. Initialize Repositories

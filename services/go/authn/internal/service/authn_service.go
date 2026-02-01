@@ -26,7 +26,9 @@ type AuthNService struct {
 func NewAuthNService(cfg *config.Config) *AuthNService {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddr,
+		Username: cfg.RedisUsername,
 		Password: cfg.RedisPassword,
+		DB:       cfg.RedisDB,
 	})
 
 	return &AuthNService{
@@ -262,6 +264,10 @@ func (s *AuthNService) Logout(ctx context.Context, token string) error {
 	return nil
 }
 
+func (s *AuthNService) PingRedis() error {
+	return s.redis.Ping(context.Background()).Err()
+}
+
 func (s *AuthNService) Register(ctx context.Context, req RegistrationRequest) error {
 	// 1. Create User in Identity Service
 	resp, err := s.postJson(s.cfg.IdentityServiceURL+"/internal/identity/users", req)
@@ -311,6 +317,7 @@ func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		// User not found or error. Return nil to mimic success for security.
+		fmt.Printf("[AuthN] User lookup for %s failed with status %d (success returned for security)\n", email, resp.StatusCode)
 		return nil
 	}
 
@@ -320,9 +327,10 @@ func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
 		FullName string `json:"full_name"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		fmt.Println("Error decoding user lookup response:", err)
+		fmt.Println("[AuthN] Error decoding user lookup response:", err)
 		return nil
 	}
+	fmt.Printf("[AuthN] Found user %s (%s) for forgot password request\n", user.ID, user.Email)
 
 	// 2. Generate cryptographically secure reset token
 	tokenBytes := make([]byte, 32)
@@ -351,8 +359,25 @@ func (s *AuthNService) ForgotPassword(ctx context.Context, email string) error {
 		"subject": "Password Reset Request",
 		"body":    fmt.Sprintf("Hello %s,\n\nClick here to reset your password: %s\n\nThis link expires in 15 minutes.", user.FullName, resetLink),
 	}
-	// Fire-and-forget
-	_, _ = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
+	// Log the attempt
+	fmt.Printf("Sending password reset email to %s via %s\n", user.Email, s.cfg.EmailServiceURL+"/internal/email/send")
+
+	resp, err = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
+	if err != nil {
+		fmt.Printf("Failed to call email service: %v\n", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Email service returned non-OK status: %d\n", resp.StatusCode)
+		// Read body for error details
+		var errBody map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&errBody)
+		fmt.Printf("Email service error: %v\n", errBody)
+	} else {
+		fmt.Println("Password reset email sent successfully (queued).")
+	}
 
 	return nil
 }
@@ -410,5 +435,9 @@ func (s *AuthNService) postJson(url string, data interface{}) (*http.Response, e
 	req.Header.Set("X-Internal-Token", s.cfg.InternalToken)
 
 	client := &http.Client{}
-	return client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("[AuthN] HTTP POST error to %s: %v\n", url, err)
+	}
+	return resp, err
 }

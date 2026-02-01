@@ -141,7 +141,7 @@ func (h *AuthNHandler) ForgotPassword(c *fiber.Ctx) error {
 	if err := h.svc.ForgotPassword(c.Context(), req.Email); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return c.JSON(fiber.Map{"message": "If the email exists, a password reset link has been sent"})
 }
 
 func (h *AuthNHandler) ResetPassword(c *fiber.Ctx) error {
@@ -156,7 +156,7 @@ func (h *AuthNHandler) ResetPassword(c *fiber.Ctx) error {
 	if err := h.svc.ResetPassword(c.Context(), req.Token, req.NewPassword); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return c.JSON(fiber.Map{"message": "Password reset successful"})
 }
 
 func (h *AuthNHandler) IssueToken(c *fiber.Ctx) error {

@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"net/smtp"
+	"strings"
 
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
 )
@@ -13,7 +14,12 @@ type SMTPProvider struct {
 }
 
 func NewSMTPProvider(cfg *core.Config) *SMTPProvider {
-	auth := smtp.PlainAuth("", cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPHost)
+	// Sanitize password: remove spaces (common in App Passwords) and quotes
+	cleanPass := strings.ReplaceAll(cfg.SMTPPassword, " ", "")
+	cleanPass = strings.ReplaceAll(cleanPass, "\"", "")
+	cleanPass = strings.ReplaceAll(cleanPass, "'", "")
+
+	auth := smtp.PlainAuth("", cfg.SMTPUsername, cleanPass, cfg.SMTPHost)
 	return &SMTPProvider{
 		config: cfg,
 		auth:   auth,
