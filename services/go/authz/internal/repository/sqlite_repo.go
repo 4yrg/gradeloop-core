@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/core/domain"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AuthZRepository struct {
@@ -41,9 +42,12 @@ func (r *AuthZRepository) CheckPermission(roleName string, resource string, acti
 	return count > 0, nil
 }
 
-// CreateRole creates a new role
+// CreateRole creates a new role uniquely (idempotent)
 func (r *AuthZRepository) CreateRole(role *domain.Role) error {
-	return r.db.Create(role).Error
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoNothing: true,
+	}).Create(role).Error
 }
 
 // GetRoleByName fetches a role by name
@@ -63,9 +67,12 @@ func (r *AuthZRepository) GetAllRoles() ([]domain.Role, error) {
 	return roles, err
 }
 
-// CreatePermission creates a new permission
+// CreatePermission creates a new permission uniquely (idempotent)
 func (r *AuthZRepository) CreatePermission(perm *domain.Permission) error {
-	return r.db.Create(perm).Error
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoNothing: true,
+	}).Create(perm).Error
 }
 
 // GetAllPermissions returns all permissions
