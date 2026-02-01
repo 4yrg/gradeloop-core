@@ -1,12 +1,7 @@
 package repository
 
 import (
-	"fmt"
-	"log"
-	"os"
-
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -14,27 +9,13 @@ type Repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(dbName string) (*Repository, error) {
-	dsn := os.Getenv("EMAIL_DATABASE_URL")
-	if dsn == "" {
-		dsn = os.Getenv("DATABASE_URL")
-	}
-	if dsn == "" {
-		return nil, fmt.Errorf("EMAIL_DATABASE_URL or DATABASE_URL must be set")
-	}
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+}
 
-	// Auto Migrate
-	err = db.AutoMigrate(&core.EmailTemplate{}, &core.EmailRequestLog{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to migrate database: %w", err)
-	}
-
-	log.Printf("Connected to PostgreSQL database")
-	return &Repository{db: db}, nil
+// AutoMigrate applies schema changes
+func (r *Repository) AutoMigrate() error {
+	return r.db.AutoMigrate(&core.EmailTemplate{}, &core.EmailRequestLog{})
 }
 
 // GetTemplateByName fetches a template by its name

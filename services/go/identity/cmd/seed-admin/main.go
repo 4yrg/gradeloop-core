@@ -6,7 +6,6 @@ import (
 
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/core"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -28,6 +27,12 @@ func main() {
 		log.Fatal("SYS_ADMIN_EMAIL and SYS_ADMIN_PW must be set")
 	}
 
+	// 1.5 Load Name
+	name := os.Getenv("SYS_ADMIN_NAME")
+	if name == "" {
+		name = "System Admin" // fallback
+	}
+
 	// 2. Connect to DB
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -41,27 +46,34 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// 3. Check if user exists
+	// 3. User Logic
+	newUser := &core.User{
+		Email:         email,
+		FullName:      name,
+		UserType:      core.UserTypeSystemAdmin,
+		IsActive:      true,
+		Status:        "active",
+		EmailVerified: true,
+	}
+
+	// Check if user exists
 	existingUser, err := repo.GetUserByEmail(email)
 	if err == nil && existingUser != nil {
-		log.Printf("User with email %s already exists. Skipping creation.", email)
+		log.Printf("User with email %s exists. Updating name to: %s", email, name)
+		existingUser.FullName = name
+		existingUser.UserType = core.UserTypeSystemAdmin // Ensure role is correct
+		existingUser.IsActive = true
+		existingUser.Status = "active"
+		existingUser.EmailVerified = true
+
+		if err := repo.UpdateUser(existingUser); err != nil {
+			log.Fatal("Failed to update system admin:", err)
+		}
+		log.Printf("System Admin (%s) updated successfully.", email)
 		return
 	}
 
 	// 4. Create User
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal("Failed to hash password:", err)
-	}
-
-	newUser := &core.User{
-		Email:        email,
-		PasswordHash: string(hashedBytes),
-		FullName:     "System Admin",
-		UserType:     core.UserTypeSystemAdmin,
-		IsActive:     true,
-	}
-
 	if err := repo.CreateUser(newUser); err != nil {
 		log.Fatal("Failed to create system admin:", err)
 	}

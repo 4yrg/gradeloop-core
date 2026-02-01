@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/4yrg/gradeloop-core/services/go/authn/internal/middleware"
@@ -16,15 +17,32 @@ func NewAuthNHandler(svc *service.AuthNService) *AuthNHandler {
 	return &AuthNHandler{svc: svc}
 }
 
-func (h *AuthNHandler) Login(c *fiber.Ctx) error {
+func (h *AuthNHandler) RequestMagicLink(c *fiber.Ctx) error {
 	var req service.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	tokens, err := h.svc.Login(c.Context(), req.Email, req.Password)
+	if err := h.svc.RequestMagicLink(c.Context(), req.Email); err != nil {
+		// Log error but return success to avoid enumeration
+		fmt.Printf("[AuthN] RequestMagicLink error for %s: %v\n", req.Email, err)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Magic link sent if account exists"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Magic link sent if account exists"})
+}
+
+func (h *AuthNHandler) ConsumeMagicLink(c *fiber.Ctx) error {
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	tokens, err := h.svc.ConsumeMagicLink(c.Context(), req.Token)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication failed"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.JSON(tokens)
@@ -33,7 +51,6 @@ func (h *AuthNHandler) Login(c *fiber.Ctx) error {
 func (h *AuthNHandler) Register(c *fiber.Ctx) error {
 	var req struct {
 		Email    string `json:"email"`
-		Password string `json:"password"`
 		FullName string `json:"full_name"`
 		UserType string `json:"user_type"`
 		// Frontend fields
@@ -44,7 +61,7 @@ func (h *AuthNHandler) Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	// Map fields if names from frontend are used
+	// Map fields
 	if req.FullName == "" && req.Name != "" {
 		req.FullName = req.Name
 	}
@@ -54,16 +71,32 @@ func (h *AuthNHandler) Register(c *fiber.Ctx) error {
 
 	svcReq := service.RegistrationRequest{
 		Email:    req.Email,
-		Password: req.Password,
 		FullName: req.FullName,
 		UserType: req.UserType,
 	}
 
-	if err := h.svc.Register(c.Context(), svcReq); err != nil {
+	if err := h.svc.RequestEmailConfirmation(c.Context(), svcReq); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.SendStatus(fiber.StatusCreated)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Confirmation email sent"})
+}
+
+func (h *AuthNHandler) VerifyEmail(c *fiber.Ctx) error {
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	tokens, err := h.svc.ConsumeConfirmationToken(c.Context(), req.Token)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// Return tokens to auto-login
+	return c.JSON(tokens)
 }
 
 func (h *AuthNHandler) RefreshToken(c *fiber.Ctx) error {
@@ -112,14 +145,8 @@ func (h *AuthNHandler) ValidateToken(c *fiber.Ctx) error {
 }
 
 func (h *AuthNHandler) LogoutAll(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(string) // Assuming Auth middleware sets this
-	// If no middleware, maybe passed in body? But safer from token.
-	// Spec says "POST /auth/logout-all".
-
+	userID := c.Locals("user_id").(string)
 	if userID == "" {
-		// Fallback to body if testing without full auth middleware setup?
-		// For safety, let's assume we need to extract from token or it's passed.
-		// Detailed impl would parse token here if middleware didn't.
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 
@@ -130,34 +157,8 @@ func (h *AuthNHandler) LogoutAll(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func (h *AuthNHandler) ForgotPassword(c *fiber.Ctx) error {
-	var req struct {
-		Email string `json:"email"`
-	}
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
-	}
-
-	if err := h.svc.ForgotPassword(c.Context(), req.Email); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-	return c.JSON(fiber.Map{"message": "If the email exists, a password reset link has been sent"})
-}
-
-func (h *AuthNHandler) ResetPassword(c *fiber.Ctx) error {
-	var req struct {
-		Token       string `json:"token"`
-		NewPassword string `json:"newPassword"`
-	}
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
-	}
-
-	if err := h.svc.ResetPassword(c.Context(), req.Token, req.NewPassword); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-	}
-	return c.JSON(fiber.Map{"message": "Password reset successful"})
-}
+// RequestMagicLink replaces Login, but we keep generic naming
+// ForgotPassword and ResetPassword removed
 
 func (h *AuthNHandler) IssueToken(c *fiber.Ctx) error {
 	var req struct {
@@ -179,13 +180,17 @@ func (h *AuthNHandler) IssueToken(c *fiber.Ctx) error {
 func (h *AuthNHandler) RegisterRoutes(app *fiber.App) {
 	auth := app.Group("/auth")
 
-	auth.Post("/login", h.Login)
+	// Magic Link Flow
+	auth.Post("/login", h.RequestMagicLink)              // Initiates flow
+	auth.Post("/magic-link/consume", h.ConsumeMagicLink) // Completes flow
+
 	auth.Post("/register", h.Register)
+	auth.Post("/verify-email", h.VerifyEmail) // Completes registration
+
 	auth.Post("/refresh", h.RefreshToken)
 	auth.Post("/logout", h.Logout)
-	auth.Post("/logout-all", h.LogoutAll) // Middleware needed here in real app
-	auth.Post("/forgot-password", h.ForgotPassword)
-	auth.Post("/reset-password", h.ResetPassword)
+	auth.Post("/logout-all", h.LogoutAll)
+
 	auth.Get("/validate", h.ValidateToken)
 
 	// Apply internal auth middleware to internal endpoints

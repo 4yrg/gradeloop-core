@@ -38,17 +38,13 @@ import { toast } from "sonner"
 
 interface InstituteTableProps {
     institutes: Institute[]
+    searchQuery: string
+    onSearchChange: (value: string) => void
 }
 
-export function InstituteTable({ institutes }: InstituteTableProps) {
-    const [searchQuery, setSearchQuery] = useState("")
+export function InstituteTable({ institutes, searchQuery, onSearchChange }: InstituteTableProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [instituteToDelete, setInstituteToDelete] = useState<Institute | null>(null)
-
-    const filteredInstitutes = institutes.filter((i) =>
-        i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.code.toLowerCase().includes(searchQuery.toLowerCase())
-    )
 
     const setSelectedInstituteId = useSystemAdminStore((state) => state.setSelectedInstituteId)
     const setDetailsModalOpen = useSystemAdminStore((state) => state.setDetailsModalOpen)
@@ -107,7 +103,7 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
                             placeholder="Search institutes..."
                             className="pl-8"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => onSearchChange(e.target.value)}
                         />
                     </div>
                 </div>
@@ -124,14 +120,14 @@ export function InstituteTable({ institutes }: InstituteTableProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredInstitutes.length === 0 ? (
+                            {institutes.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center">
                                         No institutes found.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredInstitutes.map((institute) => (
+                                institutes.map((institute) => (
                                     <TableRow key={institute.id}>
                                         <TableCell>
                                             <div className="font-medium">{institute.name}</div>

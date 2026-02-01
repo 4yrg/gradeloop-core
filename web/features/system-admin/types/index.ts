@@ -11,6 +11,7 @@ export const instituteAdminSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     role: instituteAdminRoleSchema,
+    status: z.enum(["active", "pending"]).optional(), // Added status
 });
 
 export type InstituteAdmin = z.infer<typeof instituteAdminSchema>;

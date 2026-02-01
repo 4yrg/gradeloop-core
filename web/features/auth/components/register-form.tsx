@@ -19,6 +19,7 @@ export function RegisterForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [success, setSuccess] = useState(false)
     const { setIsLoading } = useAuthLoading()
 
     const {
@@ -31,21 +32,19 @@ export function RegisterForm() {
         defaultValues: {
             name: "",
             email: "",
-            password: "",
-            confirmPassword: "",
             role: undefined,
         },
     })
 
-    const { mutateAsync: registerMutation, isPending } = useRegister()
+    const { mutateAsync: registerMutation } = useRegister()
 
     async function onSubmit(data: RegisterValues) {
         setLoading(true)
         setIsLoading(true)
         setError(null)
+        setSuccess(false)
 
         try {
-            // Call registration mutation which handles both registration and auto-login
             const result = await registerMutation(data);
             console.log("Registration result:", result);
 
@@ -58,14 +57,38 @@ export function RegisterForm() {
                 }
                 setLoading(false);
                 setIsLoading(false);
+            } else {
+                // Success
+                setSuccess(true)
+                setLoading(false)
+                setIsLoading(false)
             }
-            // Success redirect is handled by the hook
         } catch (err) {
             console.error("Registration error:", err);
             setError("Something went wrong. Please try again.")
             setLoading(false)
             setIsLoading(false)
         }
+    }
+
+    if (success) {
+        return (
+            <Card className="mx-auto max-w-sm w-full">
+                <CardHeader className="space-y-1 text-center">
+                    <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+                    <CardDescription>
+                        We've sent a confirmation link to your email address. Please click the link to activate your account.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="text-center text-sm">
+                        <Link href="/login" className="underline">
+                            Back to Sign In
+                        </Link>
+                    </div>
+                </CardContent>
+            </Card>
+        )
     }
 
     return (
@@ -111,24 +134,6 @@ export function RegisterForm() {
                             </SelectContent>
                         </Select>
                         {errors.role && <p className="text-sm font-medium text-destructive">{errors.role.message}</p>}
-                    </div>
-
-                    {/* Password Field - Validated before sending to Kong */}
-                    <div className="space-y-2">
-                        <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Password
-                        </label>
-                        <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
-                        {errors.password && <p className="text-sm font-medium text-destructive">{errors.password.message}</p>}
-                    </div>
-
-                    {/* Confirm Password Field - Client-side validation only */}
-                    <div className="space-y-2">
-                        <label htmlFor="confirmPassword" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Confirm Password
-                        </label>
-                        <Input id="confirmPassword" type="password" placeholder="••••••••" {...register("confirmPassword")} />
-                        {errors.confirmPassword && <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>}
                     </div>
 
                     {/* Error Display */}
