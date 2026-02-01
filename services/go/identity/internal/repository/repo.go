@@ -4,7 +4,9 @@ import (
 	"errors"
 
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/core"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
@@ -113,10 +115,50 @@ func (r *Repository) DeleteInstitute(id string) error {
 	return r.db.Delete(&core.Institute{}, "id = ?", id).Error
 }
 
-func (r *Repository) GetInstitutes() ([]core.Institute, error) {
+func (r *Repository) GetInstitutes(query string) ([]core.Institute, error) {
 	var institutes []core.Institute
-	err := r.db.Find(&institutes).Error
+	db := r.db
+	if query != "" {
+		q := "%" + query + "%"
+		db = db.Where("name LIKE ? OR code LIKE ?", q, q)
+	}
+	err := db.Find(&institutes).Error
 	return institutes, err
+}
+
+func (r *Repository) CreateInstituteWithAdmins(institute *core.Institute, admins []*core.User) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(institute).Error; err != nil {
+			return err
+		}
+
+		for _, admin := range admins {
+			// Find or create admin
+			var existingUser core.User
+			err := tx.Where("email = ?", admin.Email).First(&existingUser).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					// Create new user
+					if err := tx.Create(admin).Error; err != nil {
+						return err
+					}
+					existingUser = *admin
+				} else {
+					return err
+				}
+			}
+
+			// Create InstituteAdminProfile
+			profile := core.InstituteAdminProfile{
+				UserID:      existingUser.ID,
+				InstituteID: institute.ID,
+			}
+			if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&profile).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (r *Repository) GetInstituteByID(id string) (*core.Institute, error) {
@@ -126,6 +168,38 @@ func (r *Repository) GetInstituteByID(id string) (*core.Institute, error) {
 		return nil, errors.New("institute not found")
 	}
 	return &institute, err
+}
+
+func (r *Repository) GetInstituteAdmins(instituteID string) ([]core.User, error) {
+	var users []core.User
+	err := r.db.
+		Select("users.*").
+		Table("users").
+		Joins("JOIN institute_admin_profiles ON users.id = institute_admin_profiles.user_id").
+		Where("institute_admin_profiles.institute_id = ?", instituteID).
+		Find(&users).Error
+	return users, err
+}
+
+func (r *Repository) AddInstituteAdmin(instituteID string, userID string, role string) error {
+	// Parse UUIDs
+	instituteUUID, err := uuid.Parse(instituteID)
+	if err != nil {
+		return err
+	}
+	
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	
+	// Create the institute admin profile
+	adminProfile := &core.InstituteAdminProfile{
+		UserID:      userUUID,
+		InstituteID: instituteUUID,
+	}
+	
+	return r.db.Create(adminProfile).Error
 }
 
 func (r *Repository) CreateFaculty(faculty *core.Faculty) error {

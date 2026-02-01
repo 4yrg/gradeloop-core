@@ -10,6 +10,10 @@ services:
       - ../../.env
     environment:
       - PORT=8001
+      - EMAIL_SERVICE_URL=http://email-service:5005
+      - INTERNAL_SECRET=insecure-secret-for-dev
+    depends_on:
+      - email-service
     restart: unless-stopped
     develop:
       watch:

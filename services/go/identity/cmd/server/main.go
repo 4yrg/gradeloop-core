@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/api"
+	"github.com/4yrg/gradeloop-core/services/go/identity/internal/config"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/service"
 	"github.com/gofiber/fiber/v2"
@@ -19,20 +19,19 @@ func main() {
 	// 0. Load .env with robust path searching
 	_ = godotenv.Load(".env", "../.env", "../../.env", "../../../.env", "../../../../.env", "../../../../../.env")
 
-	// 1. Setup DB
-	dsn := os.Getenv("IDENTITY_DATABASE_URL")
-	if dsn == "" {
-		dsn = os.Getenv("DATABASE_URL")
-	}
-	if dsn == "" {
+	// 1. Load Configuration
+	cfg := config.Load()
+	if cfg.DatabaseURL == "" {
 		log.Fatal("IDENTITY_DATABASE_URL or DATABASE_URL must be set")
 	}
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	// 2. Setup DB
+	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// 2. Setup Components
+	// 3. Setup Components
 	repo := repository.NewRepository(db)
 
 	// Auto-Migrate (Dev only)
@@ -40,21 +39,18 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	svc := service.NewIdentityService(repo)
+	svc := service.NewIdentityService(repo, cfg)
 	handler := api.NewHandler(svc)
 
-	// 3. Setup Fiber
+	// 4. Setup Fiber
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(recover.New())
 
 	api.SetupRoutes(app, handler)
 
-	// 4. Start
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8001"
-	}
-	log.Printf("Identity Service running on :%s", port)
-	log.Fatal(app.Listen(":" + port))
+	// 5. Start
+	log.Printf("Identity Service running on :%s", cfg.Port)
+	log.Printf("Email Service URL: %s", cfg.EmailServiceURL)
+	log.Fatal(app.Listen(":" + cfg.Port))
 }

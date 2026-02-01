@@ -62,17 +62,20 @@ type InstructorProfile struct {
 
 type InstituteAdminProfile struct {
 	UserID      uuid.UUID `gorm:"type:uuid;primaryKey"`
-	InstituteID uuid.UUID `gorm:"type:uuid;not null"`
+	InstituteID uuid.UUID `gorm:"type:uuid;primaryKey"`
 }
 
 // -- Organizational Structure --
 
 type Institute struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Name      string    `gorm:"not null" json:"name"`
-	Code      string    `gorm:"uniqueIndex;not null" json:"code"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Name         string    `gorm:"not null" json:"name"`
+	Code         string    `gorm:"uniqueIndex;not null" json:"code"`
+	Domain       string    `gorm:"uniqueIndex;not null" json:"domain"`
+	ContactEmail string    `gorm:"not null" json:"contact_email"`
+	IsActive     bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 
 	Faculties []Faculty `gorm:"foreignKey:InstituteID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"faculties,omitempty"`
 }

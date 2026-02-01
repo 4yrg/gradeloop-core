@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { instituteApi } from "../../api/institute.api";
 import { instituteKeys } from "./keys";
 
-export const useInstitutes = () => {
+export const useInstitutes = (query?: string) => {
     return useQuery({
-        queryKey: instituteKeys.lists(),
-        queryFn: () => instituteApi.getInstitutes(),
+        queryKey: [...instituteKeys.lists(), query],
+        queryFn: () => instituteApi.getInstitutes(query),
     });
 };
 

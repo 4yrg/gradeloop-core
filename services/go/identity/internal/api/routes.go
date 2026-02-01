@@ -28,14 +28,18 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 	// Organizations (Assuming these should also be under internal/identity or similar)
 	// Spec didn't explicitly list Org paths under 1 Identity Service in the summary block,
 	// but clearly Identity Service owns org structure.
-	// I'll keep them under /internal/identity/orgs for consistency.
-	orgs := identity.Group("/orgs")
+	// I'll keep them under /orgs for gateway access.
+	orgs := app.Group("/orgs")
 
 	// Institutes
 	orgs.Post("/institutes", h.CreateInstitute)
 	orgs.Get("/institutes", h.GetInstitutes)
+	orgs.Get("/institutes/:id", h.GetInstitute)
 	orgs.Patch("/institutes/:id", h.UpdateInstitute) // Changed PUT to PATCH for consistency
+	orgs.Patch("/institutes/:id/activate", h.ActivateInstitute)
+	orgs.Patch("/institutes/:id/deactivate", h.DeactivateInstitute)
 	orgs.Delete("/institutes/:id", h.DeleteInstitute)
+	orgs.Post("/institutes/:id/admins", h.AddInstituteAdmin)
 
 	// Faculties
 	orgs.Post("/faculties", h.CreateFaculty)

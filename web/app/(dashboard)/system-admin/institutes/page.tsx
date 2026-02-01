@@ -5,9 +5,13 @@ import { InstituteTable } from "../../../../features/system-admin/components/ins
 import { Button } from "../../../../components/ui/button"
 import { Plus } from "lucide-react"
 import { useSystemAdminStore } from "../../../../features/system-admin/store/use-system-admin-store"
+import { useState } from "react"
+import { useDebounce } from "../../../../hooks/use-debounce"
 
 export default function InstitutesPage() {
-    const { data: institutes, isLoading } = useInstitutes()
+    const [searchQuery, setSearchQuery] = useState("")
+    const debouncedSearch = useDebounce(searchQuery, 500)
+    const { data: institutes, isLoading } = useInstitutes(debouncedSearch)
     const setCreateModalOpen = useSystemAdminStore((state) => state.setCreateModalOpen)
 
     return (
@@ -30,7 +34,11 @@ export default function InstitutesPage() {
                     <div className="h-[400px] w-full animate-pulse bg-muted rounded" />
                 </div>
             ) : (
-                <InstituteTable institutes={institutes || []} />
+                <InstituteTable
+                    institutes={institutes || []}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                />
             )}
         </div>
     )

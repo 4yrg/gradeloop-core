@@ -161,6 +161,32 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
+  - name: identity-institutes
+    url: http://identity-service:8001/orgs/institutes
+    routes:
+      - name: institutes-route
+        paths:
+          - /institutes
+        strip_path: true
+    plugins:
+      - name: correlation-id
+        config:
+          header_name: X-Request-ID
+          generator: uuid
+          echo_downstream: true
+      - name: cors
+        config:
+          origins:
+            - "http://localhost:3000"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          credentials: true
+
   - name: submission-service
     url: http://submission-service:8006
     routes:

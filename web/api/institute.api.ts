@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { Institute, ActivityLog, SetupStep, InstituteAdmin } from '../features/system-admin/types';
+import { Institute, ActivityLog, SetupStep } from '../features/system-admin/types';
 
 // Backend API types to match Java DTOs
 interface CreateInstituteRequest {
@@ -19,13 +19,17 @@ interface InstituteResponse {
     name: string;
     code: string;
     domain: string;
-    contactEmail: string;
-    isActive: boolean;
-    admins: Array<{
+    contact_email: string;
+    is_active: boolean;
+    admin_count?: number; // For list responses
+    admins?: Array<{
         id: string;
-        userId: number;
+        user_id: string;
+        name: string;
+        email: string;
         role: 'OWNER' | 'ADMIN';
     }>;
+    created_at: string;
 }
 
 // Transform backend response to frontend Institute type
@@ -35,24 +39,51 @@ const transformInstituteResponse = (response: InstituteResponse): Institute => {
         name: response.name,
         code: response.code,
         domain: response.domain,
-        contactEmail: response.contactEmail,
-        status: response.isActive ? 'active' : 'inactive',
-        admins: response.admins.map(admin => ({
+        contactEmail: response.contact_email,
+        status: response.is_active ? 'active' : 'inactive',
+        admins: response.admins?.map(admin => ({
             id: admin.id,
-            name: '', // Backend doesn't return name in current implementation
-            email: '', // Backend doesn't return email in current implementation
+            name: admin.name,
+            email: admin.email,
             role: admin.role.toLowerCase() as 'owner' | 'admin',
-        })),
+        })) || [], // Default to empty array if admins is undefined
         setupProgress: 0, // Default progress
-        createdAt: new Date().toISOString(),
+        createdAt: response.created_at,
+    };
+};
+
+// For list responses that might include admin_count instead of full admin details
+const transformInstituteListResponse = (response: InstituteResponse): Institute => {
+    return {
+        id: response.id,
+        name: response.name,
+        code: response.code,
+        domain: response.domain,
+        contactEmail: response.contact_email,
+        status: response.is_active ? 'active' : 'inactive',
+        admins: response.admin_count ? Array(response.admin_count).fill(null).map((_, index) => ({
+            id: `admin-${index}`,
+            name: '',
+            email: '',
+            role: 'admin' as 'owner' | 'admin',
+        })) : [], // Create placeholder admin objects based on count
+        setupProgress: 0, // Default progress
+        createdAt: response.created_at,
     };
 };
 
 export const instituteApi = {
-    getInstitutes: async (): Promise<Institute[]> => {
+    getInstitutes: async (query?: string): Promise<Institute[]> => {
         try {
-            const response = await apiClient.get<InstituteResponse[]>('/institutes');
-            return response.data.map(transformInstituteResponse);
+            const response = await apiClient.get<InstituteResponse[]>('/institutes', {
+                params: { q: query }
+            });
+            // Add null/undefined check for response.data
+            if (!response.data || !Array.isArray(response.data)) {
+                console.warn('Invalid response data from institutes API:', response.data);
+                return [];
+            }
+            return response.data.map(transformInstituteListResponse);
         } catch (error) {
             console.error('Failed to fetch institutes:', error);
             return [];
@@ -62,6 +93,11 @@ export const instituteApi = {
     getInstituteById: async (id: string): Promise<Institute | undefined> => {
         try {
             const response = await apiClient.get<InstituteResponse>(`/institutes/${id}`);
+            // Add null/undefined check for response.data
+            if (!response.data) {
+                console.warn('Invalid response data from institute API:', response.data);
+                return undefined;
+            }
             return transformInstituteResponse(response.data);
         } catch (error) {
             console.error(`Failed to fetch institute ${id}:`, error);
@@ -118,12 +154,12 @@ export const instituteApi = {
         });
     },
 
-    getActivityLogs: async (instituteId: string): Promise<ActivityLog[]> => {
+    getActivityLogs: async (): Promise<ActivityLog[]> => {
         // TODO: Implement when backend endpoint is available
         return [];
     },
 
-    getSetupSteps: async (instituteId: string): Promise<SetupStep[]> => {
+    getSetupSteps: async (): Promise<SetupStep[]> => {
         // TODO: Implement when backend endpoint is available
         return [];
     }

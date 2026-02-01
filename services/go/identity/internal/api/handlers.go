@@ -154,15 +154,11 @@ func (h *Handler) GetUserRole(c *fiber.Ctx) error {
 // -- Organization Handlers --
 
 func (h *Handler) CreateInstitute(c *fiber.Ctx) error {
-	type Req struct {
-		Name string `json:"name"`
-		Code string `json:"code"`
-	}
-	var req Req
+	var req service.CreateInstituteRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	inst, err := h.svc.CreateInstitute(req.Name, req.Code)
+	inst, err := h.svc.CreateInstitute(req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -170,11 +166,39 @@ func (h *Handler) CreateInstitute(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetInstitutes(c *fiber.Ctx) error {
-	list, err := h.svc.GetInstitutes()
+	query := c.Query("q")
+	list, err := h.svc.GetInstitutesWithAdminCount(query)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(list)
+}
+
+func (h *Handler) GetInstitute(c *fiber.Ctx) error {
+	id := c.Params("id")
+	inst, err := h.svc.GetInstitute(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(inst)
+}
+
+func (h *Handler) ActivateInstitute(c *fiber.Ctx) error {
+	id := c.Params("id")
+	inst, err := h.svc.ActivateInstitute(id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(inst)
+}
+
+func (h *Handler) DeactivateInstitute(c *fiber.Ctx) error {
+	id := c.Params("id")
+	inst, err := h.svc.DeactivateInstitute(id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(inst)
 }
 
 func (h *Handler) CreateFaculty(c *fiber.Ctx) error {
@@ -283,6 +307,27 @@ func (h *Handler) DeleteInstitute(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *Handler) AddInstituteAdmin(c *fiber.Ctx) error {
+	instituteId := c.Params("id")
+	
+	type AddAdminRequest struct {
+		Name  string `json:"name" validate:"required"`
+		Email string `json:"email" validate:"required,email"`
+		Role  string `json:"role" validate:"required,oneof=OWNER ADMIN"`
+	}
+	
+	var req AddAdminRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON"})
+	}
+	
+	if err := h.svc.AddInstituteAdmin(instituteId, req.Name, req.Email, req.Role); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Admin added successfully"})
 }
 
 // Similar for Faculty, Dept, Class...
