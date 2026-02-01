@@ -30,6 +30,7 @@ type CreateUserRequest struct {
 	Password string        `json:"password"`
 	FullName string        `json:"full_name"`
 	UserType core.UserType `json:"user_type"`
+	Status   string        `json:"status"`
 
 	// Profile fields (simplified for request)
 	// In a real app, these might be nested objects or specific request types
@@ -69,11 +70,16 @@ type InstituteWithAdminsResponse struct {
 func (s *IdentityService) RegisterUser(req CreateUserRequest) (*core.User, error) {
 	// Passwordless - no hashing needed
 
+	status := req.Status
+	if status == "" {
+		status = "pending"
+	}
+
 	user := &core.User{
 		Email:         req.Email,
 		FullName:      req.FullName,
 		UserType:      req.UserType,
-		Status:        "pending",
+		Status:        status,
 		EmailVerified: false,
 		IsActive:      true,
 	}
@@ -397,6 +403,7 @@ func (s *IdentityService) AddInstituteAdmin(instituteId, name, email, role strin
 			FullName: name,
 			Email:    email,
 			UserType: core.UserTypeInstituteAdmin,
+			Status:   "pending",
 		}
 
 		newUser, err := s.RegisterUser(createUserReq)
