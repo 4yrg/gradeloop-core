@@ -10,6 +10,8 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/service/provider"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -23,9 +25,20 @@ func main() {
 	}
 
 	// 2. Setup Database
-	repo, err := repository.NewRepository(cfg.DatabaseName)
+	if cfg.DatabaseURL == "" {
+		log.Fatal("EMAIL_DATABASE_URL must be set")
+	}
+
+	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to initialize repository: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	repo := repository.NewRepository(db)
+
+	// 2.1 Auto-Migrate (Dev only)
+	if err := repo.AutoMigrate(); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
 	// 3. Setup Services
