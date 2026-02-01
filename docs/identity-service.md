@@ -53,3 +53,16 @@ All endpoints are prefixed with `/internal/identity` and protected by `X-Interna
 ```bash
 go run services/go/identity/cmd/server/main.go
 ```
+
+## Seeding System Admin
+To seed the initial System Admin user, ensure the following environment variables are set in your `.env` file:
+```env
+SYS_ADMIN_EMAIL="admin@gradeloop.com"
+SYS_ADMIN_PW="secure-password"
+```
+
+Then run the seeding script:
+```bash
+cd services/go/identity
+go run cmd/seed-admin/main.go
+```
