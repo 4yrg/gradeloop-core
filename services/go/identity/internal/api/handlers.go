@@ -41,7 +41,7 @@ func (h *Handler) GetUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 func (h *Handler) UpdateUser(c *fiber.Ctx) error {

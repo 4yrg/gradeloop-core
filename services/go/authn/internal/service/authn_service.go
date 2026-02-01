@@ -63,8 +63,8 @@ type TokenResponse struct {
 // Internal Service Response Models
 type IdentityVerifyResponse struct {
 	Valid    bool   `json:"valid"` // Still used? Maybe check user existence
-	UserID   string `json:"user_id"`
-	Role     string `json:"role"`
+	UserID   string `json:"id"`
+	Role     string `json:"user_type"`
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 	Status   string `json:"status"` // pending, active
@@ -93,11 +93,6 @@ func (s *AuthNService) RequestMagicLink(ctx context.Context, email string) error
 		return nil // Return success to avoid email enumeration
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("[AuthN] User %s not found (status %d)\n", email, resp.StatusCode)
-		return nil // Return success to avoid email enumeration
-	}
 
 	var user IdentityVerifyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
@@ -140,12 +135,19 @@ func (s *AuthNService) RequestMagicLink(ctx context.Context, email string) error
 		// "link": magicLink,
 	}
 
-	_, err = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
+	resp, err = s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 	if err != nil {
-		fmt.Printf("[AuthN] Failed to send magic link email: %v\n", err)
-		// Don't error out to client
+		fmt.Printf("[AuthN] Failed to send magic link email to %s: %v\n", email, err)
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("[AuthN] Email service returned status %d for %s\n", resp.StatusCode, email)
+		return fmt.Errorf("email service error: status %d", resp.StatusCode)
 	}
 
+	fmt.Printf("[AuthN] Successfully initiated magic link email for %s\n", email)
 	return nil
 }
 
@@ -167,10 +169,6 @@ func (s *AuthNService) ConsumeMagicLink(ctx context.Context, token string) (*Tok
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("user not found")
-	}
 
 	var user IdentityVerifyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {

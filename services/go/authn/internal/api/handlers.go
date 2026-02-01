@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/4yrg/gradeloop-core/services/go/authn/internal/middleware"
@@ -24,6 +25,7 @@ func (h *AuthNHandler) RequestMagicLink(c *fiber.Ctx) error {
 
 	if err := h.svc.RequestMagicLink(c.Context(), req.Email); err != nil {
 		// Log error but return success to avoid enumeration
+		fmt.Printf("[AuthN] RequestMagicLink error for %s: %v\n", req.Email, err)
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Magic link sent if account exists"})
 	}
 

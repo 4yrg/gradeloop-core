@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, Suspense, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2, CheckCircle, XCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Button } from "../../../components/ui/button"
 import Link from "next/link"
 import { verifyMagicLink, verifyEmail } from "../../../actions/auth"
+
+const consumedTokens = new Set<string>()
 
 function VerifyContent() {
     const searchParams = useSearchParams()
@@ -16,6 +18,7 @@ function VerifyContent() {
 
     const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying")
     const [message, setMessage] = useState("Verifying your link...")
+    const started = useRef(false)
 
     useEffect(() => {
         if (!token) {
@@ -23,6 +26,9 @@ function VerifyContent() {
             setMessage("Invalid link: Missing token.")
             return
         }
+
+        if (token && consumedTokens.has(token)) return
+        if (token) consumedTokens.add(token)
 
         const verify = async () => {
             console.log("Verifying token...", type);
