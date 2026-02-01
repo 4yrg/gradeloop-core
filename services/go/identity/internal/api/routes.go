@@ -11,15 +11,18 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 
 	// Credentials
 	identity.Post("/credentials/verify", h.ValidateCredentials)
-	identity.Post("/credentials/update", h.UpdateCredentials)
+	// Credentials
+	identity.Post("/credentials/verify", h.ValidateCredentials)
 
 	// Users
 	identity.Post("/users", h.RegisterUser)
+	identity.Post("/users/:id/confirm-email", h.ConfirmUserEmail)
 	identity.Get("/users/:id", h.GetUser)
 	identity.Patch("/users/:id", h.UpdateUser) // Using PATCH as requested
 	identity.Delete("/users/:id", h.DeleteUser)
 	identity.Get("/users/:id/role", h.GetUserRole)
 	identity.Get("/users", h.ListUsers) // Added for completeness/debugging
+	identity.Post("/users/lookup", h.LookupUser)
 
 	// User Enrollments (keeping this accessible internally if needed, or maybe it belongs to Org?)
 	identity.Get("/users/:user_id/enrollments", h.GetUserEnrollments)
@@ -27,14 +30,20 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 	// Organizations (Assuming these should also be under internal/identity or similar)
 	// Spec didn't explicitly list Org paths under 1 Identity Service in the summary block,
 	// but clearly Identity Service owns org structure.
-	// I'll keep them under /internal/identity/orgs for consistency.
-	orgs := identity.Group("/orgs")
+	// I'll keep them under /orgs for gateway access.
+	orgs := app.Group("/orgs")
 
 	// Institutes
 	orgs.Post("/institutes", h.CreateInstitute)
 	orgs.Get("/institutes", h.GetInstitutes)
+	orgs.Get("/institutes/:id", h.GetInstitute)
 	orgs.Patch("/institutes/:id", h.UpdateInstitute) // Changed PUT to PATCH for consistency
+	orgs.Patch("/institutes/:id/activate", h.ActivateInstitute)
+	orgs.Patch("/institutes/:id/deactivate", h.DeactivateInstitute)
 	orgs.Delete("/institutes/:id", h.DeleteInstitute)
+	orgs.Post("/institutes/:id/admins", h.AddInstituteAdmin)
+	orgs.Delete("/institutes/:id/admins/:adminId", h.RemoveInstituteAdmin)
+	orgs.Post("/institutes/:id/admins/:adminId/resend-invite", h.ResendAdminInvite)
 
 	// Faculties
 	orgs.Post("/faculties", h.CreateFaculty)

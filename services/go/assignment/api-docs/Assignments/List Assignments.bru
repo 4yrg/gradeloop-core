@@ -1,0 +1,15 @@
+meta {
+  name: List Assignments
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/assignments?courseId=course-123
+  body: none
+  auth: none
+}
+
+query {
+  courseId: course-123
+}

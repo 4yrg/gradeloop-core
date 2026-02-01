@@ -204,7 +204,7 @@ docker-compose.override.yml
 # Miscellaneous
 # =========================
 *.sqlite3
-*.db
+# *.db
 *.tar.gz
 *.zip
 *.tgz

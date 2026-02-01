@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	goredis "github.com/redis/go-redis/v9"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -29,9 +30,27 @@ func main() {
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
+	redisUsername := os.Getenv("REDIS_USERNAME")
+	if redisUsername == "" {
+		redisUsername = "default"
+	}
+	redisDB := 0
+	if dbStr := os.Getenv("REDIS_DB"); dbStr != "" {
+		var i int
+		if _, err := fmt.Sscanf(dbStr, "%d", &i); err == nil {
+			redisDB = i
+		}
+	}
 
-	// 1. Initialize SQLite
-	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
+	// 1. Initialize DB
+	dsn := os.Getenv("SESSION_DATABASE_URL")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		log.Fatal("SESSION_DATABASE_URL or DATABASE_URL must be set")
+	}
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
@@ -43,7 +62,10 @@ func main() {
 
 	// 2. Initialize Redis
 	rdb := goredis.NewClient(&goredis.Options{
-		Addr: redisAddr,
+		Addr:     redisAddr,
+		Username: redisUsername,
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       redisDB,
 	})
 
 	// 3. Initialize Repositories

@@ -1,165 +1,82 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Button } from "../../../components/ui/button"
+import { useInstitute } from "../../../hooks/institute/useInstitutes";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "../../../components/ui/form"
-import { Input } from "../../../components/ui/input"
-import { useInstitute, useUpdateInstitute } from "../../../hooks/institute"
-import { useSystemAdminStore } from "../store/use-system-admin-store"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
-
-const editInstituteSchema = z.object({
-    name: z.string().min(2, "Institute name must be at least 2 characters"),
-    domain: z.string().min(3, "Domain must be at least 3 characters"),
-    contactEmail: z.string().email("Invalid contact email"),
-})
-
-type EditInstituteFormValues = z.infer<typeof editInstituteSchema>
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
+import { Skeleton } from "../../../components/ui/skeleton";
+import { EditInstituteDetailsTab } from "./institute-edit/edit-details-tab";
+import { AdminsTab } from "./institute-details/admins-tab";
+import { Button } from "../../../components/ui/button";
+import { X } from "lucide-react";
+import { useSystemAdminStore } from "../store/use-system-admin-store";
 
 interface EditInstituteFormProps {
-    instituteId: string
+  instituteId: string;
 }
 
 export function EditInstituteForm({ instituteId }: EditInstituteFormProps) {
-    const { data: institute, isLoading } = useInstitute(instituteId)
-    const updateInstitute = useUpdateInstitute()
-    const setEditModalOpen = useSystemAdminStore((state) => state.setEditModalOpen)
+  const { data: institute, isLoading, refetch } = useInstitute(instituteId);
+  const setEditModalOpen = useSystemAdminStore(
+    (state) => state.setEditModalOpen
+  );
 
-    const form = useForm<EditInstituteFormValues>({
-        resolver: zodResolver(editInstituteSchema),
-        defaultValues: {
-            name: "",
-            domain: "",
-            contactEmail: "",
-        },
-    })
-
-    // Update form when institute data is loaded
-    useEffect(() => {
-        if (institute) {
-            form.reset({
-                name: institute.name,
-                domain: institute.domain,
-                contactEmail: institute.contactEmail,
-            })
-        }
-    }, [institute, form])
-
-    const onSubmit = async (data: EditInstituteFormValues) => {
-        try {
-            await updateInstitute.mutateAsync({
-                id: instituteId,
-                data,
-            })
-            toast.success("Institute updated successfully")
-            setEditModalOpen(false)
-        } catch (error) {
-            toast.error("Failed to update institute. Please try again.")
-        }
-    }
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        )
-    }
-
-    if (!institute) {
-        return (
-            <div className="p-8 text-center text-muted-foreground">
-                Institute not found.
-            </div>
-        )
-    }
-
+  if (isLoading) {
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Institute Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Massachusetts Institute of Technology" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-75 w-full" />
+      </div>
+    );
+  }
 
-                <div className="grid grid-cols-2 gap-4">
-                    <FormItem>
-                        <FormLabel>Institute Code</FormLabel>
-                        <FormControl>
-                            <Input value={institute.code} disabled className="bg-muted" />
-                        </FormControl>
-                        <p className="text-xs text-muted-foreground">Code cannot be changed</p>
-                    </FormItem>
+  if (!institute) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        Institute not found.
+      </div>
+    );
+  }
 
-                    <FormField
-                        control={form.control}
-                        name="domain"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Domain</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="mit.edu" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Edit {institute.name}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Manage institute details and administrators
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setEditModalOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-                <FormField
-                    control={form.control}
-                    name="contactEmail"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Contact Email</FormLabel>
-                            <FormControl>
-                                <Input type="email" placeholder="contact@mit.edu" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <div className="flex justify-end gap-3 pt-4">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setEditModalOpen(false)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" disabled={updateInstitute.isPending}>
-                        {updateInstitute.isPending ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Updating...
-                            </>
-                        ) : (
-                            "Update Institute"
-                        )}
-                    </Button>
-                </div>
-            </form>
-        </Form>
-    )
+      <Tabs defaultValue="details" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="details">Institute Details</TabsTrigger>
+          <TabsTrigger value="admins">Administrators</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <EditInstituteDetailsTab institute={institute} />
+        </TabsContent>
+        <TabsContent value="admins">
+          <AdminsTab
+            admins={institute.admins}
+            instituteId={institute.id!}
+            onRefresh={refetch}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }

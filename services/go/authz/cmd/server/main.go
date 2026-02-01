@@ -4,13 +4,16 @@ import (
 	"log"
 	"os"
 
+	"time"
+
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/api"
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/repository"
 	"github.com/4yrg/gradeloop-core/services/go/authz/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 func main() {
@@ -19,13 +22,29 @@ func main() {
 	if port == "" {
 		port = "8004"
 	}
-	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		dbUrl = "authz.db"
+	dsn := os.Getenv("AUTHZ_DATABASE_URL")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		log.Fatal("AUTHZ_DATABASE_URL or DATABASE_URL must be set")
 	}
 
-	// 2. Database
-	db, err := gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
+	// Quiet Logger for Startup
+	newLogger := gormLogger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		gormLogger.Config{
+			SlowThreshold:             500 * time.Millisecond, // Slow SQL threshold
+			LogLevel:                  gormLogger.Warn,        // Log level
+			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,                   // Don't include params in the SQL log
+			Colorful:                  true,                   // Disable color
+		},
+	)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

@@ -6,11 +6,14 @@ services:
     container_name: identity-service
     ports:
       - "8001:8001"
+    env_file:
+      - ../../.env
     environment:
-      - DATABASE_URL=identity.db
       - PORT=8001
-    volumes:
-      - ../../services/go/identity/identity.db:/app/identity.db
+      - EMAIL_SERVICE_URL=http://email-service:5005
+      - INTERNAL_SECRET=insecure-secret-for-dev
+    depends_on:
+      - email-service
     restart: unless-stopped
     develop:
       watch:
@@ -24,19 +27,15 @@ services:
     container_name: session-service
     ports:
       - "8002:8002"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8002
-      - SQLITE_PATH=/app/session.db
-      - REDIS_ADDR=redis:6379
-    volumes:
-      - ../../services/go/session/session.db:/app/session.db
     restart: unless-stopped
     develop:
       watch:
         - action: rebuild
           path: ../../services/go/session
-    depends_on:
-      - redis
 
   email-service:
     build:
@@ -48,16 +47,12 @@ services:
     env_file:
       - ../../.env
     environment:
-      - EMAIL_DB_NAME=/app/email_db
-    volumes:
-      - ../../services/go/email/email_db.db:/app/email_db.db
-      - ../../services/go/email/templates:/app/templates
+      - EMAIL_DB_NAME=email
     restart: unless-stopped
     develop:
       watch:
         - action: rebuild
           path: ../../services/go/email
-
   authn-service:
     build:
       context: ../../services/go/authn
@@ -65,16 +60,16 @@ services:
     container_name: authn-service
     ports:
       - "8003:8003"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8003
-      - REDIS_ADDR=redis:6379
       - IDENTITY_SERVICE_URL=http://identity-service:8001
       - SESSION_SERVICE_URL=http://session-service:8002
       - EMAIL_SERVICE_URL=http://email-service:5005
       - AUTHZ_SERVICE_URL=http://authz-service:8004
       - INTERNAL_SECRET=insecure-secret-for-dev
     depends_on:
-      - redis
       - identity-service
       - session-service
       - authz-service
@@ -91,23 +86,49 @@ services:
     container_name: authz-service
     ports:
       - "8004:8004"
+    env_file:
+      - ../../.env
     environment:
       - PORT=8004
-      - DATABASE_URL=authz.db
-    volumes:
-      - ../../services/go/authz/authz.db:/app/authz.db
     restart: unless-stopped
     develop:
       watch:
         - action: rebuild
           path: ../../services/go/authz
 
-  redis:
-    image: redis:7.2-alpine
-    container_name: gradeloop-redis
+  assignment-service:
+    build:
+      context: ../../services/go/assignment
+      dockerfile: Dockerfile
+    container_name: assignment-service
     ports:
-      - "6379:6379"
+      - "8005:8005"
+    env_file:
+      - ../../.env
+    environment:
+      - PORT=8005
     restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/assignment
+
+  submission-service:
+    build:
+      context: ../../services/go/submission
+      dockerfile: Dockerfile
+    container_name: submission-service
+    ports:
+      - "8006:8006"
+    env_file:
+      - ../../.env
+    environment:
+      - PORT=8006
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../services/go/submission
 
   kong:
     image: kong:3.4

@@ -11,9 +11,13 @@ export const authApi = {
     // login: (data: LoginCredentials) => apiClient.post<LoginResponse>('/auth/login', data),
 
     // Example: getMe
-    getMe: () => apiClient.get('/auth/me'),
+    requestMagicLink: (email: string) => apiClient.post('/auth/login', { email }),
+    consumeMagicLink: (token: string) => apiClient.post('/auth/magic-link/consume', { token }),
 
-    forgotPassword: (email: string) => apiClient.post('/auth/forgot-password', { email }),
+    register: (data: any) => apiClient.post('/auth/register', data),
+    verifyEmail: (token: string) => apiClient.post('/auth/verify-email', { token }),
 
-    resetPassword: (token: string, newPassword: string) => apiClient.post('/auth/reset-password', { token, newPassword }),
+    // Legacy/Unused
+    // forgotPassword: ...
+    // resetPassword: ...
 };

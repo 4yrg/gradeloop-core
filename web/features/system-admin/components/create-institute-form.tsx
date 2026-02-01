@@ -14,7 +14,12 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import {
   Select,
   SelectContent,
@@ -57,6 +62,50 @@ export function CreateInstituteForm() {
         setCreateInstituteStep(1);
         form.reset();
       },
+      onError: (error: unknown) => {
+        // Debug: Log the error structure
+        console.error("Create institute error:", error);
+        const axiosError = error as {
+          response?: {
+            status?: number;
+            data?: { error?: string; message?: string };
+          };
+          message?: string;
+        };
+        console.error("Error response:", axiosError?.response);
+        console.error("Error data:", axiosError?.response?.data);
+
+        // Handle different types of errors
+        if (axiosError?.response?.status === 500) {
+          const errorMessage =
+            axiosError?.response?.data?.error || axiosError?.message || "";
+          console.log("500 Error message:", errorMessage);
+          // Check if it's a duplicate code error
+          if (
+            errorMessage.includes("duplicate") &&
+            errorMessage.includes("idx_institutes_code")
+          ) {
+            form.setError("code", {
+              type: "manual",
+              message:
+                "This institute code already exists. Please choose a different code.",
+            });
+          } else {
+            form.setError("root", {
+              type: "manual",
+              message: "Failed to create institute. Please try again.",
+            });
+          }
+        } else {
+          form.setError("root", {
+            type: "manual",
+            message:
+              axiosError?.response?.data?.message ||
+              axiosError?.response?.data?.error ||
+              "An error occurred while creating the institute.",
+          });
+        }
+      },
     });
   };
 
@@ -67,7 +116,9 @@ export function CreateInstituteForm() {
         : (["admins"] as const);
 
     const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) setCreateInstituteStep(createInstituteStep + 1);
+    if (isValid) {
+      setCreateInstituteStep(createInstituteStep + 1);
+    }
   };
 
   const prevStep = () => setCreateInstituteStep(createInstituteStep - 1);
@@ -287,6 +338,13 @@ export function CreateInstituteForm() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Error Display */}
+        {form.formState.errors.root && (
+          <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+            {form.formState.errors.root.message}
+          </div>
         )}
 
         <div className="flex justify-between pt-4">

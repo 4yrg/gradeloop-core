@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	DatabaseURL  string
 	DatabaseName string
 	SMTPHost     string
 	SMTPPort     int
@@ -22,6 +23,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
+		DatabaseURL:  getEnv("EMAIL_DATABASE_URL", ""),
 		DatabaseName: getEnv("EMAIL_DB_NAME", "email_db"),
 		SMTPHost:     getEnv("SMTP_HOST", "localhost"),
 		SMTPPort:     port,

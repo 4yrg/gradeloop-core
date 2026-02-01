@@ -1,11 +1,7 @@
 package repository
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/4yrg/gradeloop-core/services/go/email/internal/core"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -13,21 +9,13 @@ type Repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(dbName string) (*Repository, error) {
-	dbPath := fmt.Sprintf("%s.db", dbName)
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+}
 
-	// Auto Migrate
-	err = db.AutoMigrate(&core.EmailTemplate{}, &core.EmailRequestLog{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to migrate database: %w", err)
-	}
-
-	log.Printf("Connected to SQLite database: %s", dbPath)
-	return &Repository{db: db}, nil
+// AutoMigrate applies schema changes
+func (r *Repository) AutoMigrate() error {
+	return r.db.AutoMigrate(&core.EmailTemplate{}, &core.EmailRequestLog{})
 }
 
 // GetTemplateByName fetches a template by its name
