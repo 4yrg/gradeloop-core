@@ -2,8 +2,6 @@ package service
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +11,6 @@ import (
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/core"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type IdentityService struct {
@@ -70,18 +67,15 @@ type InstituteWithAdminsResponse struct {
 }
 
 func (s *IdentityService) RegisterUser(req CreateUserRequest) (*core.User, error) {
-	// 1. Hash Password
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
+	// Passwordless - no hashing needed
 
 	user := &core.User{
-		Email:        req.Email,
-		PasswordHash: string(hashedBytes),
-		FullName:     req.FullName,
-		UserType:     req.UserType,
-		IsActive:     true,
+		Email:         req.Email,
+		FullName:      req.FullName,
+		UserType:      req.UserType,
+		Status:        "pending",
+		EmailVerified: false,
+		IsActive:      true,
 	}
 
 	// 2. Build Profile based on Type
@@ -109,20 +103,9 @@ func (s *IdentityService) RegisterUser(req CreateUserRequest) (*core.User, error
 }
 
 func (s *IdentityService) ValidateCredentials(email, password string) (*core.User, bool, error) {
-	user, err := s.repo.GetUserByEmail(email)
-	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
-			return nil, false, nil
-		}
-		return nil, false, err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	if err != nil {
-		return nil, false, nil
-	}
-
-	return user, true, nil
+	// Passwordless auth does not use passwords.
+	// This method is deprecated and will be removed.
+	return nil, false, errors.New("password authentication is disabled")
 }
 
 // -- Extended User Features --
@@ -141,6 +124,16 @@ func (s *IdentityService) UpdateUser(id string, fullName string) (*core.User, er
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *IdentityService) ConfirmUserEmail(userID string) error {
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return err
+	}
+	user.EmailVerified = true
+	user.Status = "active"
+	return s.repo.UpdateUser(user)
 }
 
 func (s *IdentityService) DeleteUser(id string) error {
@@ -168,46 +161,36 @@ func (s *IdentityService) CreateInstitute(req CreateInstituteRequest) (*core.Ins
 
 	var admins []*core.User
 	adminCredentials := make([]struct{ name, email, password string }, 0, len(req.Admins))
-	
-	for _, adminReq := range req.Admins {
-		// Generate a random temporary password
-		tokenBytes := make([]byte, 16)
-		if _, err := rand.Read(tokenBytes); err != nil {
-			return nil, fmt.Errorf("failed to generate temporary password: %w", err)
-		}
-		tempPassword := hex.EncodeToString(tokenBytes)[:12] + "!" // 12 chars + special char
-		hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
 
+	for _, adminReq := range req.Admins {
 		user := &core.User{
-			Email:                  adminReq.Email,
-			PasswordHash:           string(hashedBytes),
-			FullName:               adminReq.Name,
-			UserType:               core.UserTypeInstituteAdmin,
-			IsActive:               true,
-			RequiresPasswordChange: true,
+			Email:         adminReq.Email,
+			FullName:      adminReq.Name,
+			UserType:      core.UserTypeInstituteAdmin,
+			Status:        "pending",
+			EmailVerified: false,
+			IsActive:      true,
 		}
 		admins = append(admins, user)
-		
-		// Store credentials for email sending
+
+		// Store details for email sending
 		adminCredentials = append(adminCredentials, struct{ name, email, password string }{
-			name:     adminReq.Name,
-			email:    adminReq.Email,
-			password: tempPassword,
+			name:  adminReq.Name,
+			email: adminReq.Email,
 		})
 	}
 
 	if err := s.repo.CreateInstituteWithAdmins(institute, admins); err != nil {
 		return nil, err
 	}
-	
+
 	// Send invitation emails to all admins
 	for _, cred := range adminCredentials {
-		if err := s.sendAdminInvitationEmail(institute, cred.name, cred.email, cred.password, true); err != nil {
+		if err := s.sendAdminInvitationEmail(institute, cred.name, cred.email); err != nil {
 			fmt.Printf("[Identity] Warning: Failed to send invitation email to %s: %v\n", cred.email, err)
-			// Continue with other emails even if one fails
 		}
 	}
-	
+
 	return institute, nil
 }
 
@@ -256,10 +239,14 @@ func (s *IdentityService) GetInstitute(id string) (*InstituteWithAdminsResponse,
 	var adminResponse []InstituteAdmin
 	for _, admin := range admins {
 		status := "Active"
-		if admin.RequiresPasswordChange {
+		if admin.Status == "pending" {
 			status = "Pending"
+		} else if admin.Status == "active" {
+			status = "Active"
+		} else if admin.Status != "" {
+			status = admin.Status
 		}
-		
+
 		adminResponse = append(adminResponse, InstituteAdmin{
 			ID:     admin.ID.String(),
 			UserID: admin.ID.String(),
@@ -399,59 +386,41 @@ func (s *IdentityService) AddInstituteAdmin(instituteId, name, email, role strin
 	if err != nil {
 		return err
 	}
-	
+
 	// Check if user with this email already exists
 	existingUser, err := s.repo.GetUserByEmail(email)
 	var userId string
-	var tempPassword string
-	var isNewUser bool
-	
+
 	if err != nil {
-		// User doesn't exist, create new user with temporary password
-		// Generate a random temporary password
-		tokenBytes := make([]byte, 16)
-		if _, err := rand.Read(tokenBytes); err != nil {
-			return fmt.Errorf("failed to generate temporary password: %w", err)
-		}
-		tempPassword = hex.EncodeToString(tokenBytes)[:12] + "!" // 12 chars + special char
-		
+		// User doesn't exist, create new user
 		createUserReq := CreateUserRequest{
-			FullName:    name,
-			Email:       email,
-			Password:    tempPassword,
-			UserType:    core.UserTypeInstituteAdmin,
-			InstituteID: instituteId,
+			FullName: name,
+			Email:    email,
+			UserType: core.UserTypeInstituteAdmin,
 		}
-		
+
 		newUser, err := s.RegisterUser(createUserReq)
 		if err != nil {
 			return err
 		}
 		userId = newUser.ID.String()
-		isNewUser = true
-		
-		// Set RequiresPasswordChange flag for new admin
-		newUser.RequiresPasswordChange = true
-		if err := s.repo.UpdateUser(newUser); err != nil {
-			fmt.Printf("[Identity] Warning: Failed to set password change requirement: %v\n", err)
-		}
+
+		// No password change required for magic link flow
 	} else {
 		// User exists, use existing user ID
 		userId = existingUser.ID.String()
-		isNewUser = false
 	}
-	
+
 	// Add admin relationship
 	if err := s.repo.AddInstituteAdmin(instituteId, userId, role); err != nil {
 		return err
 	}
-	
+
 	// Send invitation email
-	if err := s.sendAdminInvitationEmail(institute, name, email, tempPassword, isNewUser); err != nil {
+	if err := s.sendAdminInvitationEmail(institute, name, email); err != nil {
 		fmt.Printf("[Identity] Warning: Failed to send invitation email to %s: %v\n", email, err)
-		// Don't fail the admin creation if email fails
 	}
-	
+
 	return nil
 }
 
@@ -461,7 +430,7 @@ func (s *IdentityService) RemoveInstituteAdmin(instituteId, adminId string) erro
 	if err != nil {
 		return err
 	}
-	
+
 	// Remove the admin relationship
 	return s.repo.RemoveInstituteAdmin(instituteId, adminId)
 }
@@ -472,35 +441,20 @@ func (s *IdentityService) ResendAdminInvite(instituteId, adminId string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Get admin user
 	admin, err := s.repo.GetUserByID(adminId)
 	if err != nil {
 		return err
 	}
-	
-	// Check if user requires password change (meaning they haven't set their password yet)
-	if !admin.RequiresPasswordChange {
+
+	// Check if user status is pending
+	if admin.Status != "pending" {
 		return errors.New("admin has already activated their account")
 	}
-	
-	// Generate new temporary password
-	tempPassword := s.generateTempPassword()
-	
-	// Update user with new temporary password
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	
-	admin.PasswordHash = string(hashedBytes)
-	admin.RequiresPasswordChange = true
-	if err := s.repo.UpdateUser(admin); err != nil {
-		return err
-	}
-	
+
 	// Resend invitation email
-	return s.sendAdminInvitationEmail(institute, admin.FullName, admin.Email, tempPassword, false)
+	return s.sendAdminInvitationEmail(institute, admin.FullName, admin.Email)
 }
 
 // ... similar wrappers could be added for Faculty/Dept/Class updates if needed.
@@ -571,21 +525,6 @@ func (s *IdentityService) GetUserEnrollments(studentID string) ([]core.ClassEnro
 	return s.repo.GetUserEnrollments(studentID)
 }
 
-func (s *IdentityService) UpdateCredentials(userID, newPassword string) error {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	user, err := s.repo.GetUserByID(userID)
-	if err != nil {
-		return err
-	}
-
-	user.PasswordHash = string(hashedBytes)
-	return s.repo.UpdateUser(user)
-}
-
 func (s *IdentityService) GetUserRole(userID string) (string, error) {
 	user, err := s.repo.GetUserByID(userID)
 	if err != nil {
@@ -594,83 +533,45 @@ func (s *IdentityService) GetUserRole(userID string) (string, error) {
 	return string(user.UserType), nil
 }
 
-// sendAdminInvitationEmail sends invitation email with temporary password or welcome message
-func (s *IdentityService) sendAdminInvitationEmail(institute *core.Institute, adminName, adminEmail, tempPassword string, isNewUser bool) error {
-	var subject, body string
-	
-	if isNewUser {
-		// New user - send credentials and force reset URL
-		subject = fmt.Sprintf("Welcome to %s - Your Admin Account", institute.Name)
-		resetURL := fmt.Sprintf("%s/auth/force-reset", s.cfg.WebURL)
-		
-		body = fmt.Sprintf(`Hello %s,
+func (s *IdentityService) sendAdminInvitationEmail(institute *core.Institute, adminName, adminEmail string) error {
+	subject := fmt.Sprintf("Welcome to %s - Your Admin Account", institute.Name)
+	// Magic link / verify flow URL (to be implemented more robustly later)
+	loginURL := fmt.Sprintf("%s/login", s.cfg.WebURL)
+
+	body := fmt.Sprintf(`Hello %s,
 
 You have been invited as an administrator for %s on GradeLoop.
 
-Your login credentials:
-Email: %s
-Temporary Password: %s
-
-Please log in and change your password immediately:
+Please log in using your email address (Magic Link):
 %s
 
 Best regards,
-GradeLoop Team`, adminName, institute.Name, adminEmail, tempPassword, resetURL)
-	} else {
-		// Existing user - just notify about new role
-		subject = fmt.Sprintf("New Admin Role - %s", institute.Name)
-		loginURL := fmt.Sprintf("%s/login", s.cfg.WebURL)
-		
-		body = fmt.Sprintf(`Hello %s,
-
-You have been granted administrator access to %s on GradeLoop.
-
-You can now access the institute's administrative features using your existing account.
-
-Login here: %s
-
-Best regards,
 GradeLoop Team`, adminName, institute.Name, loginURL)
-	}
-	
+
 	// Send email via Email Service
 	emailPayload := map[string]string{
 		"to":      adminEmail,
 		"subject": subject,
 		"body":    body,
 	}
-	
+
 	fmt.Printf("[Identity] Sending admin invitation email to %s for institute %s\n", adminEmail, institute.Name)
-	
+
 	resp, err := s.postJson(s.cfg.EmailServiceURL+"/internal/email/send", emailPayload)
 	if err != nil {
 		return fmt.Errorf("failed to call email service: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		// Read error details
 		var errBody map[string]interface{}
 		_ = json.NewDecoder(resp.Body).Decode(&errBody)
 		return fmt.Errorf("email service returned status %d: %v", resp.StatusCode, errBody)
 	}
-	
+
 	fmt.Printf("[Identity] Admin invitation email sent successfully to %s\n", adminEmail)
 	return nil
-}
-
-// generateTempPassword generates a secure temporary password
-func (s *IdentityService) generateTempPassword() string {
-	// Generate 16 random bytes
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
-		// Fallback to a default if random generation fails
-		return "TempPass123!"
-	}
-	
-	// Convert to hex and take first 12 characters, add suffix for complexity requirements
-	tempPass := hex.EncodeToString(bytes)[:12]
-	return tempPass + "A1!"
 }
 
 // HTTP client utility for calling email service

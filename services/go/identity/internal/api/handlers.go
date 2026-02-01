@@ -13,6 +13,14 @@ func NewHandler(svc *service.IdentityService) *Handler {
 	return &Handler{svc: svc}
 }
 
+func (h *Handler) ConfirmUserEmail(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := h.svc.ConfirmUserEmail(id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
 func (h *Handler) RegisterUser(c *fiber.Ctx) error {
 	var req service.CreateUserRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -97,50 +105,11 @@ func (h *Handler) GetUserEnrollments(c *fiber.Ctx) error {
 }
 
 func (h *Handler) ValidateCredentials(c *fiber.Ctx) error {
-	type LoginRequest struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	var req LoginRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
-	}
-
-	user, valid, err := h.svc.ValidateCredentials(req.Email, req.Password)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	if !valid {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"valid": false})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"valid":       true,
-		"user_id":     user.ID,
-		"role":        user.UserType,
-		"email":       user.Email,
-		"full_name":   user.FullName,
-		"force_reset": user.RequiresPasswordChange,
-	})
+	// Passwordless auth - this endpoint returns 401/invalid always
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"valid": false, "error": "password authentication disabled"})
 }
 
-func (h *Handler) UpdateCredentials(c *fiber.Ctx) error {
-	type Req struct {
-		UserID      string `json:"user_id"`
-		NewPassword string `json:"new_password"`
-	}
-	var req Req
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cannot parse JSON"})
-	}
-
-	if err := h.svc.UpdateCredentials(req.UserID, req.NewPassword); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
+// UpdateCredentials handler removed
 
 func (h *Handler) GetUserRole(c *fiber.Ctx) error {
 	id := c.Params("id")
@@ -311,40 +280,40 @@ func (h *Handler) DeleteInstitute(c *fiber.Ctx) error {
 
 func (h *Handler) AddInstituteAdmin(c *fiber.Ctx) error {
 	instituteId := c.Params("id")
-	
+
 	type AddAdminRequest struct {
 		Name  string `json:"name" validate:"required"`
 		Email string `json:"email" validate:"required,email"`
 		Role  string `json:"role" validate:"required,oneof=OWNER ADMIN"`
 	}
-	
+
 	var req AddAdminRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	
+
 	if err := h.svc.AddInstituteAdmin(instituteId, req.Name, req.Email, req.Role); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Admin added successfully"})
 }
 
 func (h *Handler) RemoveInstituteAdmin(c *fiber.Ctx) error {
 	instituteId := c.Params("id")
 	adminId := c.Params("adminId")
-	
+
 	if err := h.svc.RemoveInstituteAdmin(instituteId, adminId); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Admin removed successfully"})
 }
 
 func (h *Handler) ResendAdminInvite(c *fiber.Ctx) error {
 	instituteId := c.Params("id")
 	adminId := c.Params("adminId")
-	
+
 	if err := h.svc.ResendAdminInvite(instituteId, adminId); err != nil {
 		// Check if it's a business logic error that should return 400
 		if err.Error() == "admin has already activated their account" {
@@ -352,7 +321,7 @@ func (h *Handler) ResendAdminInvite(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Invitation resent successfully"})
 }
 

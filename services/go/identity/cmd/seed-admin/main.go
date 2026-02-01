@@ -6,7 +6,6 @@ import (
 
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/core"
 	"github.com/4yrg/gradeloop-core/services/go/identity/internal/repository"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -49,17 +48,16 @@ func main() {
 	}
 
 	// 4. Create User
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal("Failed to hash password:", err)
-	}
+	// Passwordless - no password hashing
 
 	newUser := &core.User{
-		Email:        email,
-		PasswordHash: string(hashedBytes),
-		FullName:     "System Admin",
-		UserType:     core.UserTypeSystemAdmin,
-		IsActive:     true,
+		Email: email,
+		// No PasswordHash
+		FullName:      "System Admin",
+		UserType:      core.UserTypeSystemAdmin,
+		IsActive:      true,
+		Status:        "active",
+		EmailVerified: true,
 	}
 
 	if err := repo.CreateUser(newUser); err != nil {

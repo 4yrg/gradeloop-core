@@ -19,16 +19,17 @@ const (
 
 // User Entity
 type User struct {
-	ID                     uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
-	Email                  string         `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash           string         `gorm:"not null" json:"-"`
-	FullName               string         `gorm:"not null" json:"full_name"`
-	UserType               UserType       `gorm:"type:text;not null" json:"user_type"` // Explicit type for SQLite compatibility
-	IsActive               bool           `gorm:"default:true" json:"is_active"`
-	RequiresPasswordChange bool           `gorm:"default:false" json:"requires_password_change"`
-	CreatedAt              time.Time      `json:"created_at"`
-	UpdatedAt              time.Time      `json:"updated_at"`
-	DeletedAt              gorm.DeletedAt `gorm:"index" json:"-"`
+	ID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	Email string    `gorm:"uniqueIndex;not null" json:"email"`
+	// Password related fields removed for passwordless auth
+	FullName      string         `gorm:"not null" json:"full_name"`
+	UserType      UserType       `gorm:"type:text;not null" json:"user_type"` // Explicit type for SQLite compatibility
+	IsActive      bool           `gorm:"default:true" json:"is_active"`       // Deprecated, use Status
+	Status        string         `gorm:"default:'pending'" json:"status"`     // pending, active, disabled
+	EmailVerified bool           `gorm:"default:false" json:"email_verified"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// Associations - Pointers to allow nil (0 or 1 relationship)
 	StudentProfile        *StudentProfile        `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"student_profile,omitempty"`

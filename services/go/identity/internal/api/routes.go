@@ -11,10 +11,12 @@ func SetupRoutes(app *fiber.App, h *Handler) {
 
 	// Credentials
 	identity.Post("/credentials/verify", h.ValidateCredentials)
-	identity.Post("/credentials/update", h.UpdateCredentials)
+	// Credentials
+	identity.Post("/credentials/verify", h.ValidateCredentials)
 
 	// Users
 	identity.Post("/users", h.RegisterUser)
+	identity.Post("/users/:id/confirm-email", h.ConfirmUserEmail)
 	identity.Get("/users/:id", h.GetUser)
 	identity.Patch("/users/:id", h.UpdateUser) // Using PATCH as requested
 	identity.Delete("/users/:id", h.DeleteUser)
