@@ -112,6 +112,10 @@ func (s *IdentityService) ListUsers(offset, limit int) ([]core.User, error) {
 	return s.repo.ListUsers(offset, limit)
 }
 
+func (s *IdentityService) LookupUser(email string) (*core.User, error) {
+	return s.repo.GetUserByEmail(email)
+}
+
 // -- Organization Management --
 
 func (s *IdentityService) CreateInstitute(name, code string) (*core.Institute, error) {

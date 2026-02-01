@@ -147,7 +147,7 @@ func (h *AuthNHandler) ForgotPassword(c *fiber.Ctx) error {
 func (h *AuthNHandler) ResetPassword(c *fiber.Ctx) error {
 	var req struct {
 		Token       string `json:"token"`
-		NewPassword string `json:"new_password"`
+		NewPassword string `json:"newPassword"`
 	}
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})

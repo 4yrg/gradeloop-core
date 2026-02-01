@@ -14,6 +14,7 @@ type Config struct {
 	EmailServiceURL    string
 	AuthZServiceURL    string
 	InternalToken      string
+	WebURL             string
 }
 
 func Load() *Config {
@@ -26,6 +27,7 @@ func Load() *Config {
 		EmailServiceURL:    getEnv("EMAIL_SERVICE_URL", "http://localhost:5005"),
 		AuthZServiceURL:    getEnv("AUTHZ_SERVICE_URL", "http://localhost:8004"),
 		InternalToken:      getEnv("INTERNAL_SECRET", "insecure-secret-for-dev"),
+		WebURL:             getEnv("WEB_URL", "http://localhost:3000"),
 	}
 }
 
